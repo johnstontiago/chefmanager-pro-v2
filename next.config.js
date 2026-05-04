@@ -1,12 +1,7 @@
-const path = require('path');
-
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   distDir: process.env.NEXT_DIST_DIR || '.next',
   output: process.env.NEXT_OUTPUT_MODE,
-  experimental: {
-    outputFileTracingRoot: path.join(__dirname, '../'),
-  },
   eslint: {
     ignoreDuringBuilds: true,
   },
@@ -14,6 +9,34 @@ const nextConfig = {
     ignoreBuildErrors: false,
   },
   images: { unoptimized: true },
+  turbopack: {
+    root: __dirname,
+  },
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'X-Frame-Options',
+            value: 'DENY',
+          },
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
+          },
+          {
+            key: 'Referrer-Policy',
+            value: 'strict-origin-when-cross-origin',
+          },
+          {
+            key: 'Permissions-Policy',
+            value: 'camera=(), microphone=(), geolocation=()',
+          },
+        ],
+      },
+    ];
+  },
 };
 
 module.exports = nextConfig;
