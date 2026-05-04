@@ -85,23 +85,23 @@ export default function DashboardShell({ user, children }: DashboardShellProps) 
                                             <div className="flex items-center space-x-2">
                                                           <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
                                                                           <Package className="w-5 h-5 text-white" />
-                                                          </div>div>
-                                                          <span className="text-white font-bold">ChefManager</span>span>
-                                            </div>div>
+                                                          </div>
+                                                          <span className="text-white font-bold">ChefManager</span>
+                                            </div>
                                             <button
                                                             onClick={() => setSidebarOpen(false)}
                                                             className="lg:hidden text-slate-400 hover:text-white"
                                                           >
                                                           <X className="w-5 h-5" />
-                                            </button>button>
-                                </div>div>
+                                            </button>
+                                </div>
                       
                         {/* User Info */}
                                 <div className="px-4 py-4 border-b border-slate-800">
-                                            <div className="text-sm text-slate-400">Conectado como</div>div>
-                                            <div className="text-white font-medium truncate">{currentUser?.name}</div>div>
-                                            <div className="text-xs text-blue-400 capitalize">{currentUser?.rol}</div>div>
-                                </div>div>
+                                            <div className="text-sm text-slate-400">Conectado como</div>
+                                            <div className="text-white font-medium truncate">{currentUser?.name}</div>
+                                            <div className="text-xs text-blue-400 capitalize">{currentUser?.rol}</div>
+                                </div>
                       
                         {/* Navigation */}
                                 <nav className="flex-1 px-2 py-4 overflow-y-auto">
@@ -121,10 +121,10 @@ export default function DashboardShell({ user, children }: DashboardShellProps) 
                                                                           >
                                                                           <item.icon className="w-5 h-5 mr-3" />
                                                           {item.label}
-                                                        </Link>Link>
+                                                        </Link>
                                                       );
                       })}
-                                </nav>nav>
+                                </nav>
                       
                         {/* Logout */}
                                 <div className="p-4 border-t border-slate-800">
@@ -134,10 +134,10 @@ export default function DashboardShell({ user, children }: DashboardShellProps) 
                                                           >
                                                           <LogOut className="w-5 h-5 mr-3" />
                                                           Cerrar Sesión
-                                            </button>button>
-                                </div>div>
-                      </div>div>
-              </aside>aside>
+                                            </button>
+                                </div>
+                      </div>
+              </aside>
         
           {/* Main content */}
               <div className="lg:pl-64 min-w-0 overflow-x-hidden">
@@ -149,7 +149,7 @@ export default function DashboardShell({ user, children }: DashboardShellProps) 
                                                             className="lg:hidden text-slate-600 hover:text-slate-900"
                                                           >
                                                           <Menu className="w-6 h-6" />
-                                            </button>button>
+                                            </button>
                                 
                                   {/* Unit Selector Banner */}
                                             <div className="flex-1 flex justify-center lg:justify-start lg:ml-4 min-w-0">
@@ -160,26 +160,26 @@ export default function DashboardShell({ user, children }: DashboardShellProps) 
                                                                           <Building2 className="w-5 h-5 text-blue-600 flex-shrink-0" />
                                                                           <span className="font-medium text-blue-900 truncate">
                                                                             {currentUser?.unidadNombre || "Sin unidad asignada"}
-                                                                          </span>span>
+                                                                          </span>
                                                             {currentUser?.rol === "superuser" && (
                                                                                               <ChevronDown className="w-4 h-4 text-blue-600 flex-shrink-0" />
                                                                                             )}
-                                                          </button>button>
-                                            </div>div>
+                                                          </button>
+                                            </div>
                                 
                                             <div className="flex items-center space-x-2 flex-shrink-0">
                                                           <span className="hidden sm:inline text-sm text-slate-600 truncate max-w-[150px]">
                                                             {currentUser?.email}
-                                                          </span>span>
-                                            </div>div>
-                                </div>div>
-                      </header>header>
+                                                          </span>
+                                            </div>
+                                </div>
+                      </header>
               
                 {/* Page content */}
                       <main className="p-4 md:p-6 max-w-7xl mx-auto w-full overflow-x-hidden">
                         {children}
-                      </main>main>
-              </div>div>
+                      </main>
+              </div>
         
           {/* Unit Selector Modal */}
           {showUnitSelector && (
@@ -195,6 +195,6 @@ export default function DashboardShell({ user, children }: DashboardShellProps) 
                               }}
                             />
                 )}
-        </div>div>
+        </div>
       );
-}</div>
+}
