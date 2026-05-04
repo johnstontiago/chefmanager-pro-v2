@@ -89,6 +89,7 @@ export async function POST(request: Request) {
     const pedido = await prisma.pedido.create({
       data: {
         unidadId,
+        usuarioId: user.id,
         estado,
         total: new Decimal(total),
         notas: notas || null,
@@ -97,7 +98,6 @@ export async function POST(request: Request) {
             productoId: item.productoId,
             cantidad: new Decimal(item.cantidad),
             precioUnitario: new Decimal(item.precioUnitario),
-            subtotal: new Decimal(parseFloat(item.cantidad) * parseFloat(item.precioUnitario)),
           })),
         },
       },

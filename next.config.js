@@ -9,9 +9,6 @@ const nextConfig = {
     ignoreBuildErrors: false,
   },
   images: { unoptimized: true },
-  turbopack: {
-    root: __dirname,
-  },
   async headers() {
     return [
       {
@@ -38,5 +35,7 @@ const nextConfig = {
     ];
   },
 };
+
+module.exports = nextConfig;
 
 module.exports = nextConfig;
