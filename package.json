@@ -4,8 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "npx prisma@5.22 generate && next build",
-    "start": "next start",
+    "build": "next build",
+    "prisma:generate": "prisma generate",
+    "start": "prisma generate && next start",
     "lint": "next lint"
   },
   "dependencies": {
