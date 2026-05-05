@@ -572,7 +572,6 @@ export default function RecepcionContent({ userRole }: RecepcionContentProps) {
                   Guardar recepción
                 </Button>
               </>
-              )}
             </div>
           )}
         </DrawerContent>
