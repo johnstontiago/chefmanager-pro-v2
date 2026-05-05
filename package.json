@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "prisma generate && next build",
     "start": "next start",
-    "db:setup": "prisma db push",
+    "db:setup": "prisma db push --accept-data-loss",
     "lint": "next lint",
     "typecheck": "tsc --noEmit"
   },
