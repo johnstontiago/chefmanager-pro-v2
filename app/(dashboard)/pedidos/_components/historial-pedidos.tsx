@@ -109,6 +109,8 @@ export default function HistorialPedidos({ userRole }: HistorialPedidosProps) {
         return <Badge className="bg-blue-100 text-blue-700"><Clock className="w-3 h-3 mr-1" /> Enviado</Badge>;
       case "recibido":
         return <Badge className="bg-green-100 text-green-700"><CheckCircle className="w-3 h-3 mr-1" /> Recibido</Badge>;
+      case "recibido_parcial":
+        return <Badge className="bg-yellow-100 text-yellow-800"><CheckCircle className="w-3 h-3 mr-1" /> Recibido parcial</Badge>;
       case "cancelado":
         return <Badge className="bg-red-100 text-red-700"><XCircle className="w-3 h-3 mr-1" /> Cancelado</Badge>;
       default:
@@ -200,6 +202,30 @@ export default function HistorialPedidos({ userRole }: HistorialPedidosProps) {
     toast({ title: "CSV exportado" });
   };
 
+  const exportarCSVRecepcion = async (pedido: any) => {
+    try {
+      const res = await fetch(`/api/pedidos/${pedido.id}/csv`);
+      if (!res.ok) {
+        const err = await res.json();
+        toast({ title: err.error || "Error al exportar CSV", variant: "destructive" });
+        return;
+      }
+      const blob = await res.blob();
+      const contentDisposition = res.headers.get("Content-Disposition") || "";
+      const match = contentDisposition.match(/filename="?([^"]+)"?/);
+      const filename = match ? match[1] : `pedido-${pedido.id}-recepcion.csv`;
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      a.click();
+      window.URL.revokeObjectURL(url);
+      toast({ title: "CSV de recepción exportado" });
+    } catch {
+      toast({ title: "Error al exportar CSV", variant: "destructive" });
+    }
+  };
+
   const copiarAlPortapapeles = (pedido: any) => {
     const items = pedido.items || [];
     let texto = `PEDIDO #${pedido.id}\n`;
@@ -258,6 +284,7 @@ export default function HistorialPedidos({ userRole }: HistorialPedidosProps) {
                   <SelectItem value="borrador">Borrador</SelectItem>
                   <SelectItem value="enviado">Enviado</SelectItem>
                   <SelectItem value="recibido">Recibido</SelectItem>
+                  <SelectItem value="recibido_parcial">Recibido parcial</SelectItem>
                   <SelectItem value="cancelado">Cancelado</SelectItem>
                 </SelectContent>
               </Select>
@@ -344,8 +371,14 @@ export default function HistorialPedidos({ userRole }: HistorialPedidosProps) {
                         </DropdownMenuSub>
                         <DropdownMenuItem onClick={() => exportarCSV(pedido)}>
                           <FileSpreadsheet className="w-4 h-4 mr-2" />
-                          Exportar CSV
+                          Exportar CSV (pedido)
                         </DropdownMenuItem>
+                        {(pedido.estado === "recibido" || pedido.estado === "recibido_parcial") && (
+                          <DropdownMenuItem onClick={() => exportarCSVRecepcion(pedido)}>
+                            <FileSpreadsheet className="w-4 h-4 mr-2" />
+                            Exportar CSV recepción
+                          </DropdownMenuItem>
+                        )}
                         <DropdownMenuItem onClick={() => copiarAlPortapapeles(pedido)}>
                           <Copy className="w-4 h-4 mr-2" />
                           Copiar al portapapeles
@@ -468,8 +501,14 @@ export default function HistorialPedidos({ userRole }: HistorialPedidosProps) {
                 </Button>
                 <Button variant="outline" onClick={() => exportarCSV(pedidoDetalle)}>
                   <FileSpreadsheet className="w-4 h-4 mr-2" />
-                  CSV
+                  CSV pedido
                 </Button>
+                {(pedidoDetalle.estado === "recibido" || pedidoDetalle.estado === "recibido_parcial") && (
+                  <Button variant="outline" onClick={() => exportarCSVRecepcion(pedidoDetalle)}>
+                    <Download className="w-4 h-4 mr-2" />
+                    CSV recepción
+                  </Button>
+                )}
                 <Button variant="outline" onClick={() => copiarAlPortapapeles(pedidoDetalle)}>
                   <Copy className="w-4 h-4 mr-2" />
                   Copiar
