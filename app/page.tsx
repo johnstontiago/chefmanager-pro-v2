@@ -1,13 +1,13 @@
 import { redirect } from "next/navigation";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth-options";
+import { cookies } from "next/headers";
 
-export default async function HomePage() {
-  const session = await getServerSession(authOptions);
-  
-  if (session?.user) {
-    redirect("/dashboard");
-  } else {
-    redirect("/login");
-  }
+export const dynamic = "force-dynamic";
+
+export default function HomePage() {
+  const cookieStore = cookies();
+  const hasSession =
+    cookieStore.has("next-auth.session-token") ||
+    cookieStore.has("__Secure-next-auth.session-token");
+
+  redirect(hasSession ? "/dashboard" : "/login");
 }

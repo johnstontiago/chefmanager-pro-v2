@@ -1,12 +1,16 @@
-import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
-import { authOptions } from "@/lib/auth-options";
+import { cookies } from "next/headers";
 import LoginForm from "./_components/login-form";
 
-export default async function LoginPage() {
-  const session = await getServerSession(authOptions);
-  
-  if (session?.user) {
+export const dynamic = "force-dynamic";
+
+export default function LoginPage() {
+  const cookieStore = cookies();
+  const hasSession =
+    cookieStore.has("next-auth.session-token") ||
+    cookieStore.has("__Secure-next-auth.session-token");
+
+  if (hasSession) {
     redirect("/dashboard");
   }
 
