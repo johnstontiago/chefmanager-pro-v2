@@ -38,6 +38,7 @@ import {
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { formatDecimal, formatDate, formatDateTime, toNumber, getDaysUntilExpiry, getExpiryStatus } from "@/lib/utils";
+import QrScanner from "@/components/qr-scanner";
 
 interface ConsumoContentProps {
   userRole: string;
@@ -56,6 +57,7 @@ export default function ConsumoContent({ userRole }: ConsumoContentProps) {
   const [cantidad, setCantidad] = useState("");
   const [notas, setNotas] = useState("");
   const [saving, setSaving] = useState(false);
+  const [showQrScanner, setShowQrScanner] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -108,21 +110,23 @@ export default function ConsumoContent({ userRole }: ConsumoContentProps) {
     prod.nombre?.toLowerCase()?.includes(busqueda?.toLowerCase() || "")
   );
 
-  // Search by QR code
-  const buscarPorQR = () => {
-    if (!codigoQR.trim()) return;
-
+  const buscarPorCodigo = (codigo: string) => {
     const item = inventario.find(
-      (inv) => inv.codigoUnico?.toLowerCase() === codigoQR.toLowerCase().trim()
+      (inv) => inv.codigoUnico?.toLowerCase() === codigo.toLowerCase().trim()
     );
-
     if (item) {
       setSelectedItem(item);
       setCantidad("1");
       setCodigoQR("");
+      setShowQrScanner(false);
     } else {
       toast({ title: "Código no encontrado", variant: "destructive" });
     }
+  };
+
+  const buscarPorQR = () => {
+    if (!codigoQR.trim()) return;
+    buscarPorCodigo(codigoQR);
   };
 
   const seleccionarLote = (inv: any) => {
@@ -255,22 +259,39 @@ export default function ConsumoContent({ userRole }: ConsumoContentProps) {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* QR Search */}
             <Card className="lg:col-span-3">
-              <CardContent className="py-4">
+              <CardContent className="py-4 space-y-3">
                 <div className="flex items-center space-x-3">
                   <QrCode className="w-6 h-6 text-blue-600" />
                   <span className="font-medium">Búsqueda rápida por código</span>
                   <div className="flex-1 max-w-md">
                     <div className="flex space-x-2">
                       <Input
-                        placeholder="Escanea o ingresa código QR/único..."
+                        placeholder="Ingresa código QR/único..."
                         value={codigoQR}
                         onChange={(e) => setCodigoQR(e.target.value)}
                         onKeyDown={(e) => e.key === "Enter" && buscarPorQR()}
                       />
-                      <Button onClick={buscarPorQR}>Buscar</Button>
+                      <Button onClick={buscarPorQR} variant="outline">Buscar</Button>
+                      <Button
+                        onClick={() => setShowQrScanner((v) => !v)}
+                        variant={showQrScanner ? "default" : "outline"}
+                        className={showQrScanner ? "bg-blue-600 hover:bg-blue-700" : ""}
+                      >
+                        <QrCode className="w-4 h-4 mr-2" />
+                        {showQrScanner ? "Cerrar cámara" : "Escanear"}
+                      </Button>
                     </div>
                   </div>
                 </div>
+
+                {showQrScanner && (
+                  <div className="max-w-xs">
+                    <QrScanner
+                      onScan={(val) => buscarPorCodigo(val)}
+                      onClose={() => setShowQrScanner(false)}
+                    />
+                  </div>
+                )}
               </CardContent>
             </Card>
 
