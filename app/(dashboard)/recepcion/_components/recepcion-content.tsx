@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import {
   Package, Truck, History, Loader2, AlertTriangle,
-  CheckCircle, Calendar, ArrowRight, QrCode, Tag, ChevronDown,
+  CheckCircle, Calendar, ArrowRight, Download,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,7 +15,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { formatCurrency, formatDate, formatDecimal, toNumber, generateUniqueCode } from "@/lib/utils";
-import QrScanner from "@/components/qr-scanner";
 
 interface RecepcionContentProps {
   userRole: string;
@@ -44,7 +43,6 @@ export default function RecepcionContent({ userRole }: RecepcionContentProps) {
   const [itemStates, setItemStates] = useState<Record<number, ItemState>>({});
   const [drawerItem, setDrawerItem] = useState<any>(null);
   const [drawerForm, setDrawerForm] = useState<ItemForm | null>(null);
-  const [showQr, setShowQr] = useState(false);
   const [saving, setSaving] = useState(false);
   const [showResumen, setShowResumen] = useState(false);
 
@@ -124,6 +122,34 @@ export default function RecepcionContent({ userRole }: RecepcionContentProps) {
     return selectedPedido.items?.every(
       (item: any) => itemStates[item.id]?.estado !== "pendiente"
     );
+  };
+
+  const descargarCSV = (pedido: any, states: Record<number, ItemState>) => {
+    const filas = pedido.items?.map((item: any) => {
+      const s = states[item.id];
+      return [
+        pedido.id,
+        item.producto?.nombre ?? "",
+        item.producto?.unidadMedida ?? "",
+        formatDecimal(item.cantidad),
+        s ? formatDecimal(s.cantidadRecibida) : "0",
+        s?.lote ?? "",
+        s?.fechaCaducidad ?? "",
+        s?.ubicacion ?? "",
+        s?.codigoUnico ?? "",
+        s?.estado ?? "pendiente",
+      ].map((v) => `"${String(v).replace(/"/g, '""')}"`).join(",");
+    }) ?? [];
+
+    const cabecera = ["Pedido#","Producto","Unidad","Cant.Pedida","Cant.Recibida","Lote","Fecha Caducidad","Ubicación","Código Único","Estado"].join(",");
+    const csv = [cabecera, ...filas].join("\n");
+    const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `recepcion-pedido-${pedido.id}-${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   const confirmarRecepcion = async (generarPedidoPendiente: boolean) => {
@@ -221,6 +247,7 @@ export default function RecepcionContent({ userRole }: RecepcionContentProps) {
         description: `${itemsRecibidos.length} producto(s) registrado(s). Estado: ${nuevoEstado.replace("_", " ")}.`,
       });
 
+      descargarCSV(selectedPedido, itemStates);
       setSelectedPedido(null);
       setItemStates({});
       setShowResumen(false);
@@ -453,7 +480,7 @@ export default function RecepcionContent({ userRole }: RecepcionContentProps) {
               {saving ? (
                 <Loader2 className="w-4 h-4 animate-spin mr-2" />
               ) : (
-                <CheckCircle className="w-4 h-4 mr-2" />
+                <Download className="w-4 h-4 mr-2" />
               )}
               Finalizar recepción
             </Button>
@@ -462,7 +489,7 @@ export default function RecepcionContent({ userRole }: RecepcionContentProps) {
       )}
 
       {/* Drawer de recepción por ítem */}
-      <Drawer open={!!drawerItem} onOpenChange={(open) => { if (!open) { setDrawerItem(null); setDrawerForm(null); setShowQr(false); } }}>
+      <Drawer open={!!drawerItem} onOpenChange={(open) => { if (!open) { setDrawerItem(null); setDrawerForm(null); } }}>
         <DrawerContent className="max-h-[90vh]">
           <DrawerHeader>
             <DrawerTitle className="flex items-center gap-2">
@@ -476,90 +503,75 @@ export default function RecepcionContent({ userRole }: RecepcionContentProps) {
 
           {drawerForm && (
             <div className="px-4 pb-6 space-y-4 overflow-y-auto">
-              {showQr ? (
-                <div className="space-y-3">
-                  <p className="text-sm text-slate-600">Escanea el QR del producto para autocompletar el código</p>
-                  <QrScanner
-                    onScan={(val) => {
-                      setDrawerForm((f) => f ? { ...f, codigoUnico: val } : f);
-                      setShowQr(false);
-                    }}
+              <>
+                <div>
+                  <Label htmlFor="cant-recibida">Cantidad recibida *</Label>
+                  <Input
+                    id="cant-recibida"
+                    type="number"
+                    inputMode="decimal"
+                    step="0.01"
+                    min="0"
+                    value={drawerForm.cantidadRecibida}
+                    onChange={(e) =>
+                      setDrawerForm((f) => f ? { ...f, cantidadRecibida: parseFloat(e.target.value) || 0 } : f)
+                    }
+                    className="mt-1"
                   />
-                  <Button variant="outline" size="sm" className="w-full" onClick={() => setShowQr(false)}>
-                    Cancelar escaneo
-                  </Button>
                 </div>
-              ) : (
-                <>
-                  <div>
-                    <Label htmlFor="cant-recibida">Cantidad recibida *</Label>
-                    <Input
-                      id="cant-recibida"
-                      type="number"
-                      inputMode="decimal"
-                      step="0.01"
-                      min="0"
-                      value={drawerForm.cantidadRecibida}
-                      onChange={(e) =>
-                        setDrawerForm((f) => f ? { ...f, cantidadRecibida: parseFloat(e.target.value) || 0 } : f)
-                      }
-                      className="mt-1"
-                    />
-                  </div>
 
-                  <div>
-                    <Label htmlFor="lote-input">Lote</Label>
-                    <Input
-                      id="lote-input"
-                      placeholder="LOT-XXXX"
-                      value={drawerForm.lote}
-                      onChange={(e) => setDrawerForm((f) => f ? { ...f, lote: e.target.value } : f)}
-                      className="mt-1"
-                    />
-                  </div>
+                <div>
+                  <Label htmlFor="lote-input">Lote</Label>
+                  <Input
+                    id="lote-input"
+                    placeholder="LOT-XXXX"
+                    value={drawerForm.lote}
+                    onChange={(e) => setDrawerForm((f) => f ? { ...f, lote: e.target.value } : f)}
+                    className="mt-1"
+                  />
+                </div>
 
-                  <div>
-                    <Label htmlFor="cad-input">Fecha de caducidad</Label>
-                    <Input
-                      id="cad-input"
-                      type="date"
-                      value={drawerForm.fechaCaducidad}
-                      onChange={(e) => setDrawerForm((f) => f ? { ...f, fechaCaducidad: e.target.value } : f)}
-                      className="mt-1"
-                    />
-                  </div>
+                <div>
+                  <Label htmlFor="cad-input">Fecha de caducidad</Label>
+                  <Input
+                    id="cad-input"
+                    type="date"
+                    value={drawerForm.fechaCaducidad}
+                    onChange={(e) => setDrawerForm((f) => f ? { ...f, fechaCaducidad: e.target.value } : f)}
+                    className="mt-1"
+                  />
+                </div>
 
-                  <div>
-                    <Label htmlFor="codigo-input" className="flex items-center justify-between">
-                      <span>Código QR / Único</span>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="h-6 text-xs text-blue-600"
-                        onClick={() => setShowQr(true)}
-                      >
-                        <QrCode className="w-3 h-3 mr-1" />
-                        Escanear
-                      </Button>
-                    </Label>
-                    <Input
-                      id="codigo-input"
-                      value={drawerForm.codigoUnico}
-                      onChange={(e) => setDrawerForm((f) => f ? { ...f, codigoUnico: e.target.value } : f)}
-                      className="mt-1 font-mono text-sm"
-                    />
-                  </div>
+                <div>
+                  <Label htmlFor="ubicacion-input">Localización</Label>
+                  <Input
+                    id="ubicacion-input"
+                    placeholder="Ej: Almacén A, Estante 3"
+                    value={drawerForm.ubicacion}
+                    onChange={(e) => setDrawerForm((f) => f ? { ...f, ubicacion: e.target.value } : f)}
+                    className="mt-1"
+                  />
+                </div>
 
-                  <Button
-                    className="w-full bg-green-600 hover:bg-green-700 h-12 text-base mt-2"
-                    onClick={guardarItemRecibido}
-                    disabled={!drawerForm.cantidadRecibida}
-                  >
-                    <CheckCircle className="w-4 h-4 mr-2" />
-                    Guardar recepción
-                  </Button>
-                </>
+                <div>
+                  <Label htmlFor="codigo-input">Código Único</Label>
+                  <Input
+                    id="codigo-input"
+                    value={drawerForm.codigoUnico}
+                    onChange={(e) => setDrawerForm((f) => f ? { ...f, codigoUnico: e.target.value } : f)}
+                    className="mt-1 font-mono text-sm"
+                  />
+                </div>
+
+                <Button
+                  className="w-full bg-green-600 hover:bg-green-700 h-12 text-base mt-2"
+                  onClick={guardarItemRecibido}
+                  disabled={!drawerForm.cantidadRecibida}
+                >
+                  <CheckCircle className="w-4 h-4 mr-2" />
+                  Guardar recepción
+                </Button>
+              </>
               )}
             </div>
           )}
