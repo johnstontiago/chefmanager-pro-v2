@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth-options";
 import prisma from "@/lib/db";
 import { Decimal } from "@prisma/client/runtime/library";
 import { toNumber } from "@/lib/utils";
+import { PedidoCreateSchema } from "@/lib/schemas";
 
 export const dynamic = "force-dynamic";
 
@@ -69,28 +70,31 @@ export async function POST(request: Request) {
     }
 
     const user = session.user as any;
-    const unidadId = user.unidadId;
+    const unidadId = parseInt(String(user.unidadId));
+    const usuarioId = parseInt(String(user.id));
 
     if (!unidadId) {
       return NextResponse.json({ error: "Sin unidad" }, { status: 400 });
     }
 
-    const { items, notas, estado = "borrador" } = await request.json();
-
-    if (!items || !Array.isArray(items) || items.length === 0) {
-      return NextResponse.json({ error: "Items requeridos" }, { status: 400 });
+    const body = await request.json();
+    const parsed = PedidoCreateSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error.errors[0].message }, { status: 400 });
     }
+    const { items, notas, estado = "borrador", proveedorId } = parsed.data;
 
     let total = 0;
     for (const item of items) {
-      total += parseFloat(item.cantidad) * parseFloat(item.precioUnitario);
+      total += item.cantidad * item.precioUnitario;
     }
 
     const pedido = await prisma.pedido.create({
       data: {
         unidadId,
-        usuarioId: user.id,
-        estado,
+        usuarioId,
+        proveedorId: proveedorId ?? null,
+        estado: estado || "borrador",
         total: new Decimal(total),
         notas: notas || null,
         items: {

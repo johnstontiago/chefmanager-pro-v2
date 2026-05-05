@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
 import prisma from "@/lib/db";
 import { toNumber } from "@/lib/utils";
+import { PedidoPatchSchema } from "@/lib/schemas";
 
 export const dynamic = "force-dynamic";
 
@@ -82,7 +83,12 @@ export async function PATCH(
     const user = session.user as any;
     const { id } = await params;
     const pedidoId = parseInt(id);
-    const { estado } = await request.json();
+    const body = await request.json();
+    const parsed = PedidoPatchSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error.errors[0].message }, { status: 400 });
+    }
+    const { estado, notas } = parsed.data;
 
     const whereClause: any = { id: pedidoId };
     if (user.rol !== "superuser" && user.unidadId) {
@@ -97,7 +103,7 @@ export async function PATCH(
 
     const pedido = await prisma.pedido.update({
       where: { id: pedidoId },
-      data: { estado },
+      data: { estado, ...(notas !== undefined && { notas }) },
     });
 
     return NextResponse.json({ pedido, message: "Estado actualizado" });

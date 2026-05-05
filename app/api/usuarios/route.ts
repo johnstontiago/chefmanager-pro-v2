@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
 import prisma from "@/lib/db";
 import bcrypt from "bcryptjs";
+import { UsuarioCreateSchema } from "@/lib/schemas";
 
 export const dynamic = "force-dynamic";
 
@@ -43,11 +44,12 @@ export async function POST(request: Request) {
     const user = session.user as any;
     if (user.rol !== "superuser") return NextResponse.json({ error: "Sin permisos" }, { status: 403 });
 
-    const { email, nombre, rol, unidadId, password, pinCode } = await request.json();
-
-    if (!email || !nombre || !password) {
-      return NextResponse.json({ error: "Datos incompletos" }, { status: 400 });
+    const body = await request.json();
+    const parsed = UsuarioCreateSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error.errors[0].message }, { status: 400 });
     }
+    const { email, nombre, rol, unidadId, password, pinCode } = parsed.data;
 
     const existing = await prisma.usuario.findUnique({ where: { email } });
     if (existing) {

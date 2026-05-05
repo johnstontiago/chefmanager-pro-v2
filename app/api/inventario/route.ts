@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth-options";
 import prisma from "@/lib/db";
 import { Decimal } from "@prisma/client/runtime/library";
 import { toNumber } from "@/lib/utils";
+import { InventarioCreateSchema } from "@/lib/schemas";
 
 export const dynamic = "force-dynamic";
 
@@ -73,11 +74,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Sin unidad" }, { status: 400 });
     }
 
-    const { productoId, cantidad, lote, fechaCaducidad, ubicacion, codigoUnico } = await request.json();
-
-    if (!productoId || cantidad === undefined) {
-      return NextResponse.json({ error: "Datos incompletos" }, { status: 400 });
+    const body = await request.json();
+    const parsed = InventarioCreateSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error.errors[0].message }, { status: 400 });
     }
+    const { productoId, cantidad, lote, fechaCaducidad, ubicacion, codigoUnico } = parsed.data;
 
     // Productos son globales
     const producto = await prisma.producto.findUnique({

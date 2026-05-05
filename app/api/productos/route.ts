@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth-options";
 import prisma from "@/lib/db";
 import { Decimal } from "@prisma/client/runtime/library";
 import { toNumber } from "@/lib/utils";
+import { ProductoCreateSchema } from "@/lib/schemas";
 
 export const dynamic = "force-dynamic";
 
@@ -50,11 +51,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Sin permisos" }, { status: 403 });
     }
 
-    const { nombre, categoriaId, proveedorId, unidadMedida, precioUnitario, stockMinimo } = await request.json();
-
-    if (!nombre || !categoriaId || precioUnitario === undefined || stockMinimo === undefined) {
-      return NextResponse.json({ error: "Datos incompletos" }, { status: 400 });
+    const body = await request.json();
+    const parsed = ProductoCreateSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error.errors[0].message }, { status: 400 });
     }
+    const { nombre, categoriaId, proveedorId, unidadMedida, precioUnitario, stockMinimo } = parsed.data;
 
     const producto = await prisma.producto.create({
       data: {

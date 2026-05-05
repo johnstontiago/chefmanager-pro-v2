@@ -58,11 +58,12 @@ export default withAuth(
       return NextResponse.next();
     }
 
-    // Role-based access for dashboard routes
-    if (req.nextUrl.pathname.startsWith("/dashboard")) {
+    // Solo superuser puede acceder a la sección de administración
+    if (req.nextUrl.pathname.startsWith("/admin")) {
       const userRole = token?.rol as string;
-      // Allow all authenticated users to dashboard for now
-      // Add specific role checks as needed
+      if (!["superuser", "admin"].includes(userRole)) {
+        return NextResponse.redirect(new URL("/dashboard", req.url));
+      }
     }
 
     return NextResponse.next();
@@ -77,11 +78,15 @@ export default withAuth(
 export const config = {
   matcher: [
     "/dashboard/:path*",
+    "/admin/:path*",
     "/pedidos/:path*",
     "/categorias/:path*",
     "/movimientos/:path*",
     "/reportes/:path*",
     "/usuarios/:path*",
+    "/recepcion/:path*",
+    "/inventario/:path*",
+    "/consumo/:path*",
     "/api/:path*",
     "/login",
     "/verify-pin",
