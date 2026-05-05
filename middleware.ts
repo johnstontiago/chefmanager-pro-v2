@@ -87,7 +87,8 @@ export const config = {
     "/recepcion/:path*",
     "/inventario/:path*",
     "/consumo/:path*",
-    "/api/:path*",
+    // Excluir /api/auth/* para que NextAuth pueda manejar sus propios endpoints
+    "/api/((?!auth/).*)",
     "/login",
     "/verify-pin",
   ],
