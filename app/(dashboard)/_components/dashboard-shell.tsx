@@ -38,10 +38,21 @@ const menuItems = [
 export default function DashboardShell({ user, children }: DashboardShellProps) {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [showUnitSelector, setShowUnitSelector] = useState(false);
+    const [stockBajoCount, setStockBajoCount] = useState(0);
     const pathname = usePathname();
     const { data: session, update } = useSession() ?? {};
 
   const currentUser = (session?.user as any) || user;
+
+  useEffect(() => {
+    if (currentUser?.unidadId) {
+      fetch("/api/dashboard/stats")
+        .then((r) => r.ok ? r.json() : null)
+        .then((data) => data?.stockBajo && setStockBajoCount(data.stockBajo))
+        .catch(() => {});
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentUser?.unidadId]);
     const filteredMenu = menuItems.filter((item) =>
           item.roles.includes(currentUser?.rol || "viewer")
                                             );
@@ -120,7 +131,12 @@ export default function DashboardShell({ user, children }: DashboardShellProps) 
                                                                                                 )}
                                                                           >
                                                                           <item.icon className="w-5 h-5 mr-3" />
-                                                          {item.label}
+                                                          <span className="flex-1">{item.label}</span>
+                                                          {item.href === "/inventario" && stockBajoCount > 0 && (
+                                                            <span className="ml-1 min-w-[20px] h-5 text-xs bg-red-500 text-white rounded-full flex items-center justify-center px-1">
+                                                              {stockBajoCount > 99 ? "99+" : stockBajoCount}
+                                                            </span>
+                                                          )}
                                                         </Link>
                                                       );
                       })}
