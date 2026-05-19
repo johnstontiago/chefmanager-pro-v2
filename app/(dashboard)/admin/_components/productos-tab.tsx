@@ -266,7 +266,7 @@ export default function ProductosTab() {
                 placeholder="Nombre del producto"
               />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <Label>Categoría *</Label>
                 <Select value={formData.categoriaId} onValueChange={(v) => setFormData({ ...formData, categoriaId: v })}>
@@ -299,7 +299,7 @@ export default function ProductosTab() {
                 </Select>
               </div>
             </div>
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
               <div>
                 <Label>Unidad</Label>
                 <Select value={formData.unidadMedida} onValueChange={(v) => setFormData({ ...formData, unidadMedida: v })}>

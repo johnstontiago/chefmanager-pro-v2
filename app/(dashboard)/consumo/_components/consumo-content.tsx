@@ -260,22 +260,25 @@ export default function ConsumoContent({ userRole }: ConsumoContentProps) {
             {/* QR Search */}
             <Card className="lg:col-span-3">
               <CardContent className="py-4 space-y-3">
-                <div className="flex items-center space-x-3">
-                  <QrCode className="w-6 h-6 text-blue-600" />
-                  <span className="font-medium">Búsqueda rápida por código</span>
-                  <div className="flex-1 max-w-md">
+                <div className="flex flex-wrap items-center gap-3">
+                  <div className="flex items-center space-x-2 flex-shrink-0">
+                    <QrCode className="w-6 h-6 text-blue-600" />
+                    <span className="font-medium">Búsqueda rápida por código</span>
+                  </div>
+                  <div className="flex-1 min-w-0 w-full sm:w-auto">
                     <div className="flex space-x-2">
                       <Input
                         placeholder="Ingresa código QR/único..."
                         value={codigoQR}
                         onChange={(e) => setCodigoQR(e.target.value)}
                         onKeyDown={(e) => e.key === "Enter" && buscarPorQR()}
+                        className="min-w-0"
                       />
-                      <Button onClick={buscarPorQR} variant="outline">Buscar</Button>
+                      <Button onClick={buscarPorQR} variant="outline" className="flex-shrink-0">Buscar</Button>
                       <Button
                         onClick={() => setShowQrScanner((v) => !v)}
                         variant={showQrScanner ? "default" : "outline"}
-                        className={showQrScanner ? "bg-blue-600 hover:bg-blue-700" : ""}
+                        className={`flex-shrink-0 ${showQrScanner ? "bg-blue-600 hover:bg-blue-700" : ""}`}
                       >
                         <QrCode className="w-4 h-4 mr-2" />
                         {showQrScanner ? "Cerrar cámara" : "Escanear"}

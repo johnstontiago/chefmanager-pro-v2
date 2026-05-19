@@ -414,7 +414,7 @@ export default function HistorialPedidos({ userRole }: HistorialPedidosProps) {
 
       {/* Detail Dialog */}
       <Dialog open={!!pedidoDetalle} onOpenChange={() => setPedidoDetalle(null)}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center justify-between">
               <span>Pedido #{pedidoDetalle?.id}</span>
@@ -423,7 +423,7 @@ export default function HistorialPedidos({ userRole }: HistorialPedidosProps) {
           </DialogHeader>
           {pedidoDetalle && (
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4 text-sm">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                 <div>
                   <p className="text-slate-500">Fecha</p>
                   <p className="font-medium">{formatDate(pedidoDetalle.fechaPedido)}</p>

@@ -178,7 +178,7 @@ export default function UsuariosTab() {
           <div className="space-y-4">
             <div><Label>Email *</Label><Input type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} /></div>
             <div><Label>Nombre *</Label><Input value={formData.nombre} onChange={(e) => setFormData({ ...formData, nombre: e.target.value })} /></div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <Label>Rol</Label>
                 <Select value={formData.rol} onValueChange={(v) => setFormData({ ...formData, rol: v })}>

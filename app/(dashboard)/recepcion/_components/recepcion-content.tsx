@@ -502,7 +502,7 @@ export default function RecepcionContent({ userRole }: RecepcionContentProps) {
           </DrawerHeader>
 
           {drawerForm && (
-            <div className="px-4 pb-6 space-y-4 overflow-y-auto">
+            <div className="flex-1 min-h-0 px-4 pb-6 space-y-4 overflow-y-auto">
               <>
                 <div>
                   <Label htmlFor="cant-recibida">Cantidad recibida *</Label>
