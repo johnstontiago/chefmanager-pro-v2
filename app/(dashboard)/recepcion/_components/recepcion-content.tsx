@@ -584,7 +584,7 @@ export default function RecepcionContent({ userRole }: RecepcionContentProps) {
             <DialogTitle>Resumen de recepción</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <div className="space-y-2 text-sm">
+            <div className="space-y-2 text-sm max-h-[45vh] overflow-y-auto pr-1">
               {selectedPedido?.items?.map((item: any) => {
                 const s = itemStates[item.id];
                 return (
