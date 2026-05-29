@@ -47,6 +47,7 @@ export async function GET() {
         ...i,
         cantidad: toNumber(i.cantidad),
         precioUnitario: toNumber(i.precioUnitario),
+        cantidadRecibida: toNumber(i.cantidadRecibida),
         producto: {
           ...i.producto,
           precioUnitario: toNumber(i.producto.precioUnitario),

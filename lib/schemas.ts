@@ -14,7 +14,7 @@ export const PedidoCreateSchema = z.object({
 });
 
 export const PedidoPatchSchema = z.object({
-  estado: z.enum(["borrador", "pendiente", "enviado", "recibido", "recibido_parcial", "cancelado"]),
+  estado: z.enum(["borrador", "pendiente", "enviado", "en_recepcion", "recibido", "recibido_parcial", "cancelado"]),
   notas: z.string().max(500).optional(),
 });
 

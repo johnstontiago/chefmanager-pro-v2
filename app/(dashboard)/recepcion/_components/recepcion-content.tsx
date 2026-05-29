@@ -90,14 +90,28 @@ export default function RecepcionContent({ userRole }: RecepcionContentProps) {
     setSelectedPedido(pedido);
     const initial: Record<number, ItemState> = {};
     pedido.items?.forEach((item: any) => {
-      initial[item.id] = {
-        cantidadRecibida: toNumber(item.cantidad),
-        lote: "",
-        fechaCaducidad: "",
-        ubicacion: "",
-        codigoUnico: generateUniqueCode(),
-        estado: "pendiente",
-      };
+      if (item.estadoLinea && item.estadoLinea !== "pendiente") {
+        // Ítem ya procesado anteriormente — restaurar desde DB
+        initial[item.id] = {
+          cantidadRecibida: toNumber(item.cantidadRecibida),
+          lote: item.lote || "",
+          fechaCaducidad: item.fechaCaducidad
+            ? new Date(item.fechaCaducidad).toISOString().slice(0, 10)
+            : "",
+          ubicacion: "",
+          codigoUnico: "",
+          estado: item.estadoLinea as EstadoLinea,
+        };
+      } else {
+        initial[item.id] = {
+          cantidadRecibida: toNumber(item.cantidad),
+          lote: "",
+          fechaCaducidad: "",
+          ubicacion: "",
+          codigoUnico: generateUniqueCode(),
+          estado: "pendiente",
+        };
+      }
     });
     setItemStates(initial);
   };
@@ -178,6 +192,26 @@ export default function RecepcionContent({ userRole }: RecepcionContentProps) {
       ]);
 
       if (!invRes.ok || !movRes.ok) throw new Error("Error al registrar");
+
+      // Persistir estado del ítem en DB
+      await Promise.all([
+        fetch(`/api/pedidos/${selectedPedido.id}/items/${drawerItem.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            cantidadRecibida: drawerForm.cantidadRecibida,
+            estadoLinea,
+            lote: drawerForm.lote || null,
+            fechaCaducidad: drawerForm.fechaCaducidad || null,
+          }),
+        }),
+        // Marcar el pedido como en recepción para que permanezca en la lista
+        fetch(`/api/pedidos/${selectedPedido.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ estado: "en_recepcion" }),
+        }),
+      ]);
 
       const newItemStates: Record<number, ItemState> = {
         ...itemStates,
@@ -292,7 +326,11 @@ export default function RecepcionContent({ userRole }: RecepcionContentProps) {
                         <div>
                           <div className="flex items-center space-x-3 mb-2">
                             <span className="font-bold text-xl">Pedido #{pedido.id}</span>
-                            <Badge className="bg-blue-100 text-blue-700">Enviado</Badge>
+                            {pedido.estado === "en_recepcion" ? (
+                              <Badge className="bg-orange-100 text-orange-700">En recepción</Badge>
+                            ) : (
+                              <Badge className="bg-blue-100 text-blue-700">Enviado</Badge>
+                            )}
                           </div>
                           <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-600">
                             <span className="flex items-center">
