@@ -56,11 +56,13 @@ export async function POST(request: Request) {
     if (!parsed.success) {
       return NextResponse.json({ error: parsed.error.errors[0].message }, { status: 400 });
     }
-    const { nombre, categoriaId, proveedorId, unidadMedida, precioUnitario, stockMinimo } = parsed.data;
+    const { nombre, fabricante, formato, categoriaId, proveedorId, unidadMedida, precioUnitario, stockMinimo } = parsed.data;
 
     const producto = await prisma.producto.create({
       data: {
         nombre,
+        fabricante: fabricante || null,
+        formato: formato || null,
         categoriaId,
         proveedorId: proveedorId || null,
         unidadMedida: unidadMedida || "kg",

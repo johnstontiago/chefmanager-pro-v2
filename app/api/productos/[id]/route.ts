@@ -41,7 +41,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     }
 
     const { id } = await params;
-    const { nombre, categoriaId, proveedorId, unidadMedida, precioUnitario, stockMinimo, activo } = await request.json();
+    const { nombre, fabricante, formato, categoriaId, proveedorId, unidadMedida, precioUnitario, stockMinimo, activo } = await request.json();
 
     const existing = await prisma.producto.findUnique({ where: { id: parseInt(id) } });
     if (!existing) return NextResponse.json({ error: "No encontrado" }, { status: 404 });
@@ -50,6 +50,8 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       where: { id: parseInt(id) },
       data: {
         nombre,
+        fabricante: fabricante !== undefined ? (fabricante || null) : existing.fabricante,
+        formato: formato !== undefined ? (formato || null) : existing.formato,
         categoriaId,
         proveedorId: proveedorId || null,
         unidadMedida,

@@ -53,6 +53,8 @@ model Proveedor {
 model Producto {
   id             Int          @id @default(autoincrement())
   nombre         String
+  fabricante     String?
+  formato        String?
   categoriaId    Int          @map("categoria_id")
   proveedorId    Int?         @map("proveedor_id")
   unidadMedida   String       @map("unidad_medida")

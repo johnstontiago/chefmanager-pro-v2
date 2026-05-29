@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerClose } from "@/components/ui/drawer";
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
@@ -43,6 +43,7 @@ export default function RecepcionContent({ userRole }: RecepcionContentProps) {
   const [itemStates, setItemStates] = useState<Record<number, ItemState>>({});
   const [drawerItem, setDrawerItem] = useState<any>(null);
   const [drawerForm, setDrawerForm] = useState<ItemForm | null>(null);
+  const [savingItem, setSavingItem] = useState(false);
   const [saving, setSaving] = useState(false);
   const [showResumen, setShowResumen] = useState(false);
 
@@ -70,7 +71,7 @@ export default function RecepcionContent({ userRole }: RecepcionContentProps) {
         setHistorialRecepciones(data?.movimientos || []);
       }
     } catch {
-      // silencioso — toast solo en acciones del usuario
+      // silencioso
     } finally {
       setLoading(false);
     }
@@ -104,17 +105,59 @@ export default function RecepcionContent({ userRole }: RecepcionContentProps) {
     });
   };
 
-  const guardarItemRecibido = () => {
-    if (!drawerItem || !drawerForm) return;
+  // Guarda el ítem en la base de datos inmediatamente
+  const guardarItemRecibido = async () => {
+    if (!drawerItem || !drawerForm || !selectedPedido) return;
+
     const cantPedida = toNumber(drawerItem.cantidad);
     const estadoLinea: EstadoLinea =
       drawerForm.cantidadRecibida >= cantPedida ? "recibida" : "parcial";
-    setItemStates((prev) => ({
-      ...prev,
-      [drawerItem.id]: { ...drawerForm, estado: estadoLinea },
-    }));
-    setDrawerItem(null);
-    setDrawerForm(null);
+
+    try {
+      setSavingItem(true);
+
+      const [invRes, movRes] = await Promise.all([
+        fetch("/api/inventario", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            productoId: drawerItem.productoId,
+            cantidad: drawerForm.cantidadRecibida,
+            lote: drawerForm.lote || null,
+            fechaCaducidad: drawerForm.fechaCaducidad || null,
+            ubicacion: drawerForm.ubicacion || null,
+            codigoUnico: drawerForm.codigoUnico,
+          }),
+        }),
+        fetch("/api/movimientos", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            productoId: drawerItem.productoId,
+            tipo: "entrada",
+            cantidad: drawerForm.cantidadRecibida,
+            lote: drawerForm.lote || null,
+            notas: `Recepción pedido #${selectedPedido.id}`,
+            pedidoItemId: drawerItem.id,
+          }),
+        }),
+      ]);
+
+      if (!invRes.ok || !movRes.ok) throw new Error("Error al registrar");
+
+      setItemStates((prev) => ({
+        ...prev,
+        [drawerItem.id]: { ...drawerForm, estado: estadoLinea },
+      }));
+
+      toast({ title: `${drawerItem.producto?.nombre} registrado en inventario` });
+      setDrawerItem(null);
+      setDrawerForm(null);
+    } catch {
+      toast({ title: "Error al registrar el ítem", variant: "destructive" });
+    } finally {
+      setSavingItem(false);
+    }
   };
 
   const todosProcessados = () => {
@@ -124,34 +167,42 @@ export default function RecepcionContent({ userRole }: RecepcionContentProps) {
     );
   };
 
-  const descargarCSV = (pedido: any, states: Record<number, ItemState>) => {
-    const filas = pedido.items?.map((item: any) => {
-      const s = states[item.id];
+  const descargarCSV = () => {
+    if (!selectedPedido) return;
+    const filas = selectedPedido.items?.map((item: any) => {
+      const s = itemStates[item.id];
+      if (!s || s.estado === "pendiente") return null;
       return [
-        pedido.id,
+        selectedPedido.id,
         item.producto?.nombre ?? "",
         item.producto?.unidadMedida ?? "",
         formatDecimal(item.cantidad),
-        s ? formatDecimal(s.cantidadRecibida) : "0",
-        s?.lote ?? "",
-        s?.fechaCaducidad ?? "",
-        s?.ubicacion ?? "",
-        s?.codigoUnico ?? "",
-        s?.estado ?? "pendiente",
+        formatDecimal(s.cantidadRecibida),
+        s.lote ?? "",
+        s.fechaCaducidad ?? "",
+        s.ubicacion ?? "",
+        s.codigoUnico ?? "",
+        s.estado,
       ].map((v) => `"${String(v).replace(/"/g, '""')}"`).join(",");
-    }) ?? [];
+    }).filter(Boolean) ?? [];
 
-    const cabecera = ["Pedido#","Producto","Unidad","Cant.Pedida","Cant.Recibida","Lote","Fecha Caducidad","Ubicación","Código Único","Estado"].join(",");
+    if (filas.length === 0) {
+      toast({ title: "No hay ítems recibidos para exportar", variant: "destructive" });
+      return;
+    }
+
+    const cabecera = ["Pedido#", "Producto", "Unidad", "Cant.Pedida", "Cant.Recibida", "Lote", "Fecha Caducidad", "Ubicación", "Código Único", "Estado"].join(",");
     const csv = [cabecera, ...filas].join("\n");
     const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `recepcion-pedido-${pedido.id}-${new Date().toISOString().slice(0,10)}.csv`;
+    a.download = `recepcion-pedido-${selectedPedido.id}-${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   };
 
+  // Finaliza la recepción: actualiza el estado del pedido (los ítems ya están en DB)
   const confirmarRecepcion = async (generarPedidoPendiente: boolean) => {
     if (!selectedPedido) return;
     const itemsRecibidos = selectedPedido.items?.filter(
@@ -164,36 +215,6 @@ export default function RecepcionContent({ userRole }: RecepcionContentProps) {
 
     try {
       setSaving(true);
-
-      for (const item of itemsRecibidos) {
-        const form = itemStates[item.id];
-
-        await fetch("/api/inventario", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            productoId: item.productoId,
-            cantidad: form.cantidadRecibida,
-            lote: form.lote || null,
-            fechaCaducidad: form.fechaCaducidad || null,
-            ubicacion: form.ubicacion || null,
-            codigoUnico: form.codigoUnico,
-          }),
-        });
-
-        await fetch("/api/movimientos", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            productoId: item.productoId,
-            tipo: "entrada",
-            cantidad: form.cantidadRecibida,
-            lote: form.lote || null,
-            notas: `Recepción pedido #${selectedPedido.id}`,
-            pedidoItemId: item.id,
-          }),
-        });
-      }
 
       const hayParciales = selectedPedido.items?.some(
         (item: any) => itemStates[item.id]?.estado === "parcial" || itemStates[item.id]?.estado === "pendiente"
@@ -243,17 +264,16 @@ export default function RecepcionContent({ userRole }: RecepcionContentProps) {
       }
 
       toast({
-        title: "Recepción completada",
+        title: "Recepción finalizada",
         description: `${itemsRecibidos.length} producto(s) registrado(s). Estado: ${nuevoEstado.replace("_", " ")}.`,
       });
 
-      descargarCSV(selectedPedido, itemStates);
       setSelectedPedido(null);
       setItemStates({});
       setShowResumen(false);
       fetchData();
     } catch {
-      toast({ title: "Error al procesar recepción", variant: "destructive" });
+      toast({ title: "Error al finalizar recepción", variant: "destructive" });
     } finally {
       setSaving(false);
     }
@@ -273,6 +293,10 @@ export default function RecepcionContent({ userRole }: RecepcionContentProps) {
 
   const itemsParcialesCount = selectedPedido?.items?.filter(
     (i: any) => itemStates[i.id]?.estado === "parcial"
+  ).length ?? 0;
+
+  const itemsRecibidosCount = selectedPedido?.items?.filter(
+    (i: any) => itemStates[i.id]?.estado !== "pendiente"
   ).length ?? 0;
 
   return (
@@ -391,7 +415,7 @@ export default function RecepcionContent({ userRole }: RecepcionContentProps) {
               <h2 className="text-xl font-bold">Pedido #{selectedPedido.id}</h2>
               <p className="text-sm text-slate-500">
                 {selectedPedido.items?.length} ítems •{" "}
-                {selectedPedido.items?.length - itemsPendientesCount} procesados
+                {itemsRecibidosCount} registrado(s) en inventario
               </p>
             </div>
             <Button variant="outline" size="sm" onClick={() => { setSelectedPedido(null); setItemStates({}); }}>
@@ -400,7 +424,7 @@ export default function RecepcionContent({ userRole }: RecepcionContentProps) {
           </div>
 
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-800">
-            Pulsa <strong>Confirmar recepción</strong> en cada ítem para registrar lo que llegó.
+            Cada ítem que confirmes se <strong>registra inmediatamente</strong> en el inventario.
           </div>
 
           <div className="space-y-3">
@@ -464,11 +488,23 @@ export default function RecepcionContent({ userRole }: RecepcionContentProps) {
             })}
           </div>
 
+          {/* Botón CSV — visible cuando hay al menos un ítem registrado */}
+          {itemsRecibidosCount > 0 && (
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={descargarCSV}
+            >
+              <Download className="w-4 h-4 mr-2" />
+              Exportar CSV ({itemsRecibidosCount} ítem{itemsRecibidosCount !== 1 ? "s" : ""} recibido{itemsRecibidosCount !== 1 ? "s" : ""})
+            </Button>
+          )}
+
           {/* Botón finalizar */}
-          <div className="sticky bottom-4 pt-4">
+          <div className="sticky bottom-4 pt-2">
             <Button
               className="w-full bg-green-600 hover:bg-green-700 h-12 text-base"
-              disabled={saving || itemsPendientesCount === selectedPedido.items?.length}
+              disabled={saving || itemsRecibidosCount === 0}
               onClick={() => {
                 if (itemsPendientesCount > 0 || itemsParcialesCount > 0) {
                   setShowResumen(true);
@@ -480,7 +516,7 @@ export default function RecepcionContent({ userRole }: RecepcionContentProps) {
               {saving ? (
                 <Loader2 className="w-4 h-4 animate-spin mr-2" />
               ) : (
-                <Download className="w-4 h-4 mr-2" />
+                <CheckCircle className="w-4 h-4 mr-2" />
               )}
               Finalizar recepción
             </Button>
@@ -489,7 +525,7 @@ export default function RecepcionContent({ userRole }: RecepcionContentProps) {
       )}
 
       {/* Drawer de recepción por ítem */}
-      <Drawer open={!!drawerItem} onOpenChange={(open) => { if (!open) { setDrawerItem(null); setDrawerForm(null); } }}>
+      <Drawer open={!!drawerItem} onOpenChange={(open) => { if (!open && !savingItem) { setDrawerItem(null); setDrawerForm(null); } }}>
         <DrawerContent className="max-h-[90vh]">
           <DrawerHeader>
             <DrawerTitle className="flex items-center gap-2">
@@ -503,75 +539,77 @@ export default function RecepcionContent({ userRole }: RecepcionContentProps) {
 
           {drawerForm && (
             <div className="flex-1 min-h-0 px-4 pb-6 space-y-4 overflow-y-auto">
-              <>
-                <div>
-                  <Label htmlFor="cant-recibida">Cantidad recibida *</Label>
-                  <Input
-                    id="cant-recibida"
-                    type="number"
-                    inputMode="decimal"
-                    step="0.01"
-                    min="0"
-                    value={drawerForm.cantidadRecibida}
-                    onChange={(e) =>
-                      setDrawerForm((f) => f ? { ...f, cantidadRecibida: parseFloat(e.target.value) || 0 } : f)
-                    }
-                    className="mt-1"
-                  />
-                </div>
+              <div>
+                <Label htmlFor="cant-recibida">Cantidad recibida *</Label>
+                <Input
+                  id="cant-recibida"
+                  type="number"
+                  inputMode="decimal"
+                  step="0.01"
+                  min="0"
+                  value={drawerForm.cantidadRecibida}
+                  onChange={(e) =>
+                    setDrawerForm((f) => f ? { ...f, cantidadRecibida: parseFloat(e.target.value) || 0 } : f)
+                  }
+                  className="mt-1"
+                />
+              </div>
 
-                <div>
-                  <Label htmlFor="lote-input">Lote</Label>
-                  <Input
-                    id="lote-input"
-                    placeholder="LOT-XXXX"
-                    value={drawerForm.lote}
-                    onChange={(e) => setDrawerForm((f) => f ? { ...f, lote: e.target.value } : f)}
-                    className="mt-1"
-                  />
-                </div>
+              <div>
+                <Label htmlFor="lote-input">Lote</Label>
+                <Input
+                  id="lote-input"
+                  placeholder="LOT-XXXX"
+                  value={drawerForm.lote}
+                  onChange={(e) => setDrawerForm((f) => f ? { ...f, lote: e.target.value } : f)}
+                  className="mt-1"
+                />
+              </div>
 
-                <div>
-                  <Label htmlFor="cad-input">Fecha de caducidad</Label>
-                  <Input
-                    id="cad-input"
-                    type="date"
-                    value={drawerForm.fechaCaducidad}
-                    onChange={(e) => setDrawerForm((f) => f ? { ...f, fechaCaducidad: e.target.value } : f)}
-                    className="mt-1"
-                  />
-                </div>
+              <div>
+                <Label htmlFor="cad-input">Fecha de caducidad</Label>
+                <Input
+                  id="cad-input"
+                  type="date"
+                  value={drawerForm.fechaCaducidad}
+                  onChange={(e) => setDrawerForm((f) => f ? { ...f, fechaCaducidad: e.target.value } : f)}
+                  className="mt-1"
+                />
+              </div>
 
-                <div>
-                  <Label htmlFor="ubicacion-input">Localización</Label>
-                  <Input
-                    id="ubicacion-input"
-                    placeholder="Ej: Almacén A, Estante 3"
-                    value={drawerForm.ubicacion}
-                    onChange={(e) => setDrawerForm((f) => f ? { ...f, ubicacion: e.target.value } : f)}
-                    className="mt-1"
-                  />
-                </div>
+              <div>
+                <Label htmlFor="ubicacion-input">Localización</Label>
+                <Input
+                  id="ubicacion-input"
+                  placeholder="Ej: Almacén A, Estante 3"
+                  value={drawerForm.ubicacion}
+                  onChange={(e) => setDrawerForm((f) => f ? { ...f, ubicacion: e.target.value } : f)}
+                  className="mt-1"
+                />
+              </div>
 
-                <div>
-                  <Label htmlFor="codigo-input">Código Único</Label>
-                  <Input
-                    id="codigo-input"
-                    value={drawerForm.codigoUnico}
-                    onChange={(e) => setDrawerForm((f) => f ? { ...f, codigoUnico: e.target.value } : f)}
-                    className="mt-1 font-mono text-sm"
-                  />
-                </div>
+              <div>
+                <Label htmlFor="codigo-input">Código Único</Label>
+                <Input
+                  id="codigo-input"
+                  value={drawerForm.codigoUnico}
+                  onChange={(e) => setDrawerForm((f) => f ? { ...f, codigoUnico: e.target.value } : f)}
+                  className="mt-1 font-mono text-sm"
+                />
+              </div>
 
-                <Button
-                  className="w-full bg-green-600 hover:bg-green-700 h-12 text-base mt-2"
-                  onClick={guardarItemRecibido}
-                  disabled={!drawerForm.cantidadRecibida}
-                >
+              <Button
+                className="w-full bg-green-600 hover:bg-green-700 h-12 text-base mt-2"
+                onClick={guardarItemRecibido}
+                disabled={!drawerForm.cantidadRecibida || savingItem}
+              >
+                {savingItem ? (
+                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                ) : (
                   <CheckCircle className="w-4 h-4 mr-2" />
-                  Guardar recepción
-                </Button>
-              </>
+                )}
+                {savingItem ? "Registrando..." : "Guardar en inventario"}
+              </Button>
             </div>
           )}
         </DrawerContent>

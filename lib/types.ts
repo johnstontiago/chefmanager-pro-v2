@@ -36,6 +36,8 @@ export interface Proveedor {
 export interface Producto {
   id: number;
   nombre: string;
+  fabricante: string | null;
+  formato: string | null;
   categoriaId: number;
   proveedorId: number | null;
   unidadMedida: string;

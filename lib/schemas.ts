@@ -20,6 +20,8 @@ export const PedidoPatchSchema = z.object({
 
 export const ProductoCreateSchema = z.object({
   nombre: z.string().min(1).max(200),
+  fabricante: z.string().max(200).optional().nullable(),
+  formato: z.string().max(200).optional().nullable(),
   categoriaId: z.number().int().positive(),
   proveedorId: z.number().int().positive().optional().nullable(),
   unidadMedida: z.string().min(1).max(50).optional(),

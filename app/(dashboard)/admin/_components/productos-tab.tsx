@@ -56,6 +56,8 @@ export default function ProductosTab() {
 
   const [formData, setFormData] = useState({
     nombre: "",
+    fabricante: "",
+    formato: "",
     categoriaId: "",
     proveedorId: "",
     unidadMedida: "kg",
@@ -103,6 +105,8 @@ export default function ProductosTab() {
     setEditingProduct(null);
     setFormData({
       nombre: "",
+      fabricante: "",
+      formato: "",
       categoriaId: "",
       proveedorId: "",
       unidadMedida: "kg",
@@ -116,6 +120,8 @@ export default function ProductosTab() {
     setEditingProduct(product);
     setFormData({
       nombre: product.nombre || "",
+      fabricante: product.fabricante || "",
+      formato: product.formato || "",
       categoriaId: product.categoriaId?.toString() || "",
       proveedorId: product.proveedorId?.toString() || "",
       unidadMedida: product.unidadMedida || "kg",
@@ -135,6 +141,8 @@ export default function ProductosTab() {
       setSaving(true);
       const payload = {
         nombre: formData.nombre,
+        fabricante: formData.fabricante || null,
+        formato: formData.formato || null,
         categoriaId: parseInt(formData.categoriaId),
         proveedorId: formData.proveedorId ? parseInt(formData.proveedorId) : null,
         unidadMedida: formData.unidadMedida,
@@ -232,6 +240,8 @@ export default function ProductosTab() {
                     </div>
                     <div className="flex flex-wrap gap-x-3 gap-y-1 text-sm text-slate-500 mt-1">
                       <span>{prod.categoria?.nombre || "-"}</span>
+                      {prod.fabricante && <span>{prod.fabricante}</span>}
+                      {prod.formato && <span className="italic">{prod.formato}</span>}
                       <span>{prod.proveedor?.nombre || "Sin proveedor"}</span>
                       <span>{formatCurrency(prod.precioUnitario)}/{prod.unidadMedida}</span>
                       <span>Mín: {formatDecimal(prod.stockMinimo)}</span>
@@ -265,6 +275,24 @@ export default function ProductosTab() {
                 onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
                 placeholder="Nombre del producto"
               />
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <Label>Fabricante</Label>
+                <Input
+                  value={formData.fabricante}
+                  onChange={(e) => setFormData({ ...formData, fabricante: e.target.value })}
+                  placeholder="Marca o fabricante"
+                />
+              </div>
+              <div>
+                <Label>Formato</Label>
+                <Input
+                  value={formData.formato}
+                  onChange={(e) => setFormData({ ...formData, formato: e.target.value })}
+                  placeholder="Ej: 1kg, 500ml, 6 unid."
+                />
+              </div>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
