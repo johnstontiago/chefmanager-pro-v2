@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import {
   Package, Truck, History, Loader2, AlertTriangle,
-  CheckCircle, Calendar, ArrowRight, Download,
+  CheckCircle, Calendar, ArrowRight, Download, XCircle,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,16 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { formatCurrency, formatDate, formatDecimal, toNumber, generateUniqueCode } from "@/lib/utils";
@@ -44,8 +53,8 @@ export default function RecepcionContent({ userRole }: RecepcionContentProps) {
   const [drawerItem, setDrawerItem] = useState<any>(null);
   const [drawerForm, setDrawerForm] = useState<ItemForm | null>(null);
   const [savingItem, setSavingItem] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [showResumen, setShowResumen] = useState(false);
+  const [archiving, setArchiving] = useState(false);
+  const [showCerrarConfirm, setShowCerrarConfirm] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -105,7 +114,32 @@ export default function RecepcionContent({ userRole }: RecepcionContentProps) {
     });
   };
 
-  // Guarda el ítem en la base de datos inmediatamente
+  const archivarPedido = async (estado: "recibido" | "recibido_parcial") => {
+    if (!selectedPedido) return;
+    try {
+      setArchiving(true);
+      await fetch(`/api/pedidos/${selectedPedido.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ estado }),
+      });
+      toast({
+        title: estado === "recibido" ? "Pedido completamente recibido" : "Recepción cerrada",
+        description: estado === "recibido"
+          ? "Todos los ítems han sido registrados en inventario."
+          : "Los ítems no recibidos han sido descartados.",
+      });
+      setSelectedPedido(null);
+      setItemStates({});
+      fetchData();
+    } catch {
+      toast({ title: "Error al archivar el pedido", variant: "destructive" });
+    } finally {
+      setArchiving(false);
+    }
+  };
+
+  // Guarda el ítem en DB inmediatamente; si era el último pendiente, archiva el pedido
   const guardarItemRecibido = async () => {
     if (!drawerItem || !drawerForm || !selectedPedido) return;
 
@@ -145,26 +179,28 @@ export default function RecepcionContent({ userRole }: RecepcionContentProps) {
 
       if (!invRes.ok || !movRes.ok) throw new Error("Error al registrar");
 
-      setItemStates((prev) => ({
-        ...prev,
+      const newItemStates: Record<number, ItemState> = {
+        ...itemStates,
         [drawerItem.id]: { ...drawerForm, estado: estadoLinea },
-      }));
+      };
+      setItemStates(newItemStates);
 
       toast({ title: `${drawerItem.producto?.nombre} registrado en inventario` });
       setDrawerItem(null);
       setDrawerForm(null);
+
+      // Si todos los ítems están procesados, archivar automáticamente
+      const todosRecibidos = selectedPedido.items?.every(
+        (item: any) => newItemStates[item.id]?.estado !== "pendiente"
+      );
+      if (todosRecibidos) {
+        await archivarPedido("recibido");
+      }
     } catch {
       toast({ title: "Error al registrar el ítem", variant: "destructive" });
     } finally {
       setSavingItem(false);
     }
-  };
-
-  const todosProcessados = () => {
-    if (!selectedPedido) return false;
-    return selectedPedido.items?.every(
-      (item: any) => itemStates[item.id]?.estado !== "pendiente"
-    );
   };
 
   const descargarCSV = () => {
@@ -202,83 +238,6 @@ export default function RecepcionContent({ userRole }: RecepcionContentProps) {
     URL.revokeObjectURL(url);
   };
 
-  // Finaliza la recepción: actualiza el estado del pedido (los ítems ya están en DB)
-  const confirmarRecepcion = async (generarPedidoPendiente: boolean) => {
-    if (!selectedPedido) return;
-    const itemsRecibidos = selectedPedido.items?.filter(
-      (item: any) => itemStates[item.id]?.estado !== "pendiente"
-    );
-    if (itemsRecibidos.length === 0) {
-      toast({ title: "Marca al menos un producto como recibido", variant: "destructive" });
-      return;
-    }
-
-    try {
-      setSaving(true);
-
-      const hayParciales = selectedPedido.items?.some(
-        (item: any) => itemStates[item.id]?.estado === "parcial" || itemStates[item.id]?.estado === "pendiente"
-      );
-      const nuevoEstado = hayParciales ? "recibido_parcial" : "recibido";
-
-      await fetch(`/api/pedidos/${selectedPedido.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ estado: nuevoEstado }),
-      });
-
-      if (generarPedidoPendiente && hayParciales) {
-        const itemsFaltantes = selectedPedido.items
-          ?.filter((item: any) => {
-            const s = itemStates[item.id];
-            if (!s || s.estado === "pendiente") return true;
-            if (s.estado === "parcial") return true;
-            return false;
-          })
-          .map((item: any) => {
-            const s = itemStates[item.id];
-            const cantFaltante = s
-              ? toNumber(item.cantidad) - s.cantidadRecibida
-              : toNumber(item.cantidad);
-            return {
-              productoId: item.productoId,
-              cantidad: cantFaltante > 0 ? cantFaltante : toNumber(item.cantidad),
-              precioUnitario: toNumber(item.precioUnitario),
-            };
-          })
-          .filter((i: any) => i.cantidad > 0);
-
-        if (itemsFaltantes.length > 0) {
-          await fetch("/api/pedidos", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              items: itemsFaltantes,
-              notas: `Pedido complementario del pedido #${selectedPedido.id}`,
-              estado: "pendiente",
-              proveedorId: selectedPedido.proveedorId ?? null,
-              parentPedidoId: selectedPedido.id,
-            }),
-          });
-        }
-      }
-
-      toast({
-        title: "Recepción finalizada",
-        description: `${itemsRecibidos.length} producto(s) registrado(s). Estado: ${nuevoEstado.replace("_", " ")}.`,
-      });
-
-      setSelectedPedido(null);
-      setItemStates({});
-      setShowResumen(false);
-      fetchData();
-    } catch {
-      toast({ title: "Error al finalizar recepción", variant: "destructive" });
-    } finally {
-      setSaving(false);
-    }
-  };
-
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
@@ -289,10 +248,6 @@ export default function RecepcionContent({ userRole }: RecepcionContentProps) {
 
   const itemsPendientesCount = selectedPedido?.items?.filter(
     (i: any) => itemStates[i.id]?.estado === "pendiente"
-  ).length ?? 0;
-
-  const itemsParcialesCount = selectedPedido?.items?.filter(
-    (i: any) => itemStates[i.id]?.estado === "parcial"
   ).length ?? 0;
 
   const itemsRecibidosCount = selectedPedido?.items?.filter(
@@ -414,19 +369,24 @@ export default function RecepcionContent({ userRole }: RecepcionContentProps) {
             <div>
               <h2 className="text-xl font-bold">Pedido #{selectedPedido.id}</h2>
               <p className="text-sm text-slate-500">
-                {selectedPedido.items?.length} ítems •{" "}
-                {itemsRecibidosCount} registrado(s) en inventario
+                {itemsRecibidosCount} de {selectedPedido.items?.length} ítems registrados
               </p>
             </div>
-            <Button variant="outline" size="sm" onClick={() => { setSelectedPedido(null); setItemStates({}); }}>
-              Cancelar
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-slate-500"
+              onClick={() => { setSelectedPedido(null); setItemStates({}); }}
+            >
+              Volver
             </Button>
           </div>
 
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-800">
-            Cada ítem que confirmes se <strong>registra inmediatamente</strong> en el inventario.
+            Cada ítem que confirmes se <strong>registra inmediatamente</strong> en el inventario. Cuando el último ítem sea recibido, el pedido se archivará automáticamente.
           </div>
 
+          {/* Lista de ítems */}
           <div className="space-y-3">
             {selectedPedido.items?.map((item: any) => {
               const state = itemStates[item.id];
@@ -447,9 +407,7 @@ export default function RecepcionContent({ userRole }: RecepcionContentProps) {
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between gap-3">
                       <div className="flex-1 min-w-0">
-                        <p
-                          className={`font-semibold truncate ${recibido ? "line-through opacity-60" : ""}`}
-                        >
+                        <p className={`font-semibold truncate ${recibido ? "line-through opacity-50" : ""}`}>
                           {item.producto?.nombre}
                         </p>
                         <p className="text-sm text-slate-500">
@@ -466,9 +424,9 @@ export default function RecepcionContent({ userRole }: RecepcionContentProps) {
                         {recibido ? (
                           <Badge className={parcial ? "bg-yellow-500" : "bg-green-500"}>
                             {parcial ? (
-                              <><AlertTriangle className="w-3 h-3 mr-1" /> Parcial</>
+                              <><AlertTriangle className="w-3 h-3 mr-1" />Parcial</>
                             ) : (
-                              <><CheckCircle className="w-3 h-3 mr-1" /> Recibido</>
+                              <><CheckCircle className="w-3 h-3 mr-1" />Recibido</>
                             )}
                           </Badge>
                         ) : (
@@ -488,44 +446,39 @@ export default function RecepcionContent({ userRole }: RecepcionContentProps) {
             })}
           </div>
 
-          {/* Botón CSV — visible cuando hay al menos un ítem registrado */}
-          {itemsRecibidosCount > 0 && (
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={descargarCSV}
-            >
-              <Download className="w-4 h-4 mr-2" />
-              Exportar CSV ({itemsRecibidosCount} ítem{itemsRecibidosCount !== 1 ? "s" : ""} recibido{itemsRecibidosCount !== 1 ? "s" : ""})
-            </Button>
-          )}
+          {/* Acciones al pie de la lista */}
+          <div className="space-y-2 pt-2">
+            {itemsRecibidosCount > 0 && (
+              <Button variant="outline" className="w-full" onClick={descargarCSV}>
+                <Download className="w-4 h-4 mr-2" />
+                Exportar CSV ({itemsRecibidosCount} ítem{itemsRecibidosCount !== 1 ? "s" : ""} recibido{itemsRecibidosCount !== 1 ? "s" : ""})
+              </Button>
+            )}
 
-          {/* Botón finalizar */}
-          <div className="sticky bottom-4 pt-2">
-            <Button
-              className="w-full bg-green-600 hover:bg-green-700 h-12 text-base"
-              disabled={saving || itemsRecibidosCount === 0}
-              onClick={() => {
-                if (itemsPendientesCount > 0 || itemsParcialesCount > 0) {
-                  setShowResumen(true);
-                } else {
-                  confirmarRecepcion(false);
-                }
-              }}
-            >
-              {saving ? (
-                <Loader2 className="w-4 h-4 animate-spin mr-2" />
-              ) : (
-                <CheckCircle className="w-4 h-4 mr-2" />
-              )}
-              Finalizar recepción
-            </Button>
+            {itemsPendientesCount > 0 && (
+              <Button
+                variant="outline"
+                className="w-full border-red-300 text-red-600 hover:bg-red-50"
+                disabled={archiving}
+                onClick={() => setShowCerrarConfirm(true)}
+              >
+                {archiving ? (
+                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                ) : (
+                  <XCircle className="w-4 h-4 mr-2" />
+                )}
+                Cerrar recepción del pedido
+              </Button>
+            )}
           </div>
         </div>
       )}
 
       {/* Drawer de recepción por ítem */}
-      <Drawer open={!!drawerItem} onOpenChange={(open) => { if (!open && !savingItem) { setDrawerItem(null); setDrawerForm(null); } }}>
+      <Drawer
+        open={!!drawerItem}
+        onOpenChange={(open) => { if (!open && !savingItem) { setDrawerItem(null); setDrawerForm(null); } }}
+      >
         <DrawerContent className="max-h-[90vh]">
           <DrawerHeader>
             <DrawerTitle className="flex items-center gap-2">
@@ -615,70 +568,28 @@ export default function RecepcionContent({ userRole }: RecepcionContentProps) {
         </DrawerContent>
       </Drawer>
 
-      {/* Dialog resumen / pedido pendiente */}
-      <Dialog open={showResumen} onOpenChange={setShowResumen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Resumen de recepción</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2 text-sm max-h-[45vh] overflow-y-auto pr-1">
-              {selectedPedido?.items?.map((item: any) => {
-                const s = itemStates[item.id];
-                return (
-                  <div key={item.id} className="flex items-center justify-between py-1 border-b last:border-0">
-                    <span className="truncate flex-1">{item.producto?.nombre}</span>
-                    <Badge
-                      className={
-                        !s || s.estado === "pendiente"
-                          ? "bg-slate-200 text-slate-700"
-                          : s.estado === "parcial"
-                          ? "bg-yellow-100 text-yellow-800"
-                          : "bg-green-100 text-green-800"
-                      }
-                    >
-                      {!s || s.estado === "pendiente"
-                        ? "No recibido"
-                        : s.estado === "parcial"
-                        ? `Parcial (${formatDecimal(s.cantidadRecibida)}/${formatDecimal(item.cantidad)})`
-                        : "Completo"}
-                    </Badge>
-                  </div>
-                );
-              })}
-            </div>
-
-            {(itemsPendientesCount > 0 || itemsParcialesCount > 0) && (
-              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-800">
-                <AlertTriangle className="w-4 h-4 inline mr-1" />
-                Hay {itemsPendientesCount + itemsParcialesCount} ítem(s) con cantidades incompletas.
-                ¿Deseas crear un nuevo pedido pendiente con lo que faltó?
-              </div>
-            )}
-
-            <div className="flex flex-col gap-2">
-              {(itemsPendientesCount > 0 || itemsParcialesCount > 0) && (
-                <Button
-                  className="bg-blue-600 hover:bg-blue-700"
-                  onClick={() => confirmarRecepcion(true)}
-                  disabled={saving}
-                >
-                  {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-                  Confirmar y crear pedido pendiente
-                </Button>
-              )}
-              <Button
-                variant={itemsPendientesCount > 0 ? "outline" : "default"}
-                className={itemsPendientesCount === 0 ? "bg-green-600 hover:bg-green-700" : ""}
-                onClick={() => confirmarRecepcion(false)}
-                disabled={saving}
-              >
-                Confirmar sin pedido pendiente
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* Confirmación de cerrar recepción con ítems pendientes */}
+      <AlertDialog open={showCerrarConfirm} onOpenChange={setShowCerrarConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Cerrar recepción del pedido?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Quedan <strong>{itemsPendientesCount} ítem{itemsPendientesCount !== 1 ? "s" : ""}</strong> sin recibir.
+              Al cerrar, esos ítems serán descartados y el pedido quedará marcado como recibido parcialmente.
+              Esta acción no se puede deshacer.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-red-600 hover:bg-red-700"
+              onClick={() => { setShowCerrarConfirm(false); archivarPedido("recibido_parcial"); }}
+            >
+              Cerrar y descartar pendientes
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
