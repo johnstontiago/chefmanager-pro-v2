@@ -43,6 +43,25 @@ interface ItemState extends ItemForm {
   estado: EstadoLinea;
 }
 
+// ---------- localStorage helpers ----------
+const storageKey = (pedidoId: number) => `chef_recepcion_${pedidoId}`;
+
+const saveToLocal = (pedidoId: number, states: Record<number, ItemState>) => {
+  try { localStorage.setItem(storageKey(pedidoId), JSON.stringify(states)); } catch {}
+};
+
+const loadFromLocal = (pedidoId: number): Record<number, ItemState> | null => {
+  try {
+    const raw = localStorage.getItem(storageKey(pedidoId));
+    return raw ? JSON.parse(raw) : null;
+  } catch { return null; }
+};
+
+const clearLocal = (pedidoId: number) => {
+  try { localStorage.removeItem(storageKey(pedidoId)); } catch {}
+};
+// ------------------------------------------
+
 export default function RecepcionContent({ userRole }: RecepcionContentProps) {
   const { toast } = useToast();
   const [pedidosPendientes, setPedidosPendientes] = useState<any[]>([]);
@@ -88,11 +107,12 @@ export default function RecepcionContent({ userRole }: RecepcionContentProps) {
 
   const iniciarRecepcion = (pedido: any) => {
     setSelectedPedido(pedido);
-    const initial: Record<number, ItemState> = {};
+
+    // Estado base desde la DB
+    const fromDB: Record<number, ItemState> = {};
     pedido.items?.forEach((item: any) => {
       if (item.estadoLinea && item.estadoLinea !== "pendiente") {
-        // Ítem ya procesado anteriormente — restaurar desde DB
-        initial[item.id] = {
+        fromDB[item.id] = {
           cantidadRecibida: toNumber(item.cantidadRecibida),
           lote: item.lote || "",
           fechaCaducidad: item.fechaCaducidad
@@ -103,7 +123,7 @@ export default function RecepcionContent({ userRole }: RecepcionContentProps) {
           estado: item.estadoLinea as EstadoLinea,
         };
       } else {
-        initial[item.id] = {
+        fromDB[item.id] = {
           cantidadRecibida: toNumber(item.cantidad),
           lote: "",
           fechaCaducidad: "",
@@ -113,7 +133,19 @@ export default function RecepcionContent({ userRole }: RecepcionContentProps) {
         };
       }
     });
-    setItemStates(initial);
+
+    // localStorage puede tener datos más recientes (guardado inmediatamente al confirmar)
+    const fromLocal = loadFromLocal(pedido.id);
+    if (fromLocal) {
+      // Mezcla: localStorage tiene prioridad sobre DB para ítems que existan
+      const merged: Record<number, ItemState> = { ...fromDB };
+      for (const [id, state] of Object.entries(fromLocal)) {
+        if (merged[Number(id)]) merged[Number(id)] = state;
+      }
+      setItemStates(merged);
+    } else {
+      setItemStates(fromDB);
+    }
   };
 
   const abrirDrawerItem = (item: any) => {
@@ -137,6 +169,7 @@ export default function RecepcionContent({ userRole }: RecepcionContentProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ estado }),
       });
+      clearLocal(selectedPedido.id);
       toast({
         title: estado === "recibido" ? "Pedido completamente recibido" : "Recepción cerrada",
         description: estado === "recibido"
@@ -217,6 +250,9 @@ export default function RecepcionContent({ userRole }: RecepcionContentProps) {
         ...itemStates,
         [drawerItem.id]: { ...drawerForm, estado: estadoLinea },
       };
+
+      // localStorage primero — sobrevive reload inmediatamente
+      saveToLocal(selectedPedido.id, newItemStates);
       setItemStates(newItemStates);
 
       toast({ title: `${drawerItem.producto?.nombre} registrado en inventario` });
