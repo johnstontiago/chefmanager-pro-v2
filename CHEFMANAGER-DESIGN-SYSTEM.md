@@ -1,7 +1,7 @@
-# PANZZONI Design System
+# ChefManager Pro Design System
 ## Instrucciones para Claude Code — pegar en cualquier proyecto nuevo
 
-Este archivo define la identidad visual y las reglas de construcción de interfaz para todas las apps del ecosistema PANZZONI. Extraído de `chefmanager-inv` como referencia canónica.
+Este archivo define la identidad visual y las reglas de construcción de interfaz para todas las apps del ecosistema ChefManager Pro. Extraído de `chefmanager-inv` como referencia canónica.
 
 ---
 
@@ -32,7 +32,7 @@ Texto secundario: text-slate-500
 Texto terciario:  text-slate-400
 ```
 
-### Color primario — Azul PANZZONI
+### Color primario — Azul ChefManager Pro
 
 ```
 Primario:         bg-blue-600        #2563EB
