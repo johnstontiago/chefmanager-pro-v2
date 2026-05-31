@@ -95,11 +95,13 @@ export default function DashboardShell({ user, children }: DashboardShellProps) 
                         {/* Logo */}
                                 <div className="flex items-center justify-between h-16 px-4 border-b border-slate-800">
                                             <div className="flex items-center space-x-2">
-                                                          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                                                                          <Package className="w-5 h-5 text-white" />
-                                                          </div>
+                                                          <img
+                                                            src="/icons/icon-192.png"
+                                                            alt="ChefManager logo"
+                                                            className="w-8 h-8 rounded-lg object-cover"
+                                                          />
                                                           <span className="text-white font-bold">ChefManager</span>
-                                            </div>
+                                                        </div>
                                             <button
                                                             onClick={() => setSidebarOpen(false)}
                                                             className="lg:hidden text-slate-400 hover:text-white"
