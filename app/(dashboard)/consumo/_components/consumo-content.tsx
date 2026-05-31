@@ -261,37 +261,45 @@ export default function ConsumoContent({ userRole }: ConsumoContentProps) {
             {/* QR Search — siempre arriba */}
             <Card className="lg:col-span-3 order-1">
               <CardContent className="py-4 space-y-3">
-                <div className="flex flex-wrap items-center gap-3">
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    <QrCode className="w-6 h-6 text-blue-600" />
-                    <span className="font-medium">Búsqueda rápida por código</span>
-                  </div>
-                  <div className="flex-1 min-w-0 w-full sm:w-auto">
-                    <div className="flex gap-2">
-                      <Input
-                        placeholder="Ingresa código QR/único..."
-                        value={codigoQR}
-                        onChange={(e) => setCodigoQR(e.target.value)}
-                        onKeyDown={(e) => e.key === "Enter" && buscarPorQR()}
-                        className="min-w-0 flex-1"
-                      />
-                      <Button onClick={buscarPorQR} variant="outline" className="flex-shrink-0 px-3">
-                        Buscar
-                      </Button>
-                      <Button
-                        onClick={() => setShowQrScanner((v) => !v)}
-                        variant={showQrScanner ? "default" : "outline"}
-                        className={`flex-shrink-0 px-3 ${showQrScanner ? "bg-blue-600 hover:bg-blue-700" : ""}`}
-                      >
-                        <QrCode className="w-4 h-4 sm:mr-2" />
-                        <span className="hidden sm:inline">{showQrScanner ? "Cerrar cámara" : "Escanear"}</span>
-                      </Button>
-                    </div>
-                  </div>
+
+                {/* Título en línea propia — nunca compite con los botones */}
+                <div className="flex items-center gap-2">
+                  <QrCode className="w-5 h-5 text-blue-600 flex-shrink-0" />
+                  <span className="font-medium text-sm sm:text-base">Búsqueda rápida por código</span>
+                </div>
+
+                {/* Input + botones en fila dedicada — siempre cabe en cualquier ancho */}
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Código QR o único..."
+                    value={codigoQR}
+                    onChange={(e) => setCodigoQR(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && buscarPorQR()}
+                    className="flex-1 min-w-0"
+                  />
+                  {/* Móvil: solo icono (44px mín.). sm+: icono + texto */}
+                  <Button
+                    onClick={buscarPorQR}
+                    variant="outline"
+                    className="flex-shrink-0 min-w-[44px] px-2 sm:px-4"
+                    aria-label="Buscar"
+                  >
+                    <Search className="w-4 h-4 sm:mr-2" />
+                    <span className="hidden sm:inline">Buscar</span>
+                  </Button>
+                  <Button
+                    onClick={() => setShowQrScanner((v) => !v)}
+                    variant={showQrScanner ? "default" : "outline"}
+                    className={`flex-shrink-0 min-w-[44px] px-2 sm:px-4 ${showQrScanner ? "bg-blue-600 hover:bg-blue-700" : ""}`}
+                    aria-label={showQrScanner ? "Cerrar cámara" : "Escanear código QR"}
+                  >
+                    <QrCode className="w-4 h-4 sm:mr-2" />
+                    <span className="hidden sm:inline">{showQrScanner ? "Cerrar" : "Escanear"}</span>
+                  </Button>
                 </div>
 
                 {showQrScanner && (
-                  <div className="max-w-xs">
+                  <div className="w-full max-w-xs">
                     <QrScanner
                       onScan={(val) => buscarPorCodigo(val)}
                       onClose={() => setShowQrScanner(false)}
