@@ -357,6 +357,12 @@ export default function InventarioContent({ userRole }: InventarioContentProps) 
                                 <span className="hidden sm:inline">{prod.proveedor?.nombre || "Sin proveedor"}</span>
                                 <span>{formatCurrency(prod.precioUnitario)}/{prod.unidadMedida}</span>
                               </div>
+                              {(prod.fabricante || prod.formato) && (
+                                <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-slate-400 mt-0.5">
+                                  {prod.fabricante && <span>🏭 {prod.fabricante}</span>}
+                                  {prod.formato && <span>📦 {prod.formato}</span>}
+                                </div>
+                              )}
                             </div>
                           </div>
                           <div className="text-right flex-shrink-0 ml-1">

@@ -291,6 +291,13 @@ export default function NuevoPedido({ onPedidoCreated }: NuevoPedidoProps) {
                         <div className="flex items-center space-x-2 text-sm text-slate-500">
                           <span>{producto.unidadMedida}</span>
                         </div>
+                        {(producto.fabricante || producto.formato) && (
+                          <p className="text-xs text-slate-400 truncate">
+                            {producto.fabricante && <span>🏭 {producto.fabricante}</span>}
+                            {producto.fabricante && producto.formato && <span className="mx-1">·</span>}
+                            {producto.formato && <span>📦 {producto.formato}</span>}
+                          </p>
+                        )}
                         {producto.proveedor && (
                           <p className="text-xs text-slate-400 truncate">
                             {producto.proveedor.nombre}

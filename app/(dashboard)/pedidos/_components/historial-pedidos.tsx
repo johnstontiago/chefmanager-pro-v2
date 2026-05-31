@@ -449,6 +449,13 @@ export default function HistorialPedidos({ userRole }: HistorialPedidosProps) {
                           {item.producto?.proveedor?.nombre || "Sin proveedor"} •{" "}
                           {item.producto?.categoria?.nombre || "Sin categoría"}
                         </p>
+                        {(item.producto?.fabricante || item.producto?.formato) && (
+                          <p className="text-xs text-slate-400 mt-0.5">
+                            {item.producto?.fabricante && <span>🏭 {item.producto.fabricante}</span>}
+                            {item.producto?.fabricante && item.producto?.formato && <span className="mx-1">·</span>}
+                            {item.producto?.formato && <span>📦 {item.producto.formato}</span>}
+                          </p>
+                        )}
                       </div>
                       <div className="text-right">
                         <p className="font-semibold text-blue-600">

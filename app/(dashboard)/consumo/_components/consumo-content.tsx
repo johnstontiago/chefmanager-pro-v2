@@ -340,6 +340,13 @@ export default function ConsumoContent({ userRole }: ConsumoContentProps) {
                           </Button>
                         </div>
                         <div className="text-sm text-slate-600 space-y-1">
+                          {(selectedItem.producto?.fabricante || selectedItem.producto?.formato) && (
+                            <p className="text-xs text-slate-400">
+                              {selectedItem.producto?.fabricante && <span>🏭 {selectedItem.producto.fabricante}</span>}
+                              {selectedItem.producto?.fabricante && selectedItem.producto?.formato && <span className="mx-1">·</span>}
+                              {selectedItem.producto?.formato && <span>📦 {selectedItem.producto.formato}</span>}
+                            </p>
+                          )}
                           {selectedItem.lote && <p>Lote: {selectedItem.lote}</p>}
                           {selectedItem.ubicacion && <p>Ubicación: {selectedItem.ubicacion}</p>}
                           <p className="font-semibold text-lg text-slate-800">
@@ -455,8 +462,15 @@ export default function ConsumoContent({ userRole }: ConsumoContentProps) {
                         const lotes = inventarioByProducto[prod.id] || [];
                         return (
                           <div key={prod.id} className="border rounded-lg p-3 hover:bg-slate-50">
-                            <h4 className="font-semibold text-slate-800 mb-2">{prod.nombre}</h4>
-                            <div className="space-y-2">
+                            <h4 className="font-semibold text-slate-800">{prod.nombre}</h4>
+                            {(prod.fabricante || prod.formato) && (
+                              <p className="text-xs text-slate-400 mb-1">
+                                {prod.fabricante && <span>🏭 {prod.fabricante}</span>}
+                                {prod.fabricante && prod.formato && <span className="mx-1">·</span>}
+                                {prod.formato && <span>📦 {prod.formato}</span>}
+                              </p>
+                            )}
+                            <div className="mt-2 space-y-2">
                               {lotes.map((inv: any) => (
                                 <div
                                   key={inv.id}

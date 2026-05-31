@@ -486,6 +486,13 @@ export default function RecepcionContent({ userRole }: RecepcionContentProps) {
                         <p className={`font-semibold truncate ${recibido ? "line-through opacity-50" : ""}`}>
                           {item.producto?.nombre}
                         </p>
+                        {(item.producto?.fabricante || item.producto?.formato) && (
+                          <p className="text-xs text-slate-400">
+                            {item.producto?.fabricante && <span>🏭 {item.producto.fabricante}</span>}
+                            {item.producto?.fabricante && item.producto?.formato && <span className="mx-1">·</span>}
+                            {item.producto?.formato && <span>📦 {item.producto.formato}</span>}
+                          </p>
+                        )}
                         <p className="text-sm text-slate-500">
                           Pedido: {formatDecimal(item.cantidad)} {item.producto?.unidadMedida}
                           {recibido && (
