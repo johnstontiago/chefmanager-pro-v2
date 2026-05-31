@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { apiFetch } from "@/lib/api-client";
 import {
   Package,
   Plus,
@@ -150,7 +151,7 @@ export default function ProductosTab() {
         stockMinimo: parseFloat(formData.stockMinimo),
       };
 
-      const res = await fetch(
+      const res = await apiFetch(
         editingProduct ? `/api/productos/${editingProduct.id}` : "/api/productos",
         {
           method: editingProduct ? "PUT" : "POST",
@@ -175,7 +176,7 @@ export default function ProductosTab() {
     if (!deleteProduct) return;
 
     try {
-      const res = await fetch(`/api/productos/${deleteProduct.id}`, {
+      const res = await apiFetch(`/api/productos/${deleteProduct.id}`, {
         method: "DELETE",
       });
 

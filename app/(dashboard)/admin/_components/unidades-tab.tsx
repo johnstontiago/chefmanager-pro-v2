@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { apiFetch } from "@/lib/api-client";
 import {
   Building2,
   Plus,
@@ -67,7 +68,7 @@ export default function UnidadesTab() {
   const fetchUnidades = async () => {
     try {
       setLoading(true);
-      const res = await fetch("/api/unidades");
+      const res = await apiFetch("/api/unidades");
       if (res.ok) {
         const data = await res.json();
         setUnidades(data?.unidades || []);
@@ -118,7 +119,7 @@ export default function UnidadesTab() {
         : "/api/unidades";
       const method = editingUnidad ? "PUT" : "POST";
 
-      const res = await fetch(url, {
+      const res = await apiFetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
@@ -147,7 +148,7 @@ export default function UnidadesTab() {
     if (!deletingUnidad) return;
 
     try {
-      const res = await fetch(`/api/unidades/${deletingUnidad.id}`, {
+      const res = await apiFetch(`/api/unidades/${deletingUnidad.id}`, {
         method: "DELETE",
       });
 

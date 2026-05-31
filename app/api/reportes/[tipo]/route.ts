@@ -6,8 +6,22 @@ import { toNumber, formatCurrency, formatDate, formatDecimal, getDaysUntilExpiry
 
 export const dynamic = "force-dynamic";
 
+/** Protege contra CSV injection: valores que Excel/Sheets interpretan como fórmulas */
+function sanitizeCSVValue(value: string): string {
+  if (/^[=+\-@\t\r]/.test(value)) return `'${value}`;
+  // Escapa comillas dobles y envuelve si tiene comas o saltos
+  if (value.includes('"') || value.includes(",") || value.includes("\n")) {
+    return `"${value.replace(/"/g, '""')}"`;
+  }
+  return value;
+}
+
 function generateCSV(headers: string[], rows: string[][]): string {
-  return [headers.join(","), ...rows.map((row) => row.join(","))].join("\n");
+  const sanitize = (v: string) => sanitizeCSVValue(String(v ?? ""));
+  return [
+    headers.map(sanitize).join(","),
+    ...rows.map((row) => row.map(sanitize).join(",")),
+  ].join("\n");
 }
 
 async function generatePDF(htmlContent: string): Promise<Buffer | null> {

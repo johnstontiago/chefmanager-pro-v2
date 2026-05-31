@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { apiFetch } from "@/lib/api-client";
 import { Users, Plus, Search, Edit2, Trash2, Loader2, Save, Shield, Key, Building2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -82,7 +83,7 @@ export default function UsuariosTab() {
       if (formData.password) payload.password = formData.password;
       if (formData.pinCode) payload.pinCode = formData.pinCode;
 
-      const res = await fetch(editingItem ? `/api/usuarios/${editingItem.id}` : "/api/usuarios", {
+      const res = await apiFetch(editingItem ? `/api/usuarios/${editingItem.id}` : "/api/usuarios", {
         method: editingItem ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -104,7 +105,7 @@ export default function UsuariosTab() {
   const handleDelete = async () => {
     if (!deleteItem) return;
     try {
-      const res = await fetch(`/api/usuarios/${deleteItem.id}`, { method: "DELETE" });
+      const res = await apiFetch(`/api/usuarios/${deleteItem.id}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Error");
       toast({ title: "Usuario eliminado" });
       setDeleteItem(null);

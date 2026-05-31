@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { apiFetch } from "@/lib/api-client";
 import { useSession } from "next-auth/react";
 import {
   Search,
@@ -149,7 +150,7 @@ export default function NuevoPedido({ onPedidoCreated }: NuevoPedidoProps) {
         precioUnitario: item.precioUnitario,
       }));
 
-      const res = await fetch("/api/pedidos", {
+      const res = await apiFetch("/api/pedidos", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -159,7 +160,7 @@ export default function NuevoPedido({ onPedidoCreated }: NuevoPedidoProps) {
         }),
       });
 
-      if (!res.ok) {
+      if (!res.ok && res.status !== 202) {
         const err = await res.json();
         throw new Error(err?.error || "Error al guardar pedido");
       }

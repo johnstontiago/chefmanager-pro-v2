@@ -1,10 +1,27 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import bcrypt from "bcryptjs";
+import { checkRateLimit, getClientIP } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
+  // 10 intentos por ventana de 15 minutos
+  const ip = getClientIP(request);
+  const { allowed, remaining, resetAt } = checkRateLimit(ip, 10, 15 * 60 * 1000);
+  if (!allowed) {
+    return NextResponse.json(
+      { error: "Demasiados intentos. Espere unos minutos." },
+      {
+        status: 429,
+        headers: {
+          "Retry-After": String(Math.ceil((resetAt - Date.now()) / 1000)),
+          "X-RateLimit-Remaining": "0",
+        },
+      }
+    );
+  }
+
   try {
     const body = await request.json();
     const { email, password } = body ?? {};
@@ -21,9 +38,10 @@ export async function POST(request: Request) {
       include: { unidad: true },
     });
 
+    // Mensaje genérico para evitar enumeración de usuarios
     if (!usuario || !usuario.activo) {
       return NextResponse.json(
-        { error: "Usuario no encontrado o inactivo" },
+        { error: "Credenciales incorrectas" },
         { status: 401 }
       );
     }
@@ -31,7 +49,7 @@ export async function POST(request: Request) {
     const isValid = await bcrypt.compare(password, usuario.password);
     if (!isValid) {
       return NextResponse.json(
-        { error: "Contraseña incorrecta" },
+        { error: "Credenciales incorrectas" },
         { status: 401 }
       );
     }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { apiFetch } from "@/lib/api-client";
 import {
   Search,
   FileText,
@@ -120,7 +121,7 @@ export default function HistorialPedidos({ userRole }: HistorialPedidosProps) {
 
   const cambiarEstado = async (pedidoId: number, nuevoEstado: string) => {
     try {
-      const res = await fetch(`/api/pedidos/${pedidoId}`, {
+      const res = await apiFetch(`/api/pedidos/${pedidoId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ estado: nuevoEstado }),
@@ -141,7 +142,7 @@ export default function HistorialPedidos({ userRole }: HistorialPedidosProps) {
   ) => {
     try {
       setGenerandoPDF(true);
-      const res = await fetch("/api/pedidos/pdf", {
+      const res = await apiFetch("/api/pedidos/pdf", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ pedidoId: pedido.id, tipo }),

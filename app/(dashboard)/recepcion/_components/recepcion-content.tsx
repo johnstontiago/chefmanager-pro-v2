@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { apiFetch } from "@/lib/api-client";
 import {
   Package, Truck, History, Loader2, AlertTriangle,
   CheckCircle, Calendar, ArrowRight, Download, XCircle,
@@ -164,7 +165,7 @@ export default function RecepcionContent({ userRole }: RecepcionContentProps) {
     if (!selectedPedido) return;
     try {
       setArchiving(true);
-      await fetch(`/api/pedidos/${selectedPedido.id}`, {
+      await apiFetch(`/api/pedidos/${selectedPedido.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ estado }),
@@ -198,7 +199,7 @@ export default function RecepcionContent({ userRole }: RecepcionContentProps) {
       setSavingItem(true);
 
       const [invRes, movRes] = await Promise.all([
-        fetch("/api/inventario", {
+        apiFetch("/api/inventario", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -210,7 +211,7 @@ export default function RecepcionContent({ userRole }: RecepcionContentProps) {
             codigoUnico: drawerForm.codigoUnico,
           }),
         }),
-        fetch("/api/movimientos", {
+        apiFetch("/api/movimientos", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -224,11 +225,12 @@ export default function RecepcionContent({ userRole }: RecepcionContentProps) {
         }),
       ]);
 
-      if (!invRes.ok || !movRes.ok) throw new Error("Error al registrar");
+      if (!invRes.ok && invRes.status !== 202) throw new Error("Error al registrar");
+      if (!movRes.ok && movRes.status !== 202) throw new Error("Error al registrar");
 
       // Persistir estado del ítem en DB
       await Promise.all([
-        fetch(`/api/pedidos/${selectedPedido.id}/items/${drawerItem.id}`, {
+        apiFetch(`/api/pedidos/${selectedPedido.id}/items/${drawerItem.id}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -239,7 +241,7 @@ export default function RecepcionContent({ userRole }: RecepcionContentProps) {
           }),
         }),
         // Marcar el pedido como en recepción para que permanezca en la lista
-        fetch(`/api/pedidos/${selectedPedido.id}`, {
+        apiFetch(`/api/pedidos/${selectedPedido.id}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ estado: "en_recepcion" }),

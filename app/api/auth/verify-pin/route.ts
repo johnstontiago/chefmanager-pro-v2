@@ -2,10 +2,24 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
 import { prisma } from "@/lib/db";
+import { checkRateLimit, getClientIP } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
+  // 5 intentos por ventana de 10 minutos para PIN de 4 dígitos
+  const ip = getClientIP(request);
+  const { allowed, resetAt } = checkRateLimit(ip, 5, 10 * 60 * 1000);
+  if (!allowed) {
+    return NextResponse.json(
+      { error: "Demasiados intentos. Espere unos minutos." },
+      {
+        status: 429,
+        headers: { "Retry-After": String(Math.ceil((resetAt - Date.now()) / 1000)) },
+      }
+    );
+  }
+
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user) {

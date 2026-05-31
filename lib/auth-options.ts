@@ -37,7 +37,7 @@ export const authOptions: NextAuthOptions = {
           rol: usuario.rol,
           unidadId: usuario.unidadId,
           unidadNombre: usuario.unidad?.nombre || null,
-          pinCode: usuario.pinCode,
+          hasPin: !!usuario.pinCode,
         };
       },
     }),
@@ -49,8 +49,8 @@ export const authOptions: NextAuthOptions = {
         token.rol = (user as any).rol;
         token.unidadId = (user as any).unidadId;
         token.unidadNombre = (user as any).unidadNombre;
-        token.pinCode = (user as any).pinCode;
         token.pinVerified = false;
+        // pinCode nunca viaja en el token — verify-pin consulta la BD directamente
       }
       if (trigger === "update" && session) {
         if (session.pinVerified !== undefined) token.pinVerified = session.pinVerified;

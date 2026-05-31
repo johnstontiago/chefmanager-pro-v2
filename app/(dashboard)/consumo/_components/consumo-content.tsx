@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { apiFetch } from "@/lib/api-client";
 import {
   UtensilsCrossed,
   Search,
@@ -158,7 +159,7 @@ export default function ConsumoContent({ userRole }: ConsumoContentProps) {
     try {
       setSaving(true);
 
-      const res = await fetch("/api/movimientos", {
+      const res = await apiFetch("/api/movimientos", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -171,7 +172,7 @@ export default function ConsumoContent({ userRole }: ConsumoContentProps) {
         }),
       });
 
-      if (!res.ok) throw new Error("Error al registrar");
+      if (!res.ok && res.status !== 202) throw new Error("Error al registrar");
 
       toast({
         title: tipoMovimiento === "consumo" ? "Consumo registrado" : "Merma registrada",

@@ -20,6 +20,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import UnitSelector from "./unit-selector";
+import SyncStatus from "@/components/sync-status";
 
 interface DashboardShellProps {
     user: any;
@@ -197,6 +198,9 @@ export default function DashboardShell({ user, children }: DashboardShellProps) 
                       </main>
               </div>
         
+          {/* Indicador de estado de conexión / cola offline */}
+          <SyncStatus />
+
           {/* Unit Selector Modal */}
           {showUnitSelector && (
                   <UnitSelector

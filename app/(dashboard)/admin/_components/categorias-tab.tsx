@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { apiFetch } from "@/lib/api-client";
 import { Tags, Plus, Search, Edit2, Trash2, Loader2, Save } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -50,7 +51,7 @@ export default function CategoriasTab() {
     }
     try {
       setSaving(true);
-      const res = await fetch(editingItem ? `/api/categorias/${editingItem.id}` : "/api/categorias", {
+      const res = await apiFetch(editingItem ? `/api/categorias/${editingItem.id}` : "/api/categorias", {
         method: editingItem ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ nombre }),
@@ -69,7 +70,7 @@ export default function CategoriasTab() {
   const handleDelete = async () => {
     if (!deleteItem) return;
     try {
-      const res = await fetch(`/api/categorias/${deleteItem.id}`, { method: "DELETE" });
+      const res = await apiFetch(`/api/categorias/${deleteItem.id}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Error");
       toast({ title: "Categoría eliminada" });
       setDeleteItem(null);

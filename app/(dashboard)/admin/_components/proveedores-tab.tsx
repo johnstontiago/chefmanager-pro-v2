@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { apiFetch } from "@/lib/api-client";
 import { Truck, Plus, Search, Edit2, Trash2, Loader2, Save, Phone, Mail, User } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -27,7 +28,7 @@ export default function ProveedoresTab() {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const res = await fetch("/api/proveedores");
+      const res = await apiFetch("/api/proveedores");
       if (res.ok) {
         const data = await res.json();
         setProveedores(data?.proveedores || []);
@@ -60,7 +61,7 @@ export default function ProveedoresTab() {
     }
     try {
       setSaving(true);
-      const res = await fetch(editingItem ? `/api/proveedores/${editingItem.id}` : "/api/proveedores", {
+      const res = await apiFetch(editingItem ? `/api/proveedores/${editingItem.id}` : "/api/proveedores", {
         method: editingItem ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
@@ -79,7 +80,7 @@ export default function ProveedoresTab() {
   const handleDelete = async () => {
     if (!deleteItem) return;
     try {
-      const res = await fetch(`/api/proveedores/${deleteItem.id}`, { method: "DELETE" });
+      const res = await apiFetch(`/api/proveedores/${deleteItem.id}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Error");
       toast({ title: "Proveedor eliminado" });
       setDeleteItem(null);
