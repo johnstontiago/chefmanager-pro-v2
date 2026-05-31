@@ -245,12 +245,12 @@ export default function ConsumoContent({ userRole }: ConsumoContentProps) {
       </div>
 
       <Tabs defaultValue="registrar">
-        <TabsList>
-          <TabsTrigger value="registrar" className="flex items-center space-x-2">
+        <TabsList className="w-full sm:w-auto">
+          <TabsTrigger value="registrar" className="flex-1 sm:flex-none flex items-center justify-center gap-2">
             <UtensilsCrossed className="w-4 h-4" />
             <span>Registrar</span>
           </TabsTrigger>
-          <TabsTrigger value="historial" className="flex items-center space-x-2">
+          <TabsTrigger value="historial" className="flex-1 sm:flex-none flex items-center justify-center gap-2">
             <History className="w-4 h-4" />
             <span>Historial</span>
           </TabsTrigger>
@@ -258,31 +258,33 @@ export default function ConsumoContent({ userRole }: ConsumoContentProps) {
 
         <TabsContent value="registrar" className="mt-6">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* QR Search */}
-            <Card className="lg:col-span-3">
+            {/* QR Search — siempre arriba */}
+            <Card className="lg:col-span-3 order-1">
               <CardContent className="py-4 space-y-3">
                 <div className="flex flex-wrap items-center gap-3">
-                  <div className="flex items-center space-x-2 flex-shrink-0">
+                  <div className="flex items-center gap-2 flex-shrink-0">
                     <QrCode className="w-6 h-6 text-blue-600" />
                     <span className="font-medium">Búsqueda rápida por código</span>
                   </div>
                   <div className="flex-1 min-w-0 w-full sm:w-auto">
-                    <div className="flex space-x-2">
+                    <div className="flex gap-2">
                       <Input
                         placeholder="Ingresa código QR/único..."
                         value={codigoQR}
                         onChange={(e) => setCodigoQR(e.target.value)}
                         onKeyDown={(e) => e.key === "Enter" && buscarPorQR()}
-                        className="min-w-0"
+                        className="min-w-0 flex-1"
                       />
-                      <Button onClick={buscarPorQR} variant="outline" className="flex-shrink-0">Buscar</Button>
+                      <Button onClick={buscarPorQR} variant="outline" className="flex-shrink-0 px-3">
+                        Buscar
+                      </Button>
                       <Button
                         onClick={() => setShowQrScanner((v) => !v)}
                         variant={showQrScanner ? "default" : "outline"}
-                        className={`flex-shrink-0 ${showQrScanner ? "bg-blue-600 hover:bg-blue-700" : ""}`}
+                        className={`flex-shrink-0 px-3 ${showQrScanner ? "bg-blue-600 hover:bg-blue-700" : ""}`}
                       >
-                        <QrCode className="w-4 h-4 mr-2" />
-                        {showQrScanner ? "Cerrar cámara" : "Escanear"}
+                        <QrCode className="w-4 h-4 sm:mr-2" />
+                        <span className="hidden sm:inline">{showQrScanner ? "Cerrar cámara" : "Escanear"}</span>
                       </Button>
                     </div>
                   </div>
@@ -299,88 +301,9 @@ export default function ConsumoContent({ userRole }: ConsumoContentProps) {
               </CardContent>
             </Card>
 
-            {/* Product Search */}
-            <div className="lg:col-span-2 space-y-4">
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="flex items-center space-x-2">
-                    <Package className="w-5 h-5 text-blue-600" />
-                    <span>Seleccionar Producto</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="relative mb-4">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
-                    <Input
-                      placeholder="Buscar producto..."
-                      value={busqueda}
-                      onChange={(e) => setBusqueda(e.target.value)}
-                      className="pl-10"
-                    />
-                  </div>
-
-                  <div className="space-y-3 max-h-[60vh] overflow-y-auto">
-                    {productosFiltrados.length === 0 ? (
-                      <div className="text-center py-8 text-slate-500">
-                        <Package className="w-12 h-12 mx-auto mb-3 opacity-30" />
-                        <p>No hay productos con stock</p>
-                      </div>
-                    ) : (
-                      productosFiltrados.map((prod) => {
-                        const lotes = inventarioByProducto[prod.id] || [];
-                        return (
-                          <div key={prod.id} className="border rounded-lg p-4 hover:bg-slate-50">
-                            <h4 className="font-semibold text-slate-800 mb-2">{prod.nombre}</h4>
-                            <div className="space-y-2">
-                              {lotes.map((inv: any) => (
-                                <div
-                                  key={inv.id}
-                                  className={`flex items-center justify-between p-3 rounded-lg cursor-pointer transition-colors ${
-                                    selectedItem?.id === inv.id
-                                      ? "bg-blue-100 border-blue-300 border"
-                                      : "bg-slate-100 hover:bg-slate-200"
-                                  }`}
-                                  onClick={() => seleccionarLote(inv)}
-                                >
-                                  <div className="flex items-center space-x-3">
-                                    {inv.lote && (
-                                      <span className="flex items-center text-sm">
-                                        <Tag className="w-4 h-4 mr-1 text-slate-400" />
-                                        {inv.lote}
-                                      </span>
-                                    )}
-                                    {inv.ubicacion && (
-                                      <span className="flex items-center text-sm">
-                                        <MapPin className="w-4 h-4 mr-1 text-slate-400" />
-                                        {inv.ubicacion}
-                                      </span>
-                                    )}
-                                    {inv.fechaCaducidad && (
-                                      <span className="flex items-center text-sm">
-                                        <Calendar className="w-4 h-4 mr-1 text-slate-400" />
-                                        {formatDate(inv.fechaCaducidad)}
-                                      </span>
-                                    )}
-                                    {getExpiryBadge(inv)}
-                                  </div>
-                                  <span className="font-semibold">
-                                    {formatDecimal(inv.cantidad)} {prod.unidadMedida}
-                                  </span>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        );
-                      })
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Registration Form */}
-            <div>
-              <Card className="sticky top-24">
+            {/* Formulario — orden 2 en móvil (justo tras QR), columna derecha en desktop */}
+            <div className="order-2 lg:order-3">
+              <Card className="lg:sticky top-24">
                 <CardHeader className="pb-3">
                   <CardTitle className="flex items-center space-x-2">
                     <UtensilsCrossed className="w-5 h-5 text-blue-600" />
@@ -492,6 +415,85 @@ export default function ConsumoContent({ userRole }: ConsumoContentProps) {
                 </CardContent>
               </Card>
             </div>
+
+            {/* Lista de productos — orden 3 en móvil, col-span-2 en desktop */}
+            <div className="lg:col-span-2 space-y-4 order-3 lg:order-2">
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center gap-2">
+                    <Package className="w-5 h-5 text-blue-600" />
+                    <span>Seleccionar Producto</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="relative mb-4">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <Input
+                      placeholder="Buscar producto..."
+                      value={busqueda}
+                      onChange={(e) => setBusqueda(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
+
+                  <div className="space-y-3 max-h-[60vh] overflow-y-auto">
+                    {productosFiltrados.length === 0 ? (
+                      <div className="text-center py-8 text-slate-500">
+                        <Package className="w-12 h-12 mx-auto mb-3 opacity-30" />
+                        <p>No hay productos con stock</p>
+                      </div>
+                    ) : (
+                      productosFiltrados.map((prod) => {
+                        const lotes = inventarioByProducto[prod.id] || [];
+                        return (
+                          <div key={prod.id} className="border rounded-lg p-3 hover:bg-slate-50">
+                            <h4 className="font-semibold text-slate-800 mb-2">{prod.nombre}</h4>
+                            <div className="space-y-2">
+                              {lotes.map((inv: any) => (
+                                <div
+                                  key={inv.id}
+                                  className={`flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 rounded-lg cursor-pointer transition-colors gap-1 ${
+                                    selectedItem?.id === inv.id
+                                      ? "bg-blue-100 border-blue-300 border"
+                                      : "bg-slate-100 hover:bg-slate-200"
+                                  }`}
+                                  onClick={() => seleccionarLote(inv)}
+                                >
+                                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                                    {inv.lote && (
+                                      <span className="flex items-center text-sm">
+                                        <Tag className="w-4 h-4 mr-1 text-slate-400" />
+                                        {inv.lote}
+                                      </span>
+                                    )}
+                                    {inv.ubicacion && (
+                                      <span className="flex items-center text-sm">
+                                        <MapPin className="w-4 h-4 mr-1 text-slate-400" />
+                                        {inv.ubicacion}
+                                      </span>
+                                    )}
+                                    {inv.fechaCaducidad && (
+                                      <span className="flex items-center text-sm">
+                                        <Calendar className="w-4 h-4 mr-1 text-slate-400" />
+                                        {formatDate(inv.fechaCaducidad)}
+                                      </span>
+                                    )}
+                                    {getExpiryBadge(inv)}
+                                  </div>
+                                  <span className="font-semibold text-sm sm:text-base">
+                                    {formatDecimal(inv.cantidad)} {prod.unidadMedida}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </TabsContent>
 
@@ -509,10 +511,10 @@ export default function ConsumoContent({ userRole }: ConsumoContentProps) {
               ) : (
                 <div className="space-y-3">
                   {movimientos.map((mov) => (
-                    <div key={mov.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
-                      <div className="flex items-center space-x-3">
-                        {getMovementIcon(mov.tipo)}
-                        <div>
+                    <div key={mov.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 bg-slate-50 rounded-lg gap-3">
+                      <div className="flex items-start gap-3">
+                        <div className="mt-0.5 flex-shrink-0">{getMovementIcon(mov.tipo)}</div>
+                        <div className="min-w-0">
                           <p className="font-medium text-slate-800">{mov.producto?.nombre}</p>
                           <p className="text-sm text-slate-500">
                             {formatDecimal(mov.cantidad)} {mov.producto?.unidadMedida}
@@ -521,10 +523,12 @@ export default function ConsumoContent({ userRole }: ConsumoContentProps) {
                           {mov.notas && <p className="text-xs text-slate-400 mt-1">{mov.notas}</p>}
                         </div>
                       </div>
-                      <div className="text-right">
+                      <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-start gap-2 sm:gap-1 pl-7 sm:pl-0 flex-shrink-0">
                         {getMovementBadge(mov.tipo)}
-                        <p className="text-sm text-slate-600 mt-1">{formatDateTime(mov.fecha)}</p>
-                        <p className="text-xs text-slate-400">{mov.usuario?.nombre}</p>
+                        <div className="text-right">
+                          <p className="text-xs text-slate-600">{formatDateTime(mov.fecha)}</p>
+                          <p className="text-xs text-slate-400">{mov.usuario?.nombre}</p>
+                        </div>
                       </div>
                     </div>
                   ))}

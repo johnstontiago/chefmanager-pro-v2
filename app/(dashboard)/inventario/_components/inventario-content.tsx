@@ -258,9 +258,9 @@ export default function InventarioContent({ userRole }: InventarioContentProps) 
       {/* Filters */}
       <Card>
         <CardContent className="py-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="relative col-span-2 md:col-span-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <Input
                 placeholder="Buscar producto..."
                 value={busqueda}
@@ -338,41 +338,41 @@ export default function InventarioContent({ userRole }: InventarioContentProps) 
                   <Collapsible key={prod.id} open={isExpanded} onOpenChange={() => toggleExpand(prod.id)}>
                     <div className={`rounded-lg border ${prod.isLowStock ? "border-red-200 bg-red-50" : prod.proximoACaducar ? "border-yellow-200 bg-yellow-50" : "border-slate-200 bg-slate-50"}`}>
                       <CollapsibleTrigger asChild>
-                        <div className="flex items-center justify-between p-4 cursor-pointer hover:bg-slate-100 transition-colors">
-                          <div className="flex items-center space-x-4 flex-1">
-                            <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center shadow-sm">
+                        <div className="flex items-center justify-between p-3 sm:p-4 cursor-pointer hover:bg-slate-100 transition-colors gap-2">
+                          <div className="flex items-center gap-3 flex-1 min-w-0">
+                            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white rounded-lg flex items-center justify-center shadow-sm flex-shrink-0">
                               {isExpanded ? (
-                                <ChevronDown className="w-5 h-5 text-slate-400" />
+                                <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5 text-slate-400" />
                               ) : (
-                                <ChevronRight className="w-5 h-5 text-slate-400" />
+                                <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-slate-400" />
                               )}
                             </div>
                             <div className="flex-1 min-w-0">
-                              <div className="flex items-center space-x-2 mb-1">
-                                <h4 className="font-semibold text-slate-800 truncate">{prod.nombre}</h4>
+                              <div className="flex flex-wrap items-center gap-1 mb-1">
+                                <h4 className="font-semibold text-slate-800 text-sm sm:text-base">{prod.nombre}</h4>
                                 {getStockBadge(prod)}
                               </div>
-                              <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-500">
+                              <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs sm:text-sm text-slate-500">
                                 <span>{prod.categoria?.nombre || "-"}</span>
-                                <span>{prod.proveedor?.nombre || "Sin proveedor"}</span>
+                                <span className="hidden sm:inline">{prod.proveedor?.nombre || "Sin proveedor"}</span>
                                 <span>{formatCurrency(prod.precioUnitario)}/{prod.unidadMedida}</span>
                               </div>
                             </div>
                           </div>
-                          <div className="text-right ml-4">
-                            <div className="flex items-baseline space-x-2">
-                              <span className={`text-2xl font-bold ${prod.isLowStock ? "text-red-600" : "text-slate-800"}`}>
+                          <div className="text-right flex-shrink-0 ml-1">
+                            <div className="flex items-baseline gap-1">
+                              <span className={`text-lg sm:text-2xl font-bold ${prod.isLowStock ? "text-red-600" : "text-slate-800"}`}>
                                 {formatDecimal(prod.stockTotal)}
                               </span>
-                              <span className="text-sm text-slate-500">{prod.unidadMedida}</span>
+                              <span className="text-xs sm:text-sm text-slate-500">{prod.unidadMedida}</span>
                             </div>
-                            <div className="w-24 h-2 bg-slate-200 rounded-full mt-2">
+                            <div className="w-16 sm:w-24 h-2 bg-slate-200 rounded-full mt-1 sm:mt-2">
                               <div
                                 className={`h-2 rounded-full ${prod.isLowStock ? "bg-red-500" : "bg-green-500"}`}
                                 style={{ width: `${stockPercent}%` }}
                               />
                             </div>
-                            <p className="text-xs text-slate-400 mt-1">Mín: {formatDecimal(prod.stockMinimo)}</p>
+                            <p className="text-xs text-slate-400 mt-0.5">Mín: {formatDecimal(prod.stockMinimo)}</p>
                           </div>
                         </div>
                       </CollapsibleTrigger>
@@ -385,8 +385,8 @@ export default function InventarioContent({ userRole }: InventarioContentProps) 
                           ) : (
                             <div className="grid gap-2">
                               {prod.lotes.map((inv: any) => (
-                                <div key={inv.id} className="flex items-center justify-between p-3 bg-white rounded-lg border">
-                                  <div className="flex items-center space-x-4">
+                                <div key={inv.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 bg-white rounded-lg border gap-2">
+                                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                                     {inv.lote && (
                                       <span className="flex items-center text-sm">
                                         <Tag className="w-4 h-4 mr-1 text-slate-400" />
@@ -400,20 +400,20 @@ export default function InventarioContent({ userRole }: InventarioContentProps) 
                                       </span>
                                     )}
                                     {inv.codigoUnico && (
-                                      <span className="flex items-center text-sm">
-                                        <QrCode className="w-4 h-4 mr-1 text-slate-400" />
+                                      <span className="flex items-center text-xs text-slate-400">
+                                        <QrCode className="w-3 h-3 mr-1" />
                                         {inv.codigoUnico}
                                       </span>
                                     )}
                                   </div>
-                                  <div className="flex items-center space-x-4">
+                                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 sm:justify-end">
                                     {inv.fechaCaducidad && (
                                       <span className="flex items-center text-sm">
                                         <Calendar className="w-4 h-4 mr-1 text-slate-400" />
                                         {formatDate(inv.fechaCaducidad)}
-                                        <span className="ml-2">{getExpiryBadge(inv)}</span>
                                       </span>
                                     )}
+                                    {getExpiryBadge(inv)}
                                     <span className="font-semibold text-slate-800">
                                       {formatDecimal(inv.cantidad)} {prod.unidadMedida}
                                     </span>
