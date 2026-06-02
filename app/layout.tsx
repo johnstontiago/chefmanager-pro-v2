@@ -26,8 +26,8 @@ export const metadata: Metadata = {
     title: "ChefManager Pro",
   },
   icons: {
-    icon: "/favicon.svg",
-    shortcut: "/favicon.svg",
+    icon: "/favicon.png",
+    shortcut: "/favicon.png",
     apple: "/icons/icon-180.png",
   },
   openGraph: {
