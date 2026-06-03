@@ -53,41 +53,12 @@ export class CPCLPrinter {
 
   async printLabel(data: LabelData, config: LabelConfig = DEFAULT_LABEL_CONFIG): Promise<void> {
     if (!this.characteristic) throw new Error("Impresora no conectada");
-    const char = this.characteristic;
 
-    const res = await fetch("/api/print/cpcl", {
-      method:  "POST",
-      headers: { "Content-Type": "application/json" },
-      body:    JSON.stringify({ data, config }),
-    });
-    if (!res.ok) throw new Error("Error al generar CPCL en el servidor");
-    const { cpcl } = await res.json() as { cpcl: string };
+    const cpcl  = buildCPCLForPrint(data, config);
+    const bytes = new TextEncoder().encode(cpcl);
 
-    // Separar PRINT del resto para enviarlo tras una pausa de drenaje
-    const printSuffix     = "\r\nPRINT\r\n";
-    const hasTrailingPrint = cpcl.endsWith(printSuffix);
-    const body            = hasTrailingPrint ? cpcl.slice(0, -printSuffix.length) : cpcl;
-    const useAck          = char.properties.write;
-
-    const sendBytes = async (bytes: Uint8Array) => {
-      for (let i = 0; i < bytes.length; i += 20) {
-        const chunk = bytes.slice(i, i + 20);
-        if (useAck) {
-          await char.writeValueWithResponse(chunk);
-        } else {
-          await char.writeValueWithoutResponse(chunk);
-          await new Promise<void>((r) => setTimeout(r, 30));
-        }
-      }
-    };
-
-    await sendBytes(new TextEncoder().encode(body));
-
-    // Pausa para que la impresora drene su buffer antes de recibir PRINT
-    await new Promise<void>((r) => setTimeout(r, 600));
-
-    if (hasTrailingPrint) {
-      await sendBytes(new TextEncoder().encode(printSuffix));
+    for (let i = 0; i < bytes.length; i += 20) {
+      await this.characteristic.writeValueWithoutResponse(bytes.slice(i, i + 20));
     }
   }
 
@@ -104,7 +75,6 @@ export class CPCLPrinter {
   }
 }
 
-// Comandos CPCL de texto/líneas/cajas (sin QR ni PRINT)
 function buildLabelCommands(
   { nombre, fabricante, lote, cadEmbalaje, codigoUnico, cantidad }: LabelData,
   cfg: LabelConfig,
@@ -148,18 +118,26 @@ function buildLabelCommands(
   ];
 }
 
-// Preview de texto para el panel debug (BARCODE QR como referencia visual)
-export function buildCPCL(data: LabelData, cfg: LabelConfig): string {
+// Para impresión real: prefijo MA, tal como lo requiere el firmware de la VAVUPO P1
+function buildCPCLForPrint(data: LabelData, cfg: LabelConfig): string {
   const cmds = buildLabelCommands(data, cfg);
-  const M    = 3;
-  const nModApprox = 21; // versión 1 QR (típica para códigos cortos)
-  const sz   = nModApprox * M;
-  const xQR  = LABEL_W - sz - 10;
-  const yQR  = cfg.altoLabel - sz - 10;
   return [
     ...cmds,
-    `BARCODE QR ${xQR} ${yQR} M ${M} U 7`,
-    data.codigoUnico,
+    `BARCODE QR ${cfg.xQR} ${cfg.yQR} M ${cfg.tamanoQR} U 7`,
+    `MA,${data.codigoUnico}`,
+    "ENDQR",
+    "PRINT",
+    "",
+  ].join("\r\n");
+}
+
+// Para el panel debug (preview de texto)
+export function buildCPCL(data: LabelData, cfg: LabelConfig): string {
+  const cmds = buildLabelCommands(data, cfg);
+  return [
+    ...cmds,
+    `BARCODE QR ${cfg.xQR} ${cfg.yQR} M ${cfg.tamanoQR} U 7`,
+    `MA,${data.codigoUnico}`,
     "ENDQR",
     "PRINT",
     "",
