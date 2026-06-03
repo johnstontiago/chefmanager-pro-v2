@@ -39,8 +39,8 @@ export async function POST(req: Request) {
   const t = (x: number, y: number, fnt: string, txt: string) =>
     `TEXT ${x},${y},"${fnt}",0,1,1,"${txt}"`;
 
-  // cell_width: 2 = muy pequeño, 3 = pequeño, 4 = normal — se mapea desde tamanoQR (1-5)
-  const qrCell = Math.max(2, Math.min(4, cfg.tamanoQR));
+  // cell_width: dots por módulo QR (5 = ~105 dots para versión 1, legible con cámara)
+  const qrCell = Math.max(5, Math.min(8, cfg.tamanoQR));
 
   const lines = [
     `SIZE 50 mm,60 mm`,

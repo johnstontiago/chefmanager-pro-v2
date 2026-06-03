@@ -33,7 +33,7 @@ export const DEFAULT_LABEL_CONFIG: LabelConfig = {
   fuente:    4,
   xQR:       249,
   yQR:       327,
-  tamanoQR:  3,
+  tamanoQR:  5,
 };
 
 export class CPCLPrinter {
