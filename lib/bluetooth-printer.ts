@@ -53,12 +53,28 @@ export class CPCLPrinter {
 
   async printLabel(data: LabelData, config: LabelConfig = DEFAULT_LABEL_CONFIG): Promise<void> {
     if (!this.characteristic) throw new Error("Impresora no conectada");
+    const char = this.characteristic;
 
-    const cpcl  = buildCPCLForPrint(data, config);
-    const bytes = new TextEncoder().encode(cpcl);
+    // CPCL generado server-side: qrcode.create() solo funciona en Node.js, no en browser
+    const res = await fetch("/api/print/cpcl", {
+      method:  "POST",
+      headers: { "Content-Type": "application/json" },
+      body:    JSON.stringify({ data, config }),
+    });
+    if (!res.ok) throw new Error("Error al generar CPCL");
+    const { cpcl } = await res.json() as { cpcl: string };
+
+    const bytes  = new TextEncoder().encode(cpcl);
+    const useAck = char.properties.write;
 
     for (let i = 0; i < bytes.length; i += 20) {
-      await this.characteristic.writeValueWithoutResponse(bytes.slice(i, i + 20));
+      const chunk = bytes.slice(i, i + 20);
+      if (useAck) {
+        await char.writeValueWithResponse(chunk);
+      } else {
+        await char.writeValueWithoutResponse(chunk);
+        await new Promise<void>((r) => setTimeout(r, 10));
+      }
     }
   }
 
