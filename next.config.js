@@ -43,8 +43,9 @@ const nextConfig = {
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
           {
             // camera=(self) permite el lector QR en /recepcion
+            // bluetooth=(self) permite la impresora de etiquetas VAVUPO P1
             key: "Permissions-Policy",
-            value: "camera=(self), microphone=(), geolocation=()",
+            value: "camera=(self), microphone=(), geolocation=(), bluetooth=(self)",
           },
           {
             // HSTS: fuerza HTTPS durante 1 año, incluye subdominios

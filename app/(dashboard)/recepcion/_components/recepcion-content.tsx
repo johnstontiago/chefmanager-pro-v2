@@ -5,6 +5,7 @@ import { apiFetch } from "@/lib/api-client";
 import {
   Package, Truck, History, Loader2, AlertTriangle,
   CheckCircle, Calendar, ArrowRight, Download, XCircle,
+  Printer, Bluetooth,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -25,6 +26,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { formatCurrency, formatDate, formatDecimal, toNumber, generateUniqueCode } from "@/lib/utils";
+import { useBluetoothPrinter } from "@/hooks/use-bluetooth-printer";
 
 interface RecepcionContentProps {
   userRole: string;
@@ -65,6 +67,7 @@ const clearLocal = (pedidoId: number) => {
 
 export default function RecepcionContent({ userRole }: RecepcionContentProps) {
   const { toast } = useToast();
+  const { status: printerStatus, deviceName, isSupported: bluetoothSupported, connect: connectPrinter, printLabel } = useBluetoothPrinter();
   const [pedidosPendientes, setPedidosPendientes] = useState<any[]>([]);
   const [historialRecepciones, setHistorialRecepciones] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -257,7 +260,22 @@ export default function RecepcionContent({ userRole }: RecepcionContentProps) {
       saveToLocal(selectedPedido.id, newItemStates);
       setItemStates(newItemStates);
 
-      toast({ title: `${drawerItem.producto?.nombre} registrado en inventario` });
+      if (printerStatus === "connected") {
+        try {
+          await printLabel({
+            nombre:      drawerItem.producto?.nombre ?? "",
+            lote:        drawerForm.lote,
+            cadEmbalaje: drawerForm.fechaCaducidad,
+            codigoUnico: drawerForm.codigoUnico,
+            cantidad:    drawerForm.cantidadRecibida,
+          });
+          toast({ title: `${drawerItem.producto?.nombre} registrado · Etiqueta impresa` });
+        } catch {
+          toast({ title: `${drawerItem.producto?.nombre} registrado`, description: "No se pudo imprimir la etiqueta" });
+        }
+      } else {
+        toast({ title: `${drawerItem.producto?.nombre} registrado en inventario` });
+      }
       setDrawerItem(null);
       setDrawerForm(null);
 
@@ -448,14 +466,34 @@ export default function RecepcionContent({ userRole }: RecepcionContentProps) {
                 {itemsRecibidosCount} de {selectedPedido.items?.length} ítems registrados
               </p>
             </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-slate-500"
-              onClick={() => { setSelectedPedido(null); setItemStates({}); }}
-            >
-              Volver
-            </Button>
+            <div className="flex items-center gap-2">
+              {bluetoothSupported && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={connectPrinter}
+                  disabled={printerStatus === "connecting" || printerStatus === "printing"}
+                  className={printerStatus === "connected" ? "border-green-500 text-green-600" : ""}
+                >
+                  {printerStatus === "connecting" || printerStatus === "printing" ? (
+                    <Loader2 className="w-4 h-4 animate-spin mr-1" />
+                  ) : printerStatus === "connected" ? (
+                    <Bluetooth className="w-4 h-4 mr-1" />
+                  ) : (
+                    <Printer className="w-4 h-4 mr-1" />
+                  )}
+                  {printerStatus === "connected" ? (deviceName ?? "Conectado") : "Impresora"}
+                </Button>
+              )}
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-slate-500"
+                onClick={() => { setSelectedPedido(null); setItemStates({}); }}
+              >
+                Volver
+              </Button>
+            </div>
           </div>
 
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-800">
