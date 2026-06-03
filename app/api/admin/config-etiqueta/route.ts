@@ -9,8 +9,8 @@ const DEFAULT = {
   xMargen:   15,
   espaciado: 38,
   fuente:    4,
-  xQR:       205,
-  yQR:       300,
+  xQR:       195,
+  yQR:       285,
   tamanoQR:  3,
 };
 

@@ -32,8 +32,8 @@ export const DEFAULT_LABEL_CONFIG: LabelConfig = {
   xMargen:   15,
   espaciado: 38,
   fuente:    4,
-  xQR:       205,
-  yQR:       300,
+  xQR:       195,
+  yQR:       285,
   tamanoQR:  3,
 };
 
@@ -130,8 +130,8 @@ function buildCPCL(
     `BOX ${boxX1} ${boxY1} ${boxX2} ${boxY2} 2`,
     `TEXT ${f} 0 ${x} ${yCodUnico} Cod. Unico:`,
     `TEXT 3 0 ${x} ${yCodValor} ${codigoUnico}`,
-    // QR: M 5 = tamaño fijo (5 dots/módulo). U 2 = corrección M (15%).
-    `BARCODE QR ${cfg.xQR} ${cfg.yQR} M 5 U 2`,
+    // QR: M 6 = tamaño fijo (6 dots/módulo). U 2 = corrección M (15%).
+    `BARCODE QR ${cfg.xQR} ${cfg.yQR} M 6 U 2`,
     `MA,${codigoUnico}`,
     "ENDQR",
     "PRINT",
