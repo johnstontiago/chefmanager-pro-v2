@@ -9,6 +9,7 @@ import {
   Users,
   FileText,
   Building2,
+  Printer,
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ProductosTab from "./productos-tab";
@@ -17,6 +18,7 @@ import CategoriasTab from "./categorias-tab";
 import UsuariosTab from "./usuarios-tab";
 import ReportesTab from "./reportes-tab";
 import UnidadesTab from "./unidades-tab";
+import EtiquetaTab from "./etiqueta-tab";
 
 interface AdminContentProps {
   userRole: string;
@@ -64,6 +66,10 @@ export default function AdminContent({ userRole }: AdminContentProps) {
             <FileText className="w-4 h-4" />
             <span>Reportes</span>
           </TabsTrigger>
+          <TabsTrigger value="etiqueta" className="flex items-center space-x-2">
+            <Printer className="w-4 h-4" />
+            <span>Etiqueta</span>
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="productos" className="mt-6">
@@ -92,6 +98,10 @@ export default function AdminContent({ userRole }: AdminContentProps) {
 
         <TabsContent value="reportes" className="mt-6">
           <ReportesTab />
+        </TabsContent>
+
+        <TabsContent value="etiqueta" className="mt-6">
+          <EtiquetaTab />
         </TabsContent>
       </Tabs>
     </div>

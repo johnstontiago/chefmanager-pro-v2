@@ -1,16 +1,31 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
-import { CPCLPrinter, type LabelData, type PrinterStatus } from "@/lib/bluetooth-printer";
+import { useState, useRef, useCallback, useEffect } from "react";
+import {
+  CPCLPrinter,
+  type LabelData,
+  type LabelConfig,
+  type PrinterStatus,
+  DEFAULT_LABEL_CONFIG,
+} from "@/lib/bluetooth-printer";
 
-export type { PrinterStatus, LabelData };
+export type { PrinterStatus, LabelData, LabelConfig };
 
 export function useBluetoothPrinter() {
   const printerRef             = useRef<CPCLPrinter>(new CPCLPrinter());
   const [status, setStatus]    = useState<PrinterStatus>("disconnected");
   const [deviceName, setDeviceName] = useState<string | null>(null);
+  const [labelConfig, setLabelConfig] = useState<LabelConfig>(DEFAULT_LABEL_CONFIG);
 
   const isSupported = typeof navigator !== "undefined" && "bluetooth" in navigator;
+
+  // Carga la config guardada en el servidor al montar
+  useEffect(() => {
+    fetch("/api/admin/config-etiqueta")
+      .then((r) => r.ok ? r.json() : null)
+      .then((d) => { if (d?.config) setLabelConfig(d.config); })
+      .catch(() => {});
+  }, []);
 
   const connect = useCallback(async () => {
     if (!isSupported) return;
@@ -27,13 +42,13 @@ export function useBluetoothPrinter() {
   const printLabel = useCallback(async (data: LabelData): Promise<void> => {
     setStatus("printing");
     try {
-      await printerRef.current.printLabel(data);
+      await printerRef.current.printLabel(data, labelConfig);
       setStatus("connected");
     } catch (err) {
       setStatus("error");
       throw err;
     }
-  }, []);
+  }, [labelConfig]);
 
   const disconnect = useCallback(() => {
     printerRef.current.disconnect();

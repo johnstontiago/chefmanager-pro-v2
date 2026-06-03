@@ -14,6 +14,28 @@ export interface LabelData {
   cantidad:    number;  // número de etiquetas a imprimir
 }
 
+export interface LabelConfig {
+  titulo:    string;   // texto del título
+  altoLabel: number;   // altura en dots (53mm = 417)
+  xMargen:   number;   // margen izquierdo del texto
+  espaciado: number;   // dots entre líneas de contenido
+  fuente:    number;   // font CPCL 0-7
+  xQR:       number;   // posición X del QR
+  yQR:       number;   // posición Y del QR
+  tamanoQR:  number;   // magnification M del QR (1-7)
+}
+
+export const DEFAULT_LABEL_CONFIG: LabelConfig = {
+  titulo:    "CHEFMANAGER PRO",
+  altoLabel: 417,
+  xMargen:   15,
+  espaciado: 38,
+  fuente:    4,
+  xQR:       205,
+  yQR:       300,
+  tamanoQR:  3,
+};
+
 export class CPCLPrinter {
   private device:         BluetoothDevice | null = null;
   private characteristic: BluetoothRemoteGATTCharacteristic | null = null;
@@ -31,10 +53,10 @@ export class CPCLPrinter {
     return this.device.name ?? "Impresora";
   }
 
-  async printLabel(data: LabelData): Promise<void> {
+  async printLabel(data: LabelData, config: LabelConfig = DEFAULT_LABEL_CONFIG): Promise<void> {
     if (!this.characteristic) throw new Error("Impresora no conectada");
 
-    const cpcl  = buildCPCL(data);
+    const cpcl  = buildCPCL(data, config);
     const bytes = new TextEncoder().encode(cpcl);
 
     // BLE tiene MTU de ~20 bytes para writeValueWithoutResponse
@@ -56,38 +78,57 @@ export class CPCLPrinter {
   }
 }
 
-// Etiqueta 43×53mm a 200 DPI → 338×417 dots
-// 43mm × (200/25.4) ≈ 338 dots ancho
-// 53mm × (200/25.4) ≈ 417 dots alto
-function buildCPCL({ nombre, lote, cadEmbalaje, codigoUnico, cantidad }: LabelData): string {
+// Etiqueta 43×53mm a 200 DPI → 338 dots ancho × 417 dots alto.
+// Todos los parámetros vienen de LabelConfig para que el panel admin los controle.
+function buildCPCL(
+  { nombre, lote, cadEmbalaje, codigoUnico, cantidad }: LabelData,
+  cfg: LabelConfig,
+): string {
   const loteStr = lote        || "---";
   const cadStr  = cadEmbalaje || "---";
   const copias  = Math.max(1, Math.round(cantidad));
+  const f = cfg.fuente;
+  const x = cfg.xMargen;
+  const s = cfg.espaciado;
+
+  // Centrado manual del título (font 4 ≈ 11 dots/carácter en VAVUPO P1)
+  const xTitulo = Math.max(0, Math.floor((338 - cfg.titulo.length * 11) / 2));
+
+  // Posiciones Y de las líneas de contenido, calculadas desde y0=57
+  const y0          = 57;
+  const yProducto   = y0;
+  const yLote       = y0 +   s;
+  const yCad        = y0 + 2*s;
+  const yApertura   = y0 + 3*s;
+  const yConsumir   = y0 + 4*s;
+  const yFechaCad   = y0 + 5*s;
+  const yMermas     = y0 + 6*s;
+  const yCodUnico   = yMermas + s;
+  const yCodValor   = yCodUnico + 28;
+
+  // Cuadro Mermas: a la derecha del texto, dentro del ancho de la etiqueta
+  const boxX1 = x + 110;
+  const boxY1 = yMermas - 8;
+  const boxX2 = Math.min(boxX1 + 75, 200);
+  const boxY2 = boxY1 + 36;
 
   return [
-    // 43mm × 53mm = 338 × 417 dots a 200 DPI
-    `! 0 200 200 417 ${copias}`,
+    `! 0 200 200 ${cfg.altoLabel} ${copias}`,
     "ON-FEED IGNORE",
-    // ── Título con espacio generoso ──────────────────────────────────────
-    "CENTER",
-    "TEXT 4 0 0 10 CHEFMANAGER PRO",
-    "LEFT",
-    "LINE 15 40 323 40 2",   // separador a 30 dots bajo el título
-    // ── Campos de datos — espaciado 38 dots por línea ────────────────────
-    `TEXT 4 0 15 55 Producto: ${nombre}`,
-    `TEXT 4 0 15 93 Lote: ${loteStr}`,
-    `TEXT 4 0 15 131 Cad. Emb.: ${cadStr}`,
-    "TEXT 4 0 15 169 Fecha Apertura:",
-    "TEXT 4 0 15 207 Consumir en:",       // sustituye "Consumir hasta... dias."
-    "TEXT 4 0 15 245 Fecha Cad.:",
-    "TEXT 4 0 15 283 Mermas:",
-    "BOX 125 275 198 310 2",              // cuadro Mermas (x=125..198)
-    "TEXT 4 0 15 325 Cod. Unico:",
-    `TEXT 3 0 15 350 ${codigoUnico}`,
-    // ── QR más abajo, al lado de Mermas/Cod.Unico ────────────────────────
-    // x=205: 205 + 111 dots (QR V3 M=3 con quiet zone) = 316 ✓ dentro de 338
-    // y=270: QR queda junto a Mermas y Cod.Unico, termina en y=381 ✓
-    "BARCODE QR 205 270 M 3 U 7",
+    `TEXT ${f} 0 ${xTitulo} 12 ${cfg.titulo}`,
+    "LINE 15 43 323 43 2",
+    `TEXT ${f} 0 ${x} ${yProducto} Producto: ${nombre}`,
+    `TEXT ${f} 0 ${x} ${yLote} Lote: ${loteStr}`,
+    `TEXT ${f} 0 ${x} ${yCad} Cad. Emb.: ${cadStr}`,
+    `TEXT ${f} 0 ${x} ${yApertura} Fecha Apertura:`,
+    `TEXT ${f} 0 ${x} ${yConsumir} Consumir en:`,
+    `TEXT ${f} 0 ${x} ${yFechaCad} Fecha Cad.:`,
+    `TEXT ${f} 0 ${x} ${yMermas} Mermas:`,
+    `BOX ${boxX1} ${boxY1} ${boxX2} ${boxY2} 2`,
+    `TEXT ${f} 0 ${x} ${yCodUnico} Cod. Unico:`,
+    `TEXT 3 0 ${x} ${yCodValor} ${codigoUnico}`,
+    // QR en el lado derecho — termina en yQR + ~111 dots (M=3, QR V3 con quiet zone)
+    `BARCODE QR ${cfg.xQR} ${cfg.yQR} M ${cfg.tamanoQR} U 7`,
     `MA,${codigoUnico}`,
     "ENDQR",
     "PRINT",

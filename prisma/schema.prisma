@@ -170,3 +170,19 @@ model Movimiento {
 
   @@map("movimientos")
 }
+
+// Configuración de la etiqueta de impresión CPCL (fila única, id=1)
+model ConfigEtiqueta {
+  id         Int      @id @default(1)
+  titulo     String   @default("CHEFMANAGER PRO")
+  altoLabel  Int      @default(417)  @map("alto_label")
+  xMargen    Int      @default(15)   @map("x_margen")
+  espaciado  Int      @default(38)
+  fuente     Int      @default(4)
+  xQR        Int      @default(205)  @map("x_qr")
+  yQR        Int      @default(300)  @map("y_qr")
+  tamanoQR   Int      @default(3)    @map("tamano_qr")
+  updatedAt  DateTime @updatedAt     @map("updated_at")
+
+  @@map("config_etiqueta")
+}
