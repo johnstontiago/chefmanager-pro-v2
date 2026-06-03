@@ -56,27 +56,40 @@ export class CPCLPrinter {
   }
 }
 
-// Etiqueta 50×60mm a 200 DPI → 394×472 dots
-// Diseño basado en la etiqueta de referencia del cliente.
+// Etiqueta 43×53mm a 200 DPI → 338×417 dots
+// 43mm × (200/25.4) ≈ 338 dots ancho
+// 53mm × (200/25.4) ≈ 417 dots alto
 function buildCPCL({ nombre, lote, cadEmbalaje, codigoUnico, cantidad }: LabelData): string {
   const loteStr = lote        || "---";
   const cadStr  = cadEmbalaje || "---";
   const copias  = Math.max(1, Math.round(cantidad));
 
   return [
-    `! 0 200 200 472 ${copias}`,
+    // Alto 417 dots = 53mm exactos
+    `! 0 200 200 417 ${copias}`,
     "ON-FEED IGNORE",
-    `TEXT 4 0 5 15 Producto: ${nombre}`,
-    `TEXT 4 0 5 50 Lote: ${loteStr}`,
-    `TEXT 4 0 5 85 Cad. Emb.: ${cadStr}`,
-    "TEXT 4 0 5 120 Fecha Apertura:",
-    "TEXT 4 0 5 155 Consumir hasta.......... dias.",
-    "TEXT 4 0 5 195 Fecha Cad.:",
-    "TEXT 4 0 5 235 Mermas:",
-    "BOX 115 227 250 263 2",
-    "TEXT 4 0 5 280 Cod. Unico:",
-    `TEXT 3 0 5 305 ${codigoUnico}`,
-    `BARCODE QR 240 215 M 6 U 7`,
+    // Título centrado
+    "CENTER",
+    "TEXT 4 0 0 5 CHEFMANAGER PRO",
+    "LEFT",
+    // Línea separadora bajo el título
+    "LINE 15 33 323 33 2",
+    // Campos de datos — X=15 para margen izquierdo seguro, Y cada 32 dots
+    `TEXT 4 0 15 43 Producto: ${nombre}`,
+    `TEXT 4 0 15 75 Lote: ${loteStr}`,
+    `TEXT 4 0 15 107 Cad. Emb.: ${cadStr}`,
+    "TEXT 4 0 15 139 Fecha Apertura:",
+    "TEXT 4 0 15 171 Consumir hasta...... dias.",
+    "TEXT 4 0 15 203 Fecha Cad.:",
+    "TEXT 4 0 15 237 Mermas:",
+    // Cuadro Mermas a la derecha del texto (x=125..198)
+    "BOX 125 229 198 264 2",
+    // Código único debajo del QR
+    "TEXT 4 0 15 305 Cod. Unico:",
+    `TEXT 3 0 15 330 ${codigoUnico}`,
+    // QR — x=205 para que quepa en 338 dots (205 + ~111 dots = 316 ✓)
+    // M=3: módulo 3 dots → QR V3 ≈ 111 dots con quiet zone → cabe en el ancho restante
+    "BARCODE QR 205 180 M 3 U 7",
     `MA,${codigoUnico}`,
     "ENDQR",
     "PRINT",
