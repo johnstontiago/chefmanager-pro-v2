@@ -115,9 +115,8 @@ function buildCPCL(
   const yLote       = y0 + 2*s;
   const yCad        = y0 + 3*s;
   const yApertura   = y0 + 4*s;
-  const yConsumir   = y0 + 5*s;
-  const yFechaCad   = y0 + 6*s;
-  const yMermas     = y0 + 7*s;
+  const yFechaCad   = y0 + 5*s;
+  const yMermas     = y0 + 6*s;
   const yCodUnico   = yMermas + s;
   const yCodValor   = yCodUnico + 28;
 
@@ -141,7 +140,6 @@ function buildCPCL(
     `TEXT ${f} 0 ${x} ${yLote} Lote: ${loteStr}`,
     `TEXT ${f} 0 ${x} ${yCad} Cad. Emb.: ${cadStr}`,
     `TEXT ${f} 0 ${x} ${yApertura} Fecha Apertura:`,
-    `TEXT ${f} 0 ${x} ${yConsumir} Consumir en:`,
     `TEXT ${f} 0 ${x} ${yFechaCad} Fecha Cad.:`,
     `TEXT ${f} 0 ${x} ${yMermas} Mermas:`,
     `BOX ${boxX1} ${boxY1} ${boxX2} ${boxY2} 2`,

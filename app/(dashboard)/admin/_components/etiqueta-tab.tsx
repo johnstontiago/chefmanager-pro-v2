@@ -68,7 +68,7 @@ export default function EtiquetaTab() {
   // Posiciones Y calculadas igual que buildCPCL
   const s   = cfg.espaciado;
   const y0  = 57;
-  const yMermas = y0 + 7 * s;
+  const yMermas = y0 + 6 * s;
 
   const lines = [
     { y: y0,           text: "Berenjena" },
@@ -76,8 +76,7 @@ export default function EtiquetaTab() {
     { y: y0 +   2*s,   text: "Lote: L394959421" },
     { y: y0 +   3*s,   text: "Cad. Emb.: 2026-06-12" },
     { y: y0 +   4*s,   text: "Fecha Apertura:" },
-    { y: y0 +   5*s,   text: "Consumir en:" },
-    { y: y0 +   6*s,   text: "Fecha Cad.:" },
+    { y: y0 +   5*s,   text: "Fecha Cad.:" },
     { y: yMermas,      text: "Mermas:" },
     { y: yMermas + s,  text: "Cod. Unico:" },
     { y: yMermas + s + 28, text: "INV-MXX-XXXX", small: true },
