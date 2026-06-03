@@ -10,16 +10,27 @@ const DEFAULT = {
   espaciado: 38,
   fuente:    4,
   xQR:       195,
-  yQR:       285,
+  yQR:       280,
   tamanoQR:  3,
 };
 
+// Valores viejos que necesitan migración automática
+const STALE = { xQR: 205, yQR: 300 };
+
 async function getConfig() {
-  return prisma.configEtiqueta.upsert({
+  const row = await prisma.configEtiqueta.upsert({
     where:  { id: 1 },
     update: {},
     create: { id: 1, ...DEFAULT },
   });
+  // Migración: si la BD todavía tiene los valores por defecto antiguos, actualiza a los nuevos
+  if (row.xQR === STALE.xQR && row.yQR === STALE.yQR) {
+    return prisma.configEtiqueta.update({
+      where: { id: 1 },
+      data:  { xQR: DEFAULT.xQR, yQR: DEFAULT.yQR },
+    });
+  }
+  return row;
 }
 
 export async function GET() {

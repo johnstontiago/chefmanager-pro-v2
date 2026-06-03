@@ -33,7 +33,7 @@ export const DEFAULT_LABEL_CONFIG: LabelConfig = {
   espaciado: 38,
   fuente:    4,
   xQR:       195,
-  yQR:       285,
+  yQR:       280,
   tamanoQR:  3,
 };
 
@@ -130,8 +130,9 @@ function buildCPCL(
     `BOX ${boxX1} ${boxY1} ${boxX2} ${boxY2} 2`,
     `TEXT ${f} 0 ${x} ${yCodUnico} Cod. Unico:`,
     `TEXT 3 0 ${x} ${yCodValor} ${codigoUnico}`,
-    // QR: M 6 = tamaño fijo (6 dots/módulo). U 2 = corrección M (15%).
-    `BARCODE QR ${cfg.xQR} ${cfg.yQR} M 6 U 2`,
+    // U 7 = versión QR-7 (45 módulos), el único valor que produce tamaño visible en VAVUPO P1.
+    // M 3 es requerido por el parser pero esta impresora lo ignora — el tamaño lo controla U.
+    `BARCODE QR ${cfg.xQR} ${cfg.yQR} M 3 U 7`,
     `MA,${codigoUnico}`,
     "ENDQR",
     "PRINT",
