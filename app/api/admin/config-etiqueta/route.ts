@@ -9,8 +9,8 @@ const DEFAULT = {
   xMargen:   15,
   espaciado: 45,
   fuente:    4,
-  xQR:       261,
-  yQR:       339,
+  xQR:       249,
+  yQR:       327,
   tamanoQR:  3,
 };
 
@@ -20,8 +20,8 @@ async function getConfig() {
     update: {},
     create: { id: 1, ...DEFAULT },
   });
-  // Migración: si espaciado ≤ 38 es la configuración vieja → actualizar todo
-  if (row.espaciado <= 38) {
+  // Migración: config vieja → espaciado ≤ 38 O altoLabel < 472 (etiqueta 43mm antigua)
+  if (row.espaciado <= 38 || row.altoLabel < 472) {
     return prisma.configEtiqueta.update({
       where: { id: 1 },
       data:  {

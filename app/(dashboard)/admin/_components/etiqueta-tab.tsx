@@ -83,8 +83,8 @@ export default function EtiquetaTab() {
     { y: yMermas + s + 28, text: "INV-MXX-XXXX", small: true },
   ];
 
-  // QR: U 6 → versión 6 (41 módulos × M 3) ≈ 123 dots
-  const QR_DOTS = 123;
+  // QR: U 7 → versión 7 (45 módulos × M 3 = 135 dots)
+  const QR_DOTS = 135;
   const xTitulo = Math.max(0, Math.floor((394 - cfg.titulo.length * 11) / 2));
   const labelH  = PX(cfg.altoLabel);
 

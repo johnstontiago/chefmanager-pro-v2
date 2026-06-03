@@ -28,7 +28,7 @@ export interface LabelConfig {
 
 // Dimensiones físicas de la etiqueta (50mm × 60mm a 200 DPI)
 const LABEL_W = 394;   // 50mm ancho
-const QR_DOTS = 123;   // U=6 → versión 6 (41 módulos × M 3) ≈ 10% menor que U=7
+const QR_DOTS = 135;   // U=7 → versión 7 (45 módulos × M 3 = 135 dots)
 
 export const DEFAULT_LABEL_CONFIG: LabelConfig = {
   titulo:    "CHEFMANAGER PRO",
@@ -36,8 +36,8 @@ export const DEFAULT_LABEL_CONFIG: LabelConfig = {
   xMargen:   15,
   espaciado: 45,    // mayor espaciado para usar toda la etiqueta
   fuente:    4,
-  xQR:       261,   // derecha: 394 − 123 − 10
-  yQR:       339,   // abajo: 472 − 123 − 10
+  xQR:       249,   // derecha: 394 − 135 − 10
+  yQR:       327,   // abajo: 472 − 135 − 10
   tamanoQR:  3,
 };
 
@@ -119,8 +119,8 @@ function buildCPCL(
   const boxY2 = boxY1 + 36;
 
   // QR: esquina inferior derecha de la etiqueta (alineado a márgenes)
-  const xQR = LABEL_W - QR_DOTS - 10;              // = 261
-  const yQR = cfg.altoLabel - QR_DOTS - 10;        // = 339 para 472 dots
+  const xQR = LABEL_W - QR_DOTS - 10;              // = 249 (394-135-10)
+  const yQR = cfg.altoLabel - QR_DOTS - 10;        // = 327 para 472 dots
 
   return [
     `! 0 200 200 ${cfg.altoLabel} ${copias}`,
@@ -138,8 +138,8 @@ function buildCPCL(
     `BOX ${boxX1} ${boxY1} ${boxX2} ${boxY2} 2`,
     `TEXT ${f} 0 ${x} ${yCodUnico} Cod. Unico:`,
     `TEXT 3 0 ${x} ${yCodValor} ${codigoUnico}`,
-    // U 6 = versión 6 (41 módulos, ~10% menor que U=7). QR esquina inferior derecha.
-    `BARCODE QR ${xQR} ${yQR} M 3 U 6`,
+    // U 7 = versión 7 (45 módulos × M 3 = 135 dots). Único valor confirmado en VAVUPO P1.
+    `BARCODE QR ${xQR} ${yQR} M 3 U 7`,
     `MA,${codigoUnico}`,
     "ENDQR",
     "PRINT",
