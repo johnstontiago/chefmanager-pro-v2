@@ -53,6 +53,7 @@ export class CPCLPrinter {
 
   async printLabel(data: LabelData, config: LabelConfig = DEFAULT_LABEL_CONFIG): Promise<void> {
     if (!this.characteristic) throw new Error("Impresora no conectada");
+    const char = this.characteristic;
 
     const res = await fetch("/api/print/cpcl", {
       method:  "POST",
@@ -62,17 +63,31 @@ export class CPCLPrinter {
     if (!res.ok) throw new Error("Error al generar CPCL en el servidor");
     const { cpcl } = await res.json() as { cpcl: string };
 
-    const bytes  = new TextEncoder().encode(cpcl);
-    const useAck = this.characteristic.properties.write;
+    // Separar PRINT del resto para enviarlo tras una pausa de drenaje
+    const printSuffix     = "\r\nPRINT\r\n";
+    const hasTrailingPrint = cpcl.endsWith(printSuffix);
+    const body            = hasTrailingPrint ? cpcl.slice(0, -printSuffix.length) : cpcl;
+    const useAck          = char.properties.write;
 
-    for (let i = 0; i < bytes.length; i += 20) {
-      const chunk = bytes.slice(i, i + 20);
-      if (useAck) {
-        await this.characteristic.writeValueWithResponse(chunk);
-      } else {
-        await this.characteristic.writeValueWithoutResponse(chunk);
-        await new Promise<void>((r) => setTimeout(r, 10));
+    const sendBytes = async (bytes: Uint8Array) => {
+      for (let i = 0; i < bytes.length; i += 20) {
+        const chunk = bytes.slice(i, i + 20);
+        if (useAck) {
+          await char.writeValueWithResponse(chunk);
+        } else {
+          await char.writeValueWithoutResponse(chunk);
+          await new Promise<void>((r) => setTimeout(r, 30));
+        }
       }
+    };
+
+    await sendBytes(new TextEncoder().encode(body));
+
+    // Pausa para que la impresora drene su buffer antes de recibir PRINT
+    await new Promise<void>((r) => setTimeout(r, 600));
+
+    if (hasTrailingPrint) {
+      await sendBytes(new TextEncoder().encode(printSuffix));
     }
   }
 
