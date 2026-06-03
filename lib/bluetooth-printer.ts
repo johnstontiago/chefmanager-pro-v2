@@ -65,31 +65,29 @@ function buildCPCL({ nombre, lote, cadEmbalaje, codigoUnico, cantidad }: LabelDa
   const copias  = Math.max(1, Math.round(cantidad));
 
   return [
-    // Alto 417 dots = 53mm exactos
+    // 43mm × 53mm = 338 × 417 dots a 200 DPI
     `! 0 200 200 417 ${copias}`,
     "ON-FEED IGNORE",
-    // Título centrado
+    // ── Título con espacio generoso ──────────────────────────────────────
     "CENTER",
-    "TEXT 4 0 0 5 CHEFMANAGER PRO",
+    "TEXT 4 0 0 10 CHEFMANAGER PRO",
     "LEFT",
-    // Línea separadora bajo el título
-    "LINE 15 33 323 33 2",
-    // Campos de datos — X=15 para margen izquierdo seguro, Y cada 32 dots
-    `TEXT 4 0 15 43 Producto: ${nombre}`,
-    `TEXT 4 0 15 75 Lote: ${loteStr}`,
-    `TEXT 4 0 15 107 Cad. Emb.: ${cadStr}`,
-    "TEXT 4 0 15 139 Fecha Apertura:",
-    "TEXT 4 0 15 171 Consumir hasta...... dias.",
-    "TEXT 4 0 15 203 Fecha Cad.:",
-    "TEXT 4 0 15 237 Mermas:",
-    // Cuadro Mermas a la derecha del texto (x=125..198)
-    "BOX 125 229 198 264 2",
-    // Código único debajo del QR
-    "TEXT 4 0 15 305 Cod. Unico:",
-    `TEXT 3 0 15 330 ${codigoUnico}`,
-    // QR — x=205 para que quepa en 338 dots (205 + ~111 dots = 316 ✓)
-    // M=3: módulo 3 dots → QR V3 ≈ 111 dots con quiet zone → cabe en el ancho restante
-    "BARCODE QR 205 180 M 3 U 7",
+    "LINE 15 40 323 40 2",   // separador a 30 dots bajo el título
+    // ── Campos de datos — espaciado 38 dots por línea ────────────────────
+    `TEXT 4 0 15 55 Producto: ${nombre}`,
+    `TEXT 4 0 15 93 Lote: ${loteStr}`,
+    `TEXT 4 0 15 131 Cad. Emb.: ${cadStr}`,
+    "TEXT 4 0 15 169 Fecha Apertura:",
+    "TEXT 4 0 15 207 Consumir en:",       // sustituye "Consumir hasta... dias."
+    "TEXT 4 0 15 245 Fecha Cad.:",
+    "TEXT 4 0 15 283 Mermas:",
+    "BOX 125 275 198 310 2",              // cuadro Mermas (x=125..198)
+    "TEXT 4 0 15 325 Cod. Unico:",
+    `TEXT 3 0 15 350 ${codigoUnico}`,
+    // ── QR más abajo, al lado de Mermas/Cod.Unico ────────────────────────
+    // x=205: 205 + 111 dots (QR V3 M=3 con quiet zone) = 316 ✓ dentro de 338
+    // y=270: QR queda junto a Mermas y Cod.Unico, termina en y=381 ✓
+    "BARCODE QR 205 270 M 3 U 7",
     `MA,${codigoUnico}`,
     "ENDQR",
     "PRINT",
