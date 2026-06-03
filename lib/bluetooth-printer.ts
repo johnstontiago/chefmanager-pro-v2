@@ -1,6 +1,3 @@
-// UUIDs estándar para impresoras térmicas BLE (VAVUPO P1 y similares).
-// Si la impresora no conecta, descubre los UUIDs reales con la DevTools de Chrome:
-// chrome://bluetooth-internals → inspecciona el dispositivo emparejado.
 const SERVICE_UUID = "000018f0-0000-1000-8000-00805f9b34fb";
 const CHAR_UUID    = "00002af1-0000-1000-8000-00805f9b34fb";
 
@@ -8,36 +5,35 @@ export type PrinterStatus = "disconnected" | "connecting" | "connected" | "print
 
 export interface LabelData {
   nombre:      string;
-  fabricante:  string;  // marca del producto (sin label en la etiqueta)
+  fabricante:  string;
   lote:        string;
-  cadEmbalaje: string;  // fecha caducidad del embalaje (Inventario.fechaCaducidad)
+  cadEmbalaje: string;
   codigoUnico: string;
-  cantidad:    number;  // número de etiquetas a imprimir
+  cantidad:    number;
 }
 
 export interface LabelConfig {
-  titulo:    string;   // texto del título
-  altoLabel: number;   // altura en dots (53mm = 417)
-  xMargen:   number;   // margen izquierdo del texto
-  espaciado: number;   // dots entre líneas de contenido
-  fuente:    number;   // font CPCL 0-7
-  xQR:       number;   // posición X del QR
-  yQR:       number;   // posición Y del QR
-  tamanoQR:  number;   // magnification M del QR (1-7)
+  titulo:    string;
+  altoLabel: number;
+  xMargen:   number;
+  espaciado: number;
+  fuente:    number;
+  xQR:       number;
+  yQR:       number;
+  tamanoQR:  number;
 }
 
-// Dimensiones físicas de la etiqueta (50mm × 60mm a 200 DPI)
-const LABEL_W = 394;   // 50mm ancho
-const QR_DOTS = 135;   // U=7 → versión 7 (45 módulos × M 3 = 135 dots)
+const LABEL_W = 394;
+const QR_DOTS = 135;
 
 export const DEFAULT_LABEL_CONFIG: LabelConfig = {
   titulo:    "CHEFMANAGER PRO",
-  altoLabel: 472,   // 60mm × 200 DPI / 25.4
+  altoLabel: 472,
   xMargen:   15,
-  espaciado: 45,    // mayor espaciado para usar toda la etiqueta
+  espaciado: 45,
   fuente:    4,
-  xQR:       249,   // derecha: 394 − 135 − 10
-  yQR:       327,   // abajo: 472 − 135 − 10
+  xQR:       249,
+  yQR:       327,
   tamanoQR:  3,
 };
 
@@ -50,44 +46,28 @@ export class CPCLPrinter {
       acceptAllDevices: true,
       optionalServices: [SERVICE_UUID],
     });
-
     const server  = await this.device.gatt!.connect();
     const service = await server.getPrimaryService(SERVICE_UUID);
     this.characteristic = await service.getCharacteristic(CHAR_UUID);
-
     return this.device.name ?? "Impresora";
   }
 
   async printLabel(data: LabelData, config: LabelConfig = DEFAULT_LABEL_CONFIG): Promise<void> {
     if (!this.characteristic) throw new Error("Impresora no conectada");
 
-    const cpcl   = buildCPCL(data, config);
-    console.log("[CPCL]", cpcl);
-    const enc    = new TextEncoder();
+    // QR generado en canvas del navegador → bitmap 1-bit → comando EG de CPCL.
+    // Evita depender del comando BARCODE QR del firmware de la impresora.
+    const bytes  = await buildCPCLBytes(data, config);
     const useAck = this.characteristic.properties.write;
 
-    const send = async (bytes: Uint8Array) => {
-      for (let i = 0; i < bytes.length; i += 20) {
-        const chunk = bytes.slice(i, i + 20);
-        if (useAck) {
-          await this.characteristic!.writeValueWithResponse(chunk);
-        } else {
-          await this.characteristic!.writeValueWithoutResponse(chunk);
-          await new Promise<void>((r) => setTimeout(r, 10));
-        }
+    for (let i = 0; i < bytes.length; i += 20) {
+      const chunk = bytes.slice(i, i + 20);
+      if (useAck) {
+        await this.characteristic.writeValueWithResponse(chunk);
+      } else {
+        await this.characteristic.writeValueWithoutResponse(chunk);
+        await new Promise<void>((r) => setTimeout(r, 10));
       }
-    };
-
-    // Enviar cuerpo completo (hasta ENDQR inclusive), esperar 300ms para que la
-    // impresora procese el bloque QR, y solo entonces enviar PRINT.
-    // Sin esta pausa, la impresora imprime el QR incompleto (solo la primera fila).
-    const splitIdx = cpcl.indexOf("\r\nPRINT");
-    if (splitIdx === -1) {
-      await send(enc.encode(cpcl));
-    } else {
-      await send(enc.encode(cpcl.slice(0, splitIdx + 2)));  // todo hasta ENDQR\r\n
-      await new Promise<void>((r) => setTimeout(r, 300));   // tiempo para procesar QR
-      await send(enc.encode(cpcl.slice(splitIdx + 2)));     // PRINT\r\n\r\n
     }
   }
 
@@ -104,49 +84,39 @@ export class CPCLPrinter {
   }
 }
 
-export function buildCPCL(
+// Comandos CPCL comunes a ambos modos (sin QR, sin PRINT)
+function buildLabelCommands(
   { nombre, fabricante, lote, cadEmbalaje, codigoUnico, cantidad }: LabelData,
   cfg: LabelConfig,
-): string {
+): string[] {
   const loteStr = lote        || "---";
   const cadStr  = cadEmbalaje || "---";
   const copias  = Math.max(1, Math.round(cantidad));
   const f = cfg.fuente;
   const x = cfg.xMargen;
   const s = cfg.espaciado;
-
-  // Centrado manual del título — ancho real 50mm = 394 dots (font 4 ≈ 11 dots/carácter)
-  const xTitulo = Math.max(0, Math.floor((394 - cfg.titulo.length * 11) / 2));
-
-  // Posiciones Y de las líneas de contenido, calculadas desde y0=57
-  const y0          = 57;
-  const yNombre     = y0;
-  const yFabricante = y0 +   s;
-  const yLote       = y0 + 2*s;
-  const yCad        = y0 + 3*s;
-  const yApertura   = y0 + 4*s;
-  const yFechaCad   = y0 + 5*s;
-  const yMermas     = y0 + 6*s;
-  const yCodUnico   = yMermas + s;
-  const yCodValor   = yCodUnico + 28;
-
-  // Cuadro Mermas: a la derecha del texto (etiqueta 50mm = 394 dots, cabe sin cap)
+  const xTitulo   = Math.max(0, Math.floor((394 - cfg.titulo.length * 11) / 2));
+  const y0        = 57;
+  const yFab      = y0 +   s;
+  const yLote     = y0 + 2*s;
+  const yCad      = y0 + 3*s;
+  const yApertura = y0 + 4*s;
+  const yFechaCad = y0 + 5*s;
+  const yMermas   = y0 + 6*s;
+  const yCodUnico = yMermas + s;
+  const yCodValor = yCodUnico + 28;
   const boxX1 = x + 110;
   const boxY1 = yMermas - 8;
   const boxX2 = boxX1 + 75;
   const boxY2 = boxY1 + 36;
-
-  // QR: esquina inferior derecha de la etiqueta (alineado a márgenes)
-  const xQR = LABEL_W - QR_DOTS - 10;              // = 249 (394-135-10)
-  const yQR = cfg.altoLabel - QR_DOTS - 10;        // = 327 para 472 dots
 
   return [
     `! 0 200 200 ${cfg.altoLabel} ${copias}`,
     "ON-FEED IGNORE",
     `TEXT ${f} 0 ${xTitulo} 12 ${cfg.titulo}`,
     "LINE 15 43 374 43 2",
-    `TEXT ${f} 0 ${x} ${yNombre} ${nombre}`,
-    ...(fabricante ? [`TEXT ${f} 0 ${x} ${yFabricante} ${fabricante}`] : []),
+    `TEXT ${f} 0 ${x} ${y0} ${nombre}`,
+    ...(fabricante ? [`TEXT ${f} 0 ${x} ${yFab} ${fabricante}`] : []),
     `TEXT ${f} 0 ${x} ${yLote} Lote: ${loteStr}`,
     `TEXT ${f} 0 ${x} ${yCad} Cad. Emb.: ${cadStr}`,
     `TEXT ${f} 0 ${x} ${yApertura} Fecha Apertura:`,
@@ -155,11 +125,66 @@ export function buildCPCL(
     `BOX ${boxX1} ${boxY1} ${boxX2} ${boxY2} 2`,
     `TEXT ${f} 0 ${x} ${yCodUnico} Cod. Unico:`,
     `TEXT 3 0 ${x} ${yCodValor} ${codigoUnico}`,
-    // U 7 = versión 7 (45 módulos × M 3 = 135 dots). Único valor confirmado en VAVUPO P1.
+  ];
+}
+
+// Preview de texto para el panel debug (muestra BARCODE QR como referencia)
+export function buildCPCL(data: LabelData, cfg: LabelConfig): string {
+  const cmds = buildLabelCommands(data, cfg);
+  const xQR  = LABEL_W - QR_DOTS - 10;
+  const yQR  = cfg.altoLabel - QR_DOTS - 10;
+  return [
+    ...cmds,
     `BARCODE QR ${xQR} ${yQR} M 3 U 7`,
-    codigoUnico,
+    data.codigoUnico,
     "ENDQR",
     "PRINT",
     "",
   ].join("\r\n");
+}
+
+// Convierte el QR en un bitmap de 1 bit por píxel usando canvas del navegador.
+// Devuelve ceil(QR_DOTS/8) × QR_DOTS bytes, MSB = píxel izquierdo, 1 = negro.
+async function qrBitmap(text: string): Promise<Uint8Array> {
+  const { default: QRCode } = await import("qrcode");
+  const canvas  = document.createElement("canvas");
+  canvas.width  = QR_DOTS;
+  canvas.height = QR_DOTS;
+  await QRCode.toCanvas(canvas, text, { width: QR_DOTS, margin: 0 });
+  const ctx  = canvas.getContext("2d")!;
+  const px   = ctx.getImageData(0, 0, QR_DOTS, QR_DOTS).data;
+  const wB   = Math.ceil(QR_DOTS / 8);          // 17 bytes por fila
+  const bits = new Uint8Array(wB * QR_DOTS);
+  for (let r = 0; r < QR_DOTS; r++) {
+    for (let c = 0; c < QR_DOTS; c++) {
+      if (px[(r * QR_DOTS + c) * 4] < 128) {   // canal R < 128 → píxel negro
+        bits[r * wB + (c >> 3)] |= 0x80 >> (c & 7);
+      }
+    }
+  }
+  return bits;
+}
+
+// Payload real de impresión: comandos CPCL de texto + QR como bitmap EG.
+// EG = comando gráfico CPCL que inserta un bitmap raw en la etiqueta.
+async function buildCPCLBytes(data: LabelData, cfg: LabelConfig): Promise<Uint8Array> {
+  const cmds   = buildLabelCommands(data, cfg);
+  const bitmap = await qrBitmap(data.codigoUnico);
+  const xQR    = LABEL_W - QR_DOTS - 10;
+  const yQR    = cfg.altoLabel - QR_DOTS - 10;
+  const wB     = Math.ceil(QR_DOTS / 8);
+  const enc    = new TextEncoder();
+
+  // Comandos de texto + encabezado EG (el bitmap va inline sin separador)
+  const textPart   = [...cmds, `EG ${wB} ${QR_DOTS} ${xQR} ${yQR}`].join("\r\n") + "\r\n";
+  const printPart  = "PRINT\r\n\r\n";
+  const textBytes  = enc.encode(textPart);
+  const printBytes = enc.encode(printPart);
+
+  // Layout del payload: [texto CPCL][bitmap raw][PRINT]
+  const result = new Uint8Array(textBytes.length + bitmap.length + printBytes.length);
+  result.set(textBytes,  0);
+  result.set(bitmap,     textBytes.length);
+  result.set(printBytes, textBytes.length + bitmap.length);
+  return result;
 }
