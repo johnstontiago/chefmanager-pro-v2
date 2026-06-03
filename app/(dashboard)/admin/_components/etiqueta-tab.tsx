@@ -10,8 +10,8 @@ import { useToast } from "@/hooks/use-toast";
 import type { LabelConfig } from "@/lib/bluetooth-printer";
 import { DEFAULT_LABEL_CONFIG } from "@/lib/bluetooth-printer";
 
-// Escala de visualización: 338 dots reales → 200px pantalla
-const SCALE = 200 / 338;
+// Escala de visualización: 394 dots reales (50mm) → 220px pantalla
+const SCALE = 220 / 394;
 const PX = (dots: number) => Math.round(dots * SCALE);
 
 export default function EtiquetaTab() {
@@ -66,23 +66,27 @@ export default function EtiquetaTab() {
   }
 
   // Posiciones Y calculadas igual que buildCPCL
-  const s  = cfg.espaciado;
-  const y0 = 57;
+  const s   = cfg.espaciado;
+  const y0  = 57;
+  const yMermas = y0 + 7 * s;
+
   const lines = [
-    { y: y0,         text: "Berenjena" },
-    { y: y0 +   s,   text: "Marca Ejemplo" },
-    { y: y0 + 2*s,   text: "Lote: L394959421" },
-    { y: y0 + 3*s,   text: "Cad. Emb.: 2026-06-12" },
-    { y: y0 + 4*s,   text: "Fecha Apertura:" },
-    { y: y0 + 5*s,   text: "Consumir en:" },
-    { y: y0 + 6*s,   text: "Fecha Cad.:" },
-    { y: y0 + 7*s,   text: "Mermas:" },
-    { y: y0 + 8*s,   text: "Cod. Unico:" },
-    { y: y0 + 8*s + 28, text: "INV-MXX-XXXX", small: true },
+    { y: y0,           text: "Berenjena" },
+    { y: y0 +     s,   text: "Marca Ejemplo" },
+    { y: y0 +   2*s,   text: "Lote: L394959421" },
+    { y: y0 +   3*s,   text: "Cad. Emb.: 2026-06-12" },
+    { y: y0 +   4*s,   text: "Fecha Apertura:" },
+    { y: y0 +   5*s,   text: "Consumir en:" },
+    { y: y0 +   6*s,   text: "Fecha Cad.:" },
+    { y: yMermas,      text: "Mermas:" },
+    { y: yMermas + s,  text: "Cod. Unico:" },
+    { y: yMermas + s + 28, text: "INV-MXX-XXXX", small: true },
   ];
-  const xTitulo = Math.max(0, Math.floor((338 - cfg.titulo.length * 11) / 2));
+
+  // QR: U 7 ≈ 45 módulos × M 3 = 135 dots
+  const QR_DOTS = 135;
+  const xTitulo = Math.max(0, Math.floor((394 - cfg.titulo.length * 11) / 2));
   const labelH  = PX(cfg.altoLabel);
-  const qrSize  = PX(cfg.tamanoQR * 37); // estimado con quiet zone
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -107,19 +111,21 @@ export default function EtiquetaTab() {
 
           {/* Grid de números */}
           <div className="grid grid-cols-2 gap-3">
-            <Field label="Alto etiqueta (dots)" hint="53mm = 417" value={cfg.altoLabel}
-              onChange={(v) => set("altoLabel", v)} min={300} max={600} />
+            <Field label="Alto etiqueta (dots)" hint="60mm = 472" value={cfg.altoLabel}
+              onChange={(v) => set("altoLabel", v)} min={400} max={600} />
             <Field label="Margen izquierdo (dots)" hint="recomendado 15" value={cfg.xMargen}
               onChange={(v) => set("xMargen", v)} min={0} max={50} />
             <Field label="Espaciado líneas (dots)" hint="recomendado 38" value={cfg.espaciado}
               onChange={(v) => set("espaciado", v)} min={20} max={80} />
             <Field label="Fuente CPCL (0-7)" hint="0=mini 4=normal 7=grande" value={cfg.fuente}
               onChange={(v) => set("fuente", v)} min={0} max={7} />
-            <Field label="QR posición X (dots)" hint="máx ~220 para 43mm" value={cfg.xQR}
-              onChange={(v) => set("xQR", v)} min={100} max={280} />
-            <Field label="QR posición Y (dots)" hint="recomendado 280-320" value={cfg.yQR}
-              onChange={(v) => set("yQR", v)} min={100} max={400} />
+            <Field label="QR posición X (dots)" hint="recomendado 200-220" value={cfg.xQR}
+              onChange={(v) => set("xQR", v)} min={150} max={300} />
           </div>
+
+          <p className="text-[10px] text-slate-400">
+            El QR se alinea automáticamente con la línea Mermas.
+          </p>
 
           <div className="flex gap-2 pt-2">
             <Button className="flex-1 bg-blue-600 hover:bg-blue-700" onClick={save} disabled={saving}>
@@ -139,13 +145,13 @@ export default function EtiquetaTab() {
         <CardHeader>
           <CardTitle>Vista previa</CardTitle>
           <p className="text-xs text-slate-500">
-            Escala aproximada · 43mm × {Math.round(cfg.altoLabel / 200 * 25.4)}mm
+            Escala aproximada · 50mm × {Math.round(cfg.altoLabel / 200 * 25.4)}mm
           </p>
         </CardHeader>
         <CardContent className="flex justify-center">
           <div
             className="relative border-2 border-slate-300 bg-white overflow-hidden"
-            style={{ width: 200, height: labelH }}
+            style={{ width: 220, height: labelH }}
           >
             {/* Título */}
             <div
@@ -157,7 +163,7 @@ export default function EtiquetaTab() {
             {/* Separador */}
             <div
               className="absolute bg-slate-800"
-              style={{ left: PX(15), top: PX(43), width: PX(308), height: 1 }}
+              style={{ left: PX(15), top: PX(43), width: PX(359), height: 1 }}
             />
             {/* Líneas de datos */}
             {lines.map((l, i) => (
@@ -174,19 +180,19 @@ export default function EtiquetaTab() {
               className="absolute border border-slate-700"
               style={{
                 left:   PX(cfg.xMargen + 110),
-                top:    PX(y0 + 6*s - 8),
+                top:    PX(yMermas - 8),
                 width:  PX(75),
                 height: PX(36),
               }}
             />
-            {/* QR placeholder */}
+            {/* QR placeholder — alineado con yMermas */}
             <div
               className="absolute bg-slate-200 border border-slate-400 flex items-center justify-center"
               style={{
                 left:   PX(cfg.xQR),
-                top:    PX(cfg.yQR),
-                width:  Math.min(qrSize, 200 - PX(cfg.xQR)),
-                height: Math.min(qrSize, labelH - PX(cfg.yQR)),
+                top:    PX(yMermas),
+                width:  Math.min(PX(QR_DOTS), 220 - PX(cfg.xQR)),
+                height: Math.min(PX(QR_DOTS), labelH - PX(yMermas)),
               }}
             >
               <span className="text-[5px] text-slate-500 text-center leading-tight px-1">QR</span>

@@ -28,12 +28,12 @@ export interface LabelConfig {
 
 export const DEFAULT_LABEL_CONFIG: LabelConfig = {
   titulo:    "CHEFMANAGER PRO",
-  altoLabel: 417,
+  altoLabel: 472,   // 60mm × 200 DPI / 25.4
   xMargen:   15,
   espaciado: 38,
   fuente:    4,
-  xQR:       195,
-  yQR:       280,
+  xQR:       205,
+  yQR:       323,   // alineado con línea Mermas (y0 + 7 × espaciado)
   tamanoQR:  3,
 };
 
@@ -92,8 +92,8 @@ function buildCPCL(
   const x = cfg.xMargen;
   const s = cfg.espaciado;
 
-  // Centrado manual del título (font 4 ≈ 11 dots/carácter en VAVUPO P1)
-  const xTitulo = Math.max(0, Math.floor((338 - cfg.titulo.length * 11) / 2));
+  // Centrado manual del título — ancho real 50mm = 394 dots (font 4 ≈ 11 dots/carácter)
+  const xTitulo = Math.max(0, Math.floor((394 - cfg.titulo.length * 11) / 2));
 
   // Posiciones Y de las líneas de contenido, calculadas desde y0=57
   const y0          = 57;
@@ -108,17 +108,20 @@ function buildCPCL(
   const yCodUnico   = yMermas + s;
   const yCodValor   = yCodUnico + 28;
 
-  // Cuadro Mermas: a la derecha del texto, dentro del ancho de la etiqueta
+  // Cuadro Mermas: a la derecha del texto (etiqueta 50mm = 394 dots, cabe sin cap)
   const boxX1 = x + 110;
   const boxY1 = yMermas - 8;
-  const boxX2 = Math.min(boxX1 + 75, 200);
+  const boxX2 = boxX1 + 75;
   const boxY2 = boxY1 + 36;
+
+  // QR siempre alineado con la línea Mermas (no usa cfg.yQR)
+  const yQR = yMermas;
 
   return [
     `! 0 200 200 ${cfg.altoLabel} ${copias}`,
     "ON-FEED IGNORE",
     `TEXT ${f} 0 ${xTitulo} 12 ${cfg.titulo}`,
-    "LINE 15 43 323 43 2",
+    "LINE 15 43 374 43 2",
     `TEXT ${f} 0 ${x} ${yNombre} ${nombre}`,
     ...(fabricante ? [`TEXT ${f} 0 ${x} ${yFabricante} ${fabricante}`] : []),
     `TEXT ${f} 0 ${x} ${yLote} Lote: ${loteStr}`,
@@ -130,9 +133,8 @@ function buildCPCL(
     `BOX ${boxX1} ${boxY1} ${boxX2} ${boxY2} 2`,
     `TEXT ${f} 0 ${x} ${yCodUnico} Cod. Unico:`,
     `TEXT 3 0 ${x} ${yCodValor} ${codigoUnico}`,
-    // U 7 = versión QR-7 (45 módulos), el único valor que produce tamaño visible en VAVUPO P1.
-    // M 3 es requerido por el parser pero esta impresora lo ignora — el tamaño lo controla U.
-    `BARCODE QR ${cfg.xQR} ${cfg.yQR} M 3 U 7`,
+    // U 7 = versión QR-7 (45 módulos), tamaño visual en VAVUPO P1. QR empieza en yMermas.
+    `BARCODE QR ${cfg.xQR} ${yQR} M 3 U 7`,
     `MA,${codigoUnico}`,
     "ENDQR",
     "PRINT",

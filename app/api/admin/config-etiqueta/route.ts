@@ -5,17 +5,14 @@ import { prisma } from "@/lib/db";
 
 const DEFAULT = {
   titulo:    "CHEFMANAGER PRO",
-  altoLabel: 417,
+  altoLabel: 472,   // 60mm × 200 DPI / 25.4
   xMargen:   15,
   espaciado: 38,
   fuente:    4,
-  xQR:       195,
-  yQR:       280,
+  xQR:       205,
+  yQR:       323,   // alineado con línea Mermas
   tamanoQR:  3,
 };
-
-// Valores viejos que necesitan migración automática
-const STALE = { xQR: 205, yQR: 300 };
 
 async function getConfig() {
   const row = await prisma.configEtiqueta.upsert({
@@ -23,11 +20,11 @@ async function getConfig() {
     update: {},
     create: { id: 1, ...DEFAULT },
   });
-  // Migración: si la BD todavía tiene los valores por defecto antiguos, actualiza a los nuevos
-  if (row.xQR === STALE.xQR && row.yQR === STALE.yQR) {
+  // Migración automática: si el alto aún es el de la etiqueta de 53mm, actualiza todo
+  if (row.altoLabel < 472) {
     return prisma.configEtiqueta.update({
       where: { id: 1 },
-      data:  { xQR: DEFAULT.xQR, yQR: DEFAULT.yQR },
+      data:  { altoLabel: DEFAULT.altoLabel, xQR: DEFAULT.xQR, yQR: DEFAULT.yQR },
     });
   }
   return row;
