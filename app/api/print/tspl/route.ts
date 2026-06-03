@@ -44,6 +44,7 @@ export async function POST(req: Request) {
 
   const lines = [
     `SIZE 50 mm,60 mm`,
+    `GAP 2 mm,0`,
     `SPEED 4`,
     `DENSITY 8`,
     `CLS`,
