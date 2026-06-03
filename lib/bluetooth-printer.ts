@@ -55,16 +55,20 @@ export class CPCLPrinter {
     if (!this.characteristic) throw new Error("Impresora no conectada");
     const char = this.characteristic;
 
-    // CPCL generado server-side: qrcode.create() solo funciona en Node.js, no en browser
-    const res = await fetch("/api/print/cpcl", {
+    // TSC/TSPL generado server-side: etiqueta como bitmap + QR pixel-perfect
+    const res = await fetch("/api/print/tspl", {
       method:  "POST",
       headers: { "Content-Type": "application/json" },
       body:    JSON.stringify({ data, config }),
     });
-    if (!res.ok) throw new Error("Error al generar CPCL");
-    const { cpcl } = await res.json() as { cpcl: string };
+    if (!res.ok) throw new Error("Error al generar TSPL");
+    const { tspl } = await res.json() as { tspl: string };
 
-    const bytes  = new TextEncoder().encode(cpcl);
+    // Decodifica base64 → binario (el comando TSPL contiene bytes arbitrarios)
+    const raw   = atob(tspl);
+    const bytes = new Uint8Array(raw.length);
+    for (let i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
+
     const useAck = char.properties.write;
 
     for (let i = 0; i < bytes.length; i += 20) {
