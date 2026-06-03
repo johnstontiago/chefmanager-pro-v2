@@ -92,9 +92,7 @@ export class CPCLPrinter {
   }
 }
 
-// Etiqueta 43×53mm a 200 DPI → 338 dots ancho × 417 dots alto.
-// Todos los parámetros vienen de LabelConfig para que el panel admin los controle.
-function buildCPCL(
+export function buildCPCL(
   { nombre, fabricante, lote, cadEmbalaje, codigoUnico, cantidad }: LabelData,
   cfg: LabelConfig,
 ): string {

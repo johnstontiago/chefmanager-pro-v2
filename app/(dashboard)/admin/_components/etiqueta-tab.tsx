@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import type { LabelConfig } from "@/lib/bluetooth-printer";
-import { DEFAULT_LABEL_CONFIG } from "@/lib/bluetooth-printer";
+import { DEFAULT_LABEL_CONFIG, buildCPCL } from "@/lib/bluetooth-printer";
 
 // Escala de visualización: 394 dots reales (50mm) → 220px pantalla
 const SCALE = 220 / 394;
@@ -182,13 +182,13 @@ export default function EtiquetaTab() {
                 height: PX(36),
               }}
             />
-            {/* QR placeholder — esquina inferior derecha (x=261, y=altoLabel-123-10) */}
+            {/* QR placeholder — esquina inferior derecha */}
             <div
               className="absolute bg-slate-200 border border-slate-400 flex items-center justify-center"
               style={{
-                left:   PX(261),
+                left:   PX(249),
                 top:    PX(cfg.altoLabel - QR_DOTS - 10),
-                width:  Math.min(PX(QR_DOTS), 220 - PX(261)),
+                width:  Math.min(PX(QR_DOTS), 220 - PX(249)),
                 height: Math.min(PX(QR_DOTS), labelH - PX(cfg.altoLabel - QR_DOTS - 10)),
               }}
             >
@@ -197,7 +197,55 @@ export default function EtiquetaTab() {
           </div>
         </CardContent>
       </Card>
+
+      {/* ── Debug CPCL ────────────────────────────────────────── */}
+      <CpclDebug cfg={cfg} />
     </div>
+  );
+}
+
+function CpclDebug({ cfg }: { cfg: LabelConfig }) {
+  const [cpcl, setCpcl] = useState("");
+  const [copied, setCopied] = useState(false);
+
+  const generate = () => {
+    const text = buildCPCL(
+      { nombre: "Producto Test", fabricante: "Marca Test", lote: "L001",
+        cadEmbalaje: "2026-12-31", codigoUnico: "INV-TST-0001", cantidad: 1 },
+      cfg,
+    );
+    setCpcl(text);
+  };
+
+  const copy = async () => {
+    await navigator.clipboard.writeText(cpcl);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <Card className="lg:col-span-2">
+      <CardHeader>
+        <CardTitle className="text-sm text-slate-500">Debug CPCL</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-2">
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={generate}>Generar CPCL</Button>
+          {cpcl && (
+            <Button variant="outline" size="sm" onClick={copy}>
+              {copied ? "¡Copiado!" : "Copiar"}
+            </Button>
+          )}
+        </div>
+        {cpcl && (
+          <textarea
+            readOnly
+            value={cpcl}
+            className="w-full h-40 text-[10px] font-mono bg-slate-50 border rounded p-2 resize-none"
+          />
+        )}
+      </CardContent>
+    </Card>
   );
 }
 
