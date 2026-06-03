@@ -69,15 +69,16 @@ export default function EtiquetaTab() {
   const s  = cfg.espaciado;
   const y0 = 57;
   const lines = [
-    { y: y0,         text: "Producto: Berenjena" },
-    { y: y0 +   s,   text: `Lote: L394959421` },
-    { y: y0 + 2*s,   text: `Cad. Emb.: 2026-06-12` },
-    { y: y0 + 3*s,   text: "Fecha Apertura:" },
-    { y: y0 + 4*s,   text: "Consumir en:" },
-    { y: y0 + 5*s,   text: "Fecha Cad.:" },
-    { y: y0 + 6*s,   text: "Mermas:" },
-    { y: y0 + 7*s,   text: "Cod. Unico:" },
-    { y: y0 + 7*s + 28, text: "INV-MXX-XXXX", small: true },
+    { y: y0,         text: "Berenjena" },
+    { y: y0 +   s,   text: "Marca Ejemplo" },
+    { y: y0 + 2*s,   text: "Lote: L394959421" },
+    { y: y0 + 3*s,   text: "Cad. Emb.: 2026-06-12" },
+    { y: y0 + 4*s,   text: "Fecha Apertura:" },
+    { y: y0 + 5*s,   text: "Consumir en:" },
+    { y: y0 + 6*s,   text: "Fecha Cad.:" },
+    { y: y0 + 7*s,   text: "Mermas:" },
+    { y: y0 + 8*s,   text: "Cod. Unico:" },
+    { y: y0 + 8*s + 28, text: "INV-MXX-XXXX", small: true },
   ];
   const xTitulo = Math.max(0, Math.floor((338 - cfg.titulo.length * 11) / 2));
   const labelH  = PX(cfg.altoLabel);

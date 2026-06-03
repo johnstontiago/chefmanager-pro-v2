@@ -264,6 +264,7 @@ export default function RecepcionContent({ userRole }: RecepcionContentProps) {
         try {
           await printLabel({
             nombre:      drawerItem.producto?.nombre ?? "",
+            fabricante:  drawerItem.producto?.fabricante ?? "",
             lote:        drawerForm.lote,
             cadEmbalaje: drawerForm.fechaCaducidad,
             codigoUnico: drawerForm.codigoUnico,

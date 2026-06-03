@@ -8,6 +8,7 @@ export type PrinterStatus = "disconnected" | "connecting" | "connected" | "print
 
 export interface LabelData {
   nombre:      string;
+  fabricante:  string;  // marca del producto (sin label en la etiqueta)
   lote:        string;
   cadEmbalaje: string;  // fecha caducidad del embalaje (Inventario.fechaCaducidad)
   codigoUnico: string;
@@ -81,7 +82,7 @@ export class CPCLPrinter {
 // Etiqueta 43×53mm a 200 DPI → 338 dots ancho × 417 dots alto.
 // Todos los parámetros vienen de LabelConfig para que el panel admin los controle.
 function buildCPCL(
-  { nombre, lote, cadEmbalaje, codigoUnico, cantidad }: LabelData,
+  { nombre, fabricante, lote, cadEmbalaje, codigoUnico, cantidad }: LabelData,
   cfg: LabelConfig,
 ): string {
   const loteStr = lote        || "---";
@@ -96,13 +97,14 @@ function buildCPCL(
 
   // Posiciones Y de las líneas de contenido, calculadas desde y0=57
   const y0          = 57;
-  const yProducto   = y0;
-  const yLote       = y0 +   s;
-  const yCad        = y0 + 2*s;
-  const yApertura   = y0 + 3*s;
-  const yConsumir   = y0 + 4*s;
-  const yFechaCad   = y0 + 5*s;
-  const yMermas     = y0 + 6*s;
+  const yNombre     = y0;
+  const yFabricante = y0 +   s;
+  const yLote       = y0 + 2*s;
+  const yCad        = y0 + 3*s;
+  const yApertura   = y0 + 4*s;
+  const yConsumir   = y0 + 5*s;
+  const yFechaCad   = y0 + 6*s;
+  const yMermas     = y0 + 7*s;
   const yCodUnico   = yMermas + s;
   const yCodValor   = yCodUnico + 28;
 
@@ -117,7 +119,8 @@ function buildCPCL(
     "ON-FEED IGNORE",
     `TEXT ${f} 0 ${xTitulo} 12 ${cfg.titulo}`,
     "LINE 15 43 323 43 2",
-    `TEXT ${f} 0 ${x} ${yProducto} Producto: ${nombre}`,
+    `TEXT ${f} 0 ${x} ${yNombre} ${nombre}`,
+    ...(fabricante ? [`TEXT ${f} 0 ${x} ${yFabricante} ${fabricante}`] : []),
     `TEXT ${f} 0 ${x} ${yLote} Lote: ${loteStr}`,
     `TEXT ${f} 0 ${x} ${yCad} Cad. Emb.: ${cadStr}`,
     `TEXT ${f} 0 ${x} ${yApertura} Fecha Apertura:`,
