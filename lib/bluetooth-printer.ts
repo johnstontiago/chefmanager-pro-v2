@@ -61,7 +61,10 @@ export class CPCLPrinter {
       headers: { "Content-Type": "application/json" },
       body:    JSON.stringify({ data, config }),
     });
-    if (!res.ok) throw new Error("Error al generar TSPL");
+    if (!res.ok) {
+      const body = await res.text().catch(() => "");
+      throw new Error(`Error servidor TSPL (${res.status}): ${body.slice(0, 120)}`);
+    }
     const { tspl } = await res.json() as { tspl: string };
 
     // Decodifica base64 → binario (el comando TSPL contiene bytes arbitrarios)

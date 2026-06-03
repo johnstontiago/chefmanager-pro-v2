@@ -271,8 +271,9 @@ export default function RecepcionContent({ userRole }: RecepcionContentProps) {
             cantidad:    drawerForm.cantidadRecibida,
           });
           toast({ title: `${drawerItem.producto?.nombre} registrado · Etiqueta impresa` });
-        } catch {
-          toast({ title: `${drawerItem.producto?.nombre} registrado`, description: "No se pudo imprimir la etiqueta" });
+        } catch (printErr) {
+          const msg = printErr instanceof Error ? printErr.message : "Error desconocido";
+          toast({ title: `${drawerItem.producto?.nombre} registrado`, description: `Etiqueta: ${msg}`, variant: "destructive" });
         }
       } else {
         toast({ title: `${drawerItem.producto?.nombre} registrado en inventario` });
