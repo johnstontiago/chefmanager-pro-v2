@@ -127,8 +127,8 @@ function buildCPCL(
     `BOX ${boxX1} ${boxY1} ${boxX2} ${boxY2} 2`,
     `TEXT ${f} 0 ${x} ${yCodUnico} Cod. Unico:`,
     `TEXT 3 0 ${x} ${yCodValor} ${codigoUnico}`,
-    // QR en el lado derecho — termina en yQR + ~111 dots (M=3, QR V3 con quiet zone)
-    `BARCODE QR ${cfg.xQR} ${cfg.yQR} M ${cfg.tamanoQR} U 7`,
+    // QR: M = dots por módulo (1=pequeño … 7=grande). Sin U, el intérprete elige versión automática.
+    `BARCODE QR ${cfg.xQR} ${cfg.yQR} M ${cfg.tamanoQR}`,
     `MA,${codigoUnico}`,
     "ENDQR",
     "PRINT",

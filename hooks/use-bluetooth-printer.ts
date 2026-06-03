@@ -42,7 +42,11 @@ export function useBluetoothPrinter() {
   const printLabel = useCallback(async (data: LabelData): Promise<void> => {
     setStatus("printing");
     try {
-      await printerRef.current.printLabel(data, labelConfig);
+      const freshConfig = await fetch("/api/admin/config-etiqueta")
+        .then((r) => (r.ok ? r.json() : null))
+        .then((d) => d?.config ?? labelConfig)
+        .catch(() => labelConfig);
+      await printerRef.current.printLabel(data, freshConfig);
       setStatus("connected");
     } catch (err) {
       setStatus("error");
