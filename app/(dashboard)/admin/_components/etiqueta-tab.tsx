@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import type { LabelConfig } from "@/lib/bluetooth-printer";
-import { DEFAULT_LABEL_CONFIG, buildCPCL } from "@/lib/bluetooth-printer";
+import { DEFAULT_LABEL_CONFIG } from "@/lib/bluetooth-printer";
 
 // Escala de visualización: 394 dots reales (50mm) → 220px pantalla
 const SCALE = 220 / 394;
@@ -65,7 +65,6 @@ export default function EtiquetaTab() {
     );
   }
 
-  // Posiciones Y calculadas igual que buildCPCL
   const s   = cfg.espaciado;
   const y0  = 57;
   const yMermas = y0 + 6 * s;
@@ -116,7 +115,7 @@ export default function EtiquetaTab() {
               onChange={(v) => set("xMargen", v)} min={0} max={50} />
             <Field label="Espaciado líneas (dots)" hint="recomendado 45" value={cfg.espaciado}
               onChange={(v) => set("espaciado", v)} min={20} max={80} />
-            <Field label="Fuente CPCL (0-7)" hint="0=mini 4=normal 7=grande" value={cfg.fuente}
+            <Field label="Fuente (0-7)" hint="0=mini 4=normal 7=grande" value={cfg.fuente}
               onChange={(v) => set("fuente", v)} min={0} max={7} />
           </div>
 
@@ -198,54 +197,7 @@ export default function EtiquetaTab() {
         </CardContent>
       </Card>
 
-      {/* ── Debug CPCL ────────────────────────────────────────── */}
-      <CpclDebug cfg={cfg} />
     </div>
-  );
-}
-
-function CpclDebug({ cfg }: { cfg: LabelConfig }) {
-  const [cpcl, setCpcl] = useState("");
-  const [copied, setCopied] = useState(false);
-
-  const generate = () => {
-    const text = buildCPCL(
-      { nombre: "Producto Test", fabricante: "Marca Test", lote: "L001",
-        cadEmbalaje: "2026-12-31", codigoUnico: "INV-TST-0001", cantidad: 1 },
-      cfg,
-    );
-    setCpcl(text);
-  };
-
-  const copy = async () => {
-    await navigator.clipboard.writeText(cpcl);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
-  return (
-    <Card className="lg:col-span-2">
-      <CardHeader>
-        <CardTitle className="text-sm text-slate-500">Debug CPCL</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-2">
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={generate}>Generar CPCL</Button>
-          {cpcl && (
-            <Button variant="outline" size="sm" onClick={copy}>
-              {copied ? "¡Copiado!" : "Copiar"}
-            </Button>
-          )}
-        </div>
-        {cpcl && (
-          <textarea
-            readOnly
-            value={cpcl}
-            className="w-full h-40 text-[10px] font-mono bg-slate-50 border rounded p-2 resize-none"
-          />
-        )}
-      </CardContent>
-    </Card>
   );
 }
 

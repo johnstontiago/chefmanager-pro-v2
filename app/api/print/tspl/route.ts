@@ -1,36 +1,8 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
-import { create as qrCreate } from "qrcode";
-import { deflateSync } from "zlib";
 import type { LabelData, LabelConfig } from "@/lib/bluetooth-printer";
 import { DEFAULT_LABEL_CONFIG } from "@/lib/bluetooth-printer";
-
-const QR_M = 3; // dots por módulo QR
-
-// Genera el bitmap 1-bit del QR (sin librerías externas)
-function buildQrBitmap(text: string): { buf: Buffer; w: number; h: number } {
-  const qr     = qrCreate(text, { errorCorrectionLevel: "L" });
-  const nMod   = qr.modules.size;
-  const qrPx   = nMod * QR_M;
-  const rowBytes = Math.ceil(qrPx / 8);
-  const buf    = Buffer.alloc(rowBytes * qrPx, 0);
-
-  for (let r = 0; r < nMod; r++) {
-    for (let c = 0; c < nMod; c++) {
-      if (!qr.modules.data[r * nMod + c]) continue;
-      for (let dy = 0; dy < QR_M; dy++) {
-        for (let dx = 0; dx < QR_M; dx++) {
-          const bx = c * QR_M + dx;
-          const by = r * QR_M + dy;
-          buf[by * rowBytes + (bx >> 3)] |= 0x80 >> (bx & 7);
-        }
-      }
-    }
-  }
-
-  return { buf, w: qrPx, h: qrPx };
-}
 
 export async function POST(req: Request) {
   const session = await getServerSession(authOptions);
@@ -45,7 +17,6 @@ export async function POST(req: Request) {
   const loteStr = lote        || "---";
   const cadStr  = cadEmbalaje || "---";
 
-  // TSC/TSPL usa parámetros con coma: TEXT x,y,"font",rotation,xmul,ymul,"text"
   const f  = String(cfg.fuente);
   const xm = cfg.xMargen;
   const s  = cfg.espaciado;
@@ -68,8 +39,10 @@ export async function POST(req: Request) {
   const t = (x: number, y: number, fnt: string, txt: string) =>
     `TEXT ${x},${y},"${fnt}",0,1,1,"${txt}"`;
 
-  // Texto e instrucciones gráficas como texto plano (sin binario)
-  const textLines = [
+  // cell_width: 2 = muy pequeño, 3 = pequeño, 4 = normal — se mapea desde tamanoQR (1-5)
+  const qrCell = Math.max(2, Math.min(4, cfg.tamanoQR));
+
+  const lines = [
     `SIZE 50 mm,60 mm`,
     `SPEED 4`,
     `DENSITY 8`,
@@ -80,30 +53,18 @@ export async function POST(req: Request) {
     t(xm, y0, f, nombre),
     ...(fabricante ? [t(xm, yFab, f, fabricante)] : []),
     t(xm, yLote, f, `Lote: ${loteStr}`),
-    t(xm, yCad, f, `Cad. Emb.: ${cadStr}`),
+    t(xm, yCad,  f, `Cad. Emb.: ${cadStr}`),
     t(xm, yApertura, f, "Fecha Apertura:"),
     t(xm, yFechaCad, f, "Fecha Cad.:"),
-    t(xm, yMermas, f, "Mermas:"),
+    t(xm, yMermas,   f, "Mermas:"),
     `BOX ${boxX1},${boxY1},${boxX2},${boxY2},2`,
     t(xm, yCodUnico, f, "Cod. Unico:"),
     t(xm, yCodValor, "3", codigoUnico),
+    `QRCODE ${cfg.xQR},${cfg.yQR},L,${qrCell},A,0,"${codigoUnico}"`,
+    `PRINT 1,${copies}`,
+    ``,
   ];
-  const textPart = textLines.join("\r\n") + "\r\n";
 
-  // QR como bitmap 1-bit comprimido con zlib (modo 3)
-  const { buf: qrBuf, w: qrW, h: qrH } = buildQrBitmap(codigoUnico);
-  const qrRowBytes = Math.ceil(qrW / 8);
-  const qrX = 394 - qrW - 10;
-  const qrY = 472 - qrH - 10;
-  const comp = deflateSync(qrBuf);
-
-  // Comando BITMAP con datos binarios embebidos + terminador PRINT
-  const tspl = Buffer.concat([
-    Buffer.from(textPart),
-    Buffer.from(`BITMAP ${qrX},${qrY},${qrRowBytes},${qrH},3,${comp.length},`),
-    comp,
-    Buffer.from(`\r\nPRINT 1,${copies}\r\n`),
-  ]);
-
-  return NextResponse.json({ tspl: tspl.toString("base64") });
+  const tspl = lines.join("\r\n");
+  return NextResponse.json({ tspl: Buffer.from(tspl).toString("base64") });
 }

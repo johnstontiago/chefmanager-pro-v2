@@ -168,11 +168,14 @@ export default function RecepcionContent({ userRole }: RecepcionContentProps) {
     if (!selectedPedido) return;
     try {
       setArchiving(true);
-      await apiFetch(`/api/pedidos/${selectedPedido.id}`, {
+      const res = await apiFetch(`/api/pedidos/${selectedPedido.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ estado }),
       });
+      if (!res.ok && res.status !== 202) {
+        throw new Error(`Error ${res.status} al actualizar el pedido`);
+      }
       clearLocal(selectedPedido.id);
       toast({
         title: estado === "recibido" ? "Pedido completamente recibido" : "Recepción cerrada",
@@ -575,6 +578,21 @@ export default function RecepcionContent({ userRole }: RecepcionContentProps) {
               <Button variant="outline" className="w-full" onClick={descargarCSV}>
                 <Download className="w-4 h-4 mr-2" />
                 Exportar CSV ({itemsRecibidosCount} ítem{itemsRecibidosCount !== 1 ? "s" : ""} recibido{itemsRecibidosCount !== 1 ? "s" : ""})
+              </Button>
+            )}
+
+            {itemsPendientesCount === 0 && itemsRecibidosCount > 0 && (
+              <Button
+                className="w-full bg-green-600 hover:bg-green-700 h-12 text-base"
+                disabled={archiving}
+                onClick={() => archivarPedido("recibido")}
+              >
+                {archiving ? (
+                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                ) : (
+                  <CheckCircle className="w-4 h-4 mr-2" />
+                )}
+                Finalizar recepción del pedido
               </Button>
             )}
 
