@@ -62,11 +62,20 @@ export class CPCLPrinter {
     if (!this.characteristic) throw new Error("Impresora no conectada");
 
     const cpcl  = buildCPCL(data, config);
+    console.log("[CPCL]", cpcl);
     const bytes = new TextEncoder().encode(cpcl);
 
-    // BLE tiene MTU de ~20 bytes para writeValueWithoutResponse
+    // Usar writeValueWithResponse si la característica lo soporta (ACK garantiza orden).
+    // Si no, writeValueWithoutResponse + delay para que la impresora bufferice antes de procesar.
+    const useAck = this.characteristic.properties.write;
     for (let i = 0; i < bytes.length; i += 20) {
-      await this.characteristic.writeValueWithoutResponse(bytes.slice(i, i + 20));
+      const chunk = bytes.slice(i, i + 20);
+      if (useAck) {
+        await this.characteristic.writeValueWithResponse(chunk);
+      } else {
+        await this.characteristic.writeValueWithoutResponse(chunk);
+        await new Promise<void>((r) => setTimeout(r, 10));
+      }
     }
   }
 
@@ -140,7 +149,7 @@ function buildCPCL(
     `TEXT 3 0 ${x} ${yCodValor} ${codigoUnico}`,
     // U 7 = versión 7 (45 módulos × M 3 = 135 dots). Único valor confirmado en VAVUPO P1.
     `BARCODE QR ${xQR} ${yQR} M 3 U 7`,
-    `MA,${codigoUnico}`,
+    codigoUnico,
     "ENDQR",
     "PRINT",
     "",
