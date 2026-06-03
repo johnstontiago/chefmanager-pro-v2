@@ -26,14 +26,18 @@ export interface LabelConfig {
   tamanoQR:  number;   // magnification M del QR (1-7)
 }
 
+// Dimensiones físicas de la etiqueta (50mm × 60mm a 200 DPI)
+const LABEL_W = 394;   // 50mm ancho
+const QR_DOTS = 123;   // U=6 → versión 6 (41 módulos × M 3) ≈ 10% menor que U=7
+
 export const DEFAULT_LABEL_CONFIG: LabelConfig = {
   titulo:    "CHEFMANAGER PRO",
   altoLabel: 472,   // 60mm × 200 DPI / 25.4
   xMargen:   15,
-  espaciado: 38,
+  espaciado: 45,    // mayor espaciado para usar toda la etiqueta
   fuente:    4,
-  xQR:       205,
-  yQR:       323,   // alineado con línea Mermas (y0 + 7 × espaciado)
+  xQR:       261,   // derecha: 394 − 123 − 10
+  yQR:       339,   // abajo: 472 − 123 − 10
   tamanoQR:  3,
 };
 
@@ -114,8 +118,9 @@ function buildCPCL(
   const boxX2 = boxX1 + 75;
   const boxY2 = boxY1 + 36;
 
-  // QR siempre alineado con la línea Mermas (no usa cfg.yQR)
-  const yQR = yMermas;
+  // QR: esquina inferior derecha de la etiqueta (alineado a márgenes)
+  const xQR = LABEL_W - QR_DOTS - 10;              // = 261
+  const yQR = cfg.altoLabel - QR_DOTS - 10;        // = 339 para 472 dots
 
   return [
     `! 0 200 200 ${cfg.altoLabel} ${copias}`,
@@ -133,8 +138,8 @@ function buildCPCL(
     `BOX ${boxX1} ${boxY1} ${boxX2} ${boxY2} 2`,
     `TEXT ${f} 0 ${x} ${yCodUnico} Cod. Unico:`,
     `TEXT 3 0 ${x} ${yCodValor} ${codigoUnico}`,
-    // U 7 = versión QR-7 (45 módulos), tamaño visual en VAVUPO P1. QR empieza en yMermas.
-    `BARCODE QR ${cfg.xQR} ${yQR} M 3 U 7`,
+    // U 6 = versión 6 (41 módulos, ~10% menor que U=7). QR esquina inferior derecha.
+    `BARCODE QR ${xQR} ${yQR} M 3 U 6`,
     `MA,${codigoUnico}`,
     "ENDQR",
     "PRINT",

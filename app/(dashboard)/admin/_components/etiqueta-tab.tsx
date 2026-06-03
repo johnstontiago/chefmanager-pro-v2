@@ -83,8 +83,8 @@ export default function EtiquetaTab() {
     { y: yMermas + s + 28, text: "INV-MXX-XXXX", small: true },
   ];
 
-  // QR: U 7 ≈ 45 módulos × M 3 = 135 dots
-  const QR_DOTS = 135;
+  // QR: U 6 → versión 6 (41 módulos × M 3) ≈ 123 dots
+  const QR_DOTS = 123;
   const xTitulo = Math.max(0, Math.floor((394 - cfg.titulo.length * 11) / 2));
   const labelH  = PX(cfg.altoLabel);
 
@@ -115,16 +115,14 @@ export default function EtiquetaTab() {
               onChange={(v) => set("altoLabel", v)} min={400} max={600} />
             <Field label="Margen izquierdo (dots)" hint="recomendado 15" value={cfg.xMargen}
               onChange={(v) => set("xMargen", v)} min={0} max={50} />
-            <Field label="Espaciado líneas (dots)" hint="recomendado 38" value={cfg.espaciado}
+            <Field label="Espaciado líneas (dots)" hint="recomendado 45" value={cfg.espaciado}
               onChange={(v) => set("espaciado", v)} min={20} max={80} />
             <Field label="Fuente CPCL (0-7)" hint="0=mini 4=normal 7=grande" value={cfg.fuente}
               onChange={(v) => set("fuente", v)} min={0} max={7} />
-            <Field label="QR posición X (dots)" hint="recomendado 200-220" value={cfg.xQR}
-              onChange={(v) => set("xQR", v)} min={150} max={300} />
           </div>
 
           <p className="text-[10px] text-slate-400">
-            El QR se alinea automáticamente con la línea Mermas.
+            El QR se posiciona automáticamente en la esquina inferior derecha.
           </p>
 
           <div className="flex gap-2 pt-2">
@@ -185,14 +183,14 @@ export default function EtiquetaTab() {
                 height: PX(36),
               }}
             />
-            {/* QR placeholder — alineado con yMermas */}
+            {/* QR placeholder — esquina inferior derecha (x=261, y=altoLabel-123-10) */}
             <div
               className="absolute bg-slate-200 border border-slate-400 flex items-center justify-center"
               style={{
-                left:   PX(cfg.xQR),
-                top:    PX(yMermas),
-                width:  Math.min(PX(QR_DOTS), 220 - PX(cfg.xQR)),
-                height: Math.min(PX(QR_DOTS), labelH - PX(yMermas)),
+                left:   PX(261),
+                top:    PX(cfg.altoLabel - QR_DOTS - 10),
+                width:  Math.min(PX(QR_DOTS), 220 - PX(261)),
+                height: Math.min(PX(QR_DOTS), labelH - PX(cfg.altoLabel - QR_DOTS - 10)),
               }}
             >
               <span className="text-[5px] text-slate-500 text-center leading-tight px-1">QR</span>
