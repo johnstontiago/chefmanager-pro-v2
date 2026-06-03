@@ -114,12 +114,10 @@ export default function EtiquetaTab() {
               onChange={(v) => set("espaciado", v)} min={20} max={80} />
             <Field label="Fuente CPCL (0-7)" hint="0=mini 4=normal 7=grande" value={cfg.fuente}
               onChange={(v) => set("fuente", v)} min={0} max={7} />
-            <Field label="QR posición X (dots)" hint="max ~220 para 43mm" value={cfg.xQR}
+            <Field label="QR posición X (dots)" hint="máx ~220 para 43mm" value={cfg.xQR}
               onChange={(v) => set("xQR", v)} min={100} max={280} />
             <Field label="QR posición Y (dots)" hint="recomendado 280-320" value={cfg.yQR}
               onChange={(v) => set("yQR", v)} min={100} max={400} />
-            <Field label="QR tamaño M (1-7)" hint="3=pequeño 5=grande" value={cfg.tamanoQR}
-              onChange={(v) => set("tamanoQR", v)} min={1} max={7} />
           </div>
 
           <div className="flex gap-2 pt-2">

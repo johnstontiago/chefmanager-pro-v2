@@ -127,8 +127,8 @@ function buildCPCL(
     `BOX ${boxX1} ${boxY1} ${boxX2} ${boxY2} 2`,
     `TEXT ${f} 0 ${x} ${yCodUnico} Cod. Unico:`,
     `TEXT 3 0 ${x} ${yCodValor} ${codigoUnico}`,
-    // QR: M = dots por módulo (1=pequeño … 7=grande). U 2 = corrección M (15%), valor válido requerido.
-    `BARCODE QR ${cfg.xQR} ${cfg.yQR} M ${cfg.tamanoQR} U 2`,
+    // QR: M 5 = tamaño fijo (5 dots/módulo). U 2 = corrección M (15%).
+    `BARCODE QR ${cfg.xQR} ${cfg.yQR} M 5 U 2`,
     `MA,${codigoUnico}`,
     "ENDQR",
     "PRINT",
