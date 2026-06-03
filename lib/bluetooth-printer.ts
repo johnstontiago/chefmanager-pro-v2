@@ -61,21 +61,33 @@ export class CPCLPrinter {
   async printLabel(data: LabelData, config: LabelConfig = DEFAULT_LABEL_CONFIG): Promise<void> {
     if (!this.characteristic) throw new Error("Impresora no conectada");
 
-    const cpcl  = buildCPCL(data, config);
+    const cpcl   = buildCPCL(data, config);
     console.log("[CPCL]", cpcl);
-    const bytes = new TextEncoder().encode(cpcl);
-
-    // Usar writeValueWithResponse si la característica lo soporta (ACK garantiza orden).
-    // Si no, writeValueWithoutResponse + delay para que la impresora bufferice antes de procesar.
+    const enc    = new TextEncoder();
     const useAck = this.characteristic.properties.write;
-    for (let i = 0; i < bytes.length; i += 20) {
-      const chunk = bytes.slice(i, i + 20);
-      if (useAck) {
-        await this.characteristic.writeValueWithResponse(chunk);
-      } else {
-        await this.characteristic.writeValueWithoutResponse(chunk);
-        await new Promise<void>((r) => setTimeout(r, 10));
+
+    const send = async (bytes: Uint8Array) => {
+      for (let i = 0; i < bytes.length; i += 20) {
+        const chunk = bytes.slice(i, i + 20);
+        if (useAck) {
+          await this.characteristic!.writeValueWithResponse(chunk);
+        } else {
+          await this.characteristic!.writeValueWithoutResponse(chunk);
+          await new Promise<void>((r) => setTimeout(r, 10));
+        }
       }
+    };
+
+    // Enviar cuerpo completo (hasta ENDQR inclusive), esperar 300ms para que la
+    // impresora procese el bloque QR, y solo entonces enviar PRINT.
+    // Sin esta pausa, la impresora imprime el QR incompleto (solo la primera fila).
+    const splitIdx = cpcl.indexOf("\r\nPRINT");
+    if (splitIdx === -1) {
+      await send(enc.encode(cpcl));
+    } else {
+      await send(enc.encode(cpcl.slice(0, splitIdx + 2)));  // todo hasta ENDQR\r\n
+      await new Promise<void>((r) => setTimeout(r, 300));   // tiempo para procesar QR
+      await send(enc.encode(cpcl.slice(splitIdx + 2)));     // PRINT\r\n\r\n
     }
   }
 
