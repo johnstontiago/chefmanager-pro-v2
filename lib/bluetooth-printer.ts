@@ -24,7 +24,6 @@ export interface LabelConfig {
 }
 
 const LABEL_W = 394;
-const QR_DOTS = 135;
 
 export const DEFAULT_LABEL_CONFIG: LabelConfig = {
   titulo:    "CHEFMANAGER PRO",
@@ -55,9 +54,9 @@ export class CPCLPrinter {
   async printLabel(data: LabelData, config: LabelConfig = DEFAULT_LABEL_CONFIG): Promise<void> {
     if (!this.characteristic) throw new Error("Impresora no conectada");
 
-    // QR generado en canvas del navegador → bitmap 1-bit → comando EG de CPCL.
-    // Evita depender del comando BARCODE QR del firmware de la impresora.
-    const bytes  = await buildCPCLBytes(data, config);
+    // QR generado como comandos LINE de CPCL — no depende del firmware de la impresora
+    const cpcl   = await buildCPCLFull(data, config);
+    const bytes  = new TextEncoder().encode(cpcl);
     const useAck = this.characteristic.properties.write;
 
     for (let i = 0; i < bytes.length; i += 20) {
@@ -84,7 +83,7 @@ export class CPCLPrinter {
   }
 }
 
-// Comandos CPCL comunes a ambos modos (sin QR, sin PRINT)
+// Comandos CPCL de texto/líneas/cajas (sin QR ni PRINT)
 function buildLabelCommands(
   { nombre, fabricante, lote, cadEmbalaje, codigoUnico, cantidad }: LabelData,
   cfg: LabelConfig,
@@ -128,63 +127,65 @@ function buildLabelCommands(
   ];
 }
 
-// Preview de texto para el panel debug (muestra BARCODE QR como referencia)
+// QR como comandos LINE de CPCL usando la matriz de módulos de qrcode.
+// Cada fila de módulos oscuros contiguos → 1 comando LINE (RLE horizontal).
+async function buildQRLines(
+  text: string,
+  M: number,      // dots por módulo (3 = cada módulo ocupa 3×3 dots)
+  labelW: number,
+  labelH: number,
+): Promise<string[]> {
+  const { default: QRCode } = await import("qrcode");
+  // create() devuelve la matriz de módulos sin necesitar canvas ni DOM
+  const qr   = (QRCode as unknown as { create: (t: string, o: object) => unknown })
+                 .create(text, { errorCorrectionLevel: "L" });
+  const nMod = (qr as { modules: { size: number; data: Uint8ClampedArray } }).modules.size;
+  const bits = (qr as { modules: { size: number; data: Uint8ClampedArray } }).modules.data;
+
+  // QR posicionado en la esquina inferior derecha con margen de 10 dots
+  const x0 = labelW - nMod * M - 10;
+  const y0 = labelH - nMod * M - 10;
+
+  const cmds: string[] = [];
+  for (let row = 0; row < nMod; row++) {
+    let start = -1;
+    for (let col = 0; col <= nMod; col++) {
+      const dark = col < nMod && bits[row * nMod + col] === 1;
+      if (dark && start === -1) {
+        start = col;
+      } else if (!dark && start !== -1) {
+        const x1 = x0 + start * M;
+        const x2 = x0 + col * M - 1;
+        const y  = y0 + row * M + (M >> 1); // centro vertical del módulo
+        cmds.push(`LINE ${x1} ${y} ${x2} ${y} ${M}`);
+        start = -1;
+      }
+    }
+  }
+  return cmds;
+}
+
+// CPCL completo para impresión (texto + QR como LINE commands)
+async function buildCPCLFull(data: LabelData, cfg: LabelConfig): Promise<string> {
+  const cmds   = buildLabelCommands(data, cfg);
+  const qrCmds = await buildQRLines(data.codigoUnico, 3, LABEL_W, cfg.altoLabel);
+  return [...cmds, ...qrCmds, "PRINT", ""].join("\r\n");
+}
+
+// Preview de texto para el panel debug (BARCODE QR como referencia visual)
 export function buildCPCL(data: LabelData, cfg: LabelConfig): string {
   const cmds = buildLabelCommands(data, cfg);
-  const xQR  = LABEL_W - QR_DOTS - 10;
-  const yQR  = cfg.altoLabel - QR_DOTS - 10;
+  const M    = 3;
+  const nModApprox = 21; // versión 1 QR (típica para códigos cortos)
+  const sz   = nModApprox * M;
+  const xQR  = LABEL_W - sz - 10;
+  const yQR  = cfg.altoLabel - sz - 10;
   return [
     ...cmds,
-    `BARCODE QR ${xQR} ${yQR} M 3 U 7`,
+    `BARCODE QR ${xQR} ${yQR} M ${M} U 7`,
     data.codigoUnico,
     "ENDQR",
     "PRINT",
     "",
   ].join("\r\n");
-}
-
-// Convierte el QR en un bitmap de 1 bit por píxel usando canvas del navegador.
-// Devuelve ceil(QR_DOTS/8) × QR_DOTS bytes, MSB = píxel izquierdo, 1 = negro.
-async function qrBitmap(text: string): Promise<Uint8Array> {
-  const { default: QRCode } = await import("qrcode");
-  const canvas  = document.createElement("canvas");
-  canvas.width  = QR_DOTS;
-  canvas.height = QR_DOTS;
-  await QRCode.toCanvas(canvas, text, { width: QR_DOTS, margin: 0 });
-  const ctx  = canvas.getContext("2d")!;
-  const px   = ctx.getImageData(0, 0, QR_DOTS, QR_DOTS).data;
-  const wB   = Math.ceil(QR_DOTS / 8);          // 17 bytes por fila
-  const bits = new Uint8Array(wB * QR_DOTS);
-  for (let r = 0; r < QR_DOTS; r++) {
-    for (let c = 0; c < QR_DOTS; c++) {
-      if (px[(r * QR_DOTS + c) * 4] < 128) {   // canal R < 128 → píxel negro
-        bits[r * wB + (c >> 3)] |= 0x80 >> (c & 7);
-      }
-    }
-  }
-  return bits;
-}
-
-// Payload real de impresión: comandos CPCL de texto + QR como bitmap EG.
-// EG = comando gráfico CPCL que inserta un bitmap raw en la etiqueta.
-async function buildCPCLBytes(data: LabelData, cfg: LabelConfig): Promise<Uint8Array> {
-  const cmds   = buildLabelCommands(data, cfg);
-  const bitmap = await qrBitmap(data.codigoUnico);
-  const xQR    = LABEL_W - QR_DOTS - 10;
-  const yQR    = cfg.altoLabel - QR_DOTS - 10;
-  const wB     = Math.ceil(QR_DOTS / 8);
-  const enc    = new TextEncoder();
-
-  // Comandos de texto + encabezado EG (el bitmap va inline sin separador)
-  const textPart   = [...cmds, `EG ${wB} ${QR_DOTS} ${xQR} ${yQR}`].join("\r\n") + "\r\n";
-  const printPart  = "PRINT\r\n\r\n";
-  const textBytes  = enc.encode(textPart);
-  const printBytes = enc.encode(printPart);
-
-  // Layout del payload: [texto CPCL][bitmap raw][PRINT]
-  const result = new Uint8Array(textBytes.length + bitmap.length + printBytes.length);
-  result.set(textBytes,  0);
-  result.set(bitmap,     textBytes.length);
-  result.set(printBytes, textBytes.length + bitmap.length);
-  return result;
 }
