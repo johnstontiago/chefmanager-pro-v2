@@ -54,8 +54,14 @@ export class CPCLPrinter {
   async printLabel(data: LabelData, config: LabelConfig = DEFAULT_LABEL_CONFIG): Promise<void> {
     if (!this.characteristic) throw new Error("Impresora no conectada");
 
-    // QR generado como comandos LINE de CPCL — no depende del firmware de la impresora
-    const cpcl   = await buildCPCLFull(data, config);
+    const res = await fetch("/api/print/cpcl", {
+      method:  "POST",
+      headers: { "Content-Type": "application/json" },
+      body:    JSON.stringify({ data, config }),
+    });
+    if (!res.ok) throw new Error("Error al generar CPCL en el servidor");
+    const { cpcl } = await res.json() as { cpcl: string };
+
     const bytes  = new TextEncoder().encode(cpcl);
     const useAck = this.characteristic.properties.write;
 
@@ -125,51 +131,6 @@ function buildLabelCommands(
     `TEXT ${f} 0 ${x} ${yCodUnico} Cod. Unico:`,
     `TEXT 3 0 ${x} ${yCodValor} ${codigoUnico}`,
   ];
-}
-
-// QR como comandos LINE de CPCL usando la matriz de módulos de qrcode.
-// Cada fila de módulos oscuros contiguos → 1 comando LINE (RLE horizontal).
-async function buildQRLines(
-  text: string,
-  M: number,      // dots por módulo (3 = cada módulo ocupa 3×3 dots)
-  labelW: number,
-  labelH: number,
-): Promise<string[]> {
-  const { default: QRCode } = await import("qrcode");
-  // create() devuelve la matriz de módulos sin necesitar canvas ni DOM
-  const qr   = (QRCode as unknown as { create: (t: string, o: object) => unknown })
-                 .create(text, { errorCorrectionLevel: "L" });
-  const nMod = (qr as { modules: { size: number; data: Uint8ClampedArray } }).modules.size;
-  const bits = (qr as { modules: { size: number; data: Uint8ClampedArray } }).modules.data;
-
-  // QR posicionado en la esquina inferior derecha con margen de 10 dots
-  const x0 = labelW - nMod * M - 10;
-  const y0 = labelH - nMod * M - 10;
-
-  const cmds: string[] = [];
-  for (let row = 0; row < nMod; row++) {
-    let start = -1;
-    for (let col = 0; col <= nMod; col++) {
-      const dark = col < nMod && bits[row * nMod + col] === 1;
-      if (dark && start === -1) {
-        start = col;
-      } else if (!dark && start !== -1) {
-        const x1 = x0 + start * M;
-        const x2 = x0 + col * M - 1;
-        const y  = y0 + row * M + (M >> 1); // centro vertical del módulo
-        cmds.push(`LINE ${x1} ${y} ${x2} ${y} ${M}`);
-        start = -1;
-      }
-    }
-  }
-  return cmds;
-}
-
-// CPCL completo para impresión (texto + QR como LINE commands)
-async function buildCPCLFull(data: LabelData, cfg: LabelConfig): Promise<string> {
-  const cmds   = buildLabelCommands(data, cfg);
-  const qrCmds = await buildQRLines(data.codigoUnico, 3, LABEL_W, cfg.altoLabel);
-  return [...cmds, ...qrCmds, "PRINT", ""].join("\r\n");
 }
 
 // Preview de texto para el panel debug (BARCODE QR como referencia visual)
