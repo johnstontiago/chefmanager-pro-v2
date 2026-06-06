@@ -24,7 +24,25 @@ export async function htmlToPdf(html: string, options: PdfOptions = {}): Promise
 
   try {
     const page = await browser.newPage();
-    await page.setContent(html, { waitUntil: 'load' });
+
+    // Disable JS: our HTML is static (inline CSS only). No need for script execution.
+    await page.setJavaScriptEnabled(false);
+
+    // Block all outbound network requests from the headless browser.
+    // Our HTML is self-contained (inline CSS, no external assets).
+    // Without this, a crafted payload could probe internal Railway services (SSRF)
+    // or read local files via file:// URLs.
+    await page.setRequestInterception(true);
+    page.on('request', (req) => {
+      const url = req.url();
+      if (url.startsWith('data:') || url === 'about:blank') {
+        req.continue();
+      } else {
+        req.abort('blockedbyclient');
+      }
+    });
+
+    await page.setContent(html, { waitUntil: 'domcontentloaded' });
 
     const pdf = await page.pdf({
       format: options.format ?? 'A4',
