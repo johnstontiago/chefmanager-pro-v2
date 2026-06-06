@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
 import prisma from "@/lib/db";
 import { toNumber, formatCurrency, formatDate, formatDecimal, getDaysUntilExpiry } from "@/lib/utils";
+import { htmlToPdf } from "@/lib/pdf-generator";
 
 export const dynamic = "force-dynamic";
 
@@ -26,36 +27,11 @@ function generateCSV(headers: string[], rows: string[][]): string {
 
 async function generatePDF(htmlContent: string): Promise<Buffer | null> {
   try {
-    const createRes = await fetch("https://apps.abacus.ai/api/createConvertHtmlToPdfRequest", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        deployment_token: process.env.ABACUSAI_API_KEY,
-        html_content: htmlContent,
-        pdf_options: { format: "A4", margin: { top: "15mm", bottom: "15mm", left: "10mm", right: "10mm" } },
-      }),
+    return await htmlToPdf(htmlContent, {
+      format: 'A4',
+      margin: { top: '15mm', bottom: '15mm', left: '10mm', right: '10mm' },
     });
-
-    if (!createRes.ok) return null;
-    const { request_id } = await createRes.json();
-    if (!request_id) return null;
-
-    for (let i = 0; i < 60; i++) {
-      await new Promise((r) => setTimeout(r, 1000));
-      const statusRes = await fetch("https://apps.abacus.ai/api/getConvertHtmlToPdfStatus", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ request_id, deployment_token: process.env.ABACUSAI_API_KEY }),
-      });
-      const statusResult = await statusRes.json();
-      if (statusResult?.status === "SUCCESS" && statusResult?.result?.result) {
-        return Buffer.from(statusResult.result.result, "base64");
-      } else if (statusResult?.status === "FAILED") {
-        return null;
-      }
-    }
-    return null;
-  } catch (error) {
+  } catch {
     return null;
   }
 }
