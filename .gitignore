@@ -109,4 +109,4 @@ temp/
 *.sw?
 
 # Prisma
-.env.local
+.env.local.backup/

@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth-options";
 import prisma from "@/lib/db";
 import { toNumber, formatCurrency, formatDate, formatDecimal } from "@/lib/utils";
 import archiver from "archiver";
+import { htmlToPdf } from "@/lib/pdf-generator";
 
 export const dynamic = "force-dynamic";
 
@@ -103,54 +104,13 @@ function generatePDFHtml(
   `;
 }
 
-async function generatePDF(html: string, filename: string): Promise<Buffer | null> {
+async function generatePDF(html: string, _filename: string): Promise<Buffer | null> {
   try {
-    const createResponse = await fetch(
-      "https://apps.abacus.ai/api/createConvertHtmlToPdfRequest",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          deployment_token: process.env.ABACUSAI_API_KEY,
-          html_content: html,
-          pdf_options: { format: "A4", margin: { top: "20mm", bottom: "20mm", left: "15mm", right: "15mm" } },
-        }),
-      }
-    );
-
-    if (!createResponse.ok) return null;
-
-    const { request_id } = await createResponse.json();
-    if (!request_id) return null;
-
-    for (let i = 0; i < 60; i++) {
-      await new Promise((r) => setTimeout(r, 1000));
-
-      const statusResponse = await fetch(
-        "https://apps.abacus.ai/api/getConvertHtmlToPdfStatus",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            request_id,
-            deployment_token: process.env.ABACUSAI_API_KEY,
-          }),
-        }
-      );
-
-      const statusResult = await statusResponse.json();
-      const status = statusResult?.status || "FAILED";
-
-      if (status === "SUCCESS" && statusResult?.result?.result) {
-        return Buffer.from(statusResult.result.result, "base64");
-      } else if (status === "FAILED") {
-        return null;
-      }
-    }
-
-    return null;
-  } catch (error) {
-    console.error("PDF generation error:", error);
+    return await htmlToPdf(html, {
+      format: 'A4',
+      margin: { top: '20mm', bottom: '20mm', left: '15mm', right: '15mm' },
+    });
+  } catch {
     return null;
   }
 }
