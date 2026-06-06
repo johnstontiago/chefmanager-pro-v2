@@ -340,13 +340,13 @@ export default function HistorialPedidos({ userRole }: HistorialPedidosProps) {
                           <MoreVertical className="w-4 h-4" />
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
+                      <DropdownMenuContent align="end" className="bg-white border-slate-200">
                         <DropdownMenuSub>
                           <DropdownMenuSubTrigger>
                             <FileDown className="w-4 h-4 mr-2" />
                             Generar PDF
                           </DropdownMenuSubTrigger>
-                          <DropdownMenuSubContent>
+                          <DropdownMenuSubContent className="bg-white border-slate-200">
                             <DropdownMenuItem
                               onClick={() => generarPDF(pedido, "completo")}
                               disabled={generandoPDF}
