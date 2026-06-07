@@ -40,6 +40,7 @@ export default function OnboardingForm() {
   const [form, setForm] = useState<FormData>(EMPTY);
   const [step, setStep] = useState(1);
   const [saving, setSaving] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [done, setDone] = useState<{ tenantId: number; tenantNombre: string } | null>(null);
 
   const set = (k: keyof FormData, v: string) => setForm((f) => ({ ...f, [k]: v }));
@@ -70,8 +71,9 @@ export default function OnboardingForm() {
   };
 
   const handleSubmit = async () => {
+    setErrorMsg(null);
     const err = validateStep(3);
-    if (err) { toast({ title: err, variant: "destructive" }); return; }
+    if (err) { setErrorMsg(err); return; }
     setSaving(true);
     try {
       const payload = {
@@ -98,7 +100,9 @@ export default function OnboardingForm() {
       if (!res.ok) throw new Error(data.error || "Error desconocido");
       setDone({ tenantId: data.resultado.tenant.id, tenantNombre: data.resultado.tenant.nombre });
     } catch (e: any) {
-      toast({ title: e.message || "Error al crear el negocio", variant: "destructive" });
+      const msg = e.message || "Error al crear el negocio";
+      setErrorMsg(msg);
+      toast({ title: msg, variant: "destructive" });
     } finally {
       setSaving(false);
     }
@@ -270,11 +274,16 @@ export default function OnboardingForm() {
                 />
               </div>
             </div>
+            {errorMsg && (
+              <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+                {errorMsg}
+              </div>
+            )}
             <div className="flex justify-between pt-2">
-              <Button variant="outline" onClick={() => setStep(2)}>Atrás</Button>
+              <Button variant="outline" onClick={() => setStep(2)} disabled={saving}>Atrás</Button>
               <Button className="bg-purple-600 hover:bg-purple-700" onClick={handleSubmit} disabled={saving}>
                 {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-                Crear Negocio
+                {saving ? "Creando..." : "Crear Negocio"}
               </Button>
             </div>
           </CardContent>

@@ -110,8 +110,7 @@ export const TenantCreateSchema = z.object({
   email: z.string().email(),
   regionUE: z.boolean().optional(),
   plan: z.enum(["basico", "profesional", "enterprise"]).optional(),
-  fechaVencimiento: z.string().datetime({ offset: true }).optional().nullable()
-    .or(z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().nullable()),
+  fechaVencimiento: z.string().nullable().optional(),
   notasInternas: z.string().max(1000).optional().nullable(),
 });
 
@@ -124,9 +123,8 @@ export const OnboardingSchema = z.object({
   tenantNombre: z.string().min(1, "Nombre del negocio requerido").max(200),
   tenantCif: z.string().max(50).optional().nullable(),
   tenantEmail: z.string().email("Email inválido"),
-  plan: z.enum(["basico", "profesional", "enterprise"]).default("basico"),
-  fechaVencimiento: z.string().datetime({ offset: true }).optional().nullable()
-    .or(z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().nullable()),
+  plan: z.enum(["basico", "profesional", "enterprise"]).optional(),
+  fechaVencimiento: z.string().nullable().optional(),
   notasInternas: z.string().max(1000).optional().nullable(),
   // Unidad principal
   unidadNombre: z.string().min(1, "Nombre de la unidad requerido").max(200),

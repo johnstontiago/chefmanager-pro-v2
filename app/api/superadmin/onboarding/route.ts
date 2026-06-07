@@ -82,7 +82,9 @@ export async function POST(request: Request) {
     });
 
     return NextResponse.json({ resultado }, { status: 201 });
-  } catch {
-    return NextResponse.json({ error: "Error interno al crear el negocio" }, { status: 500 });
+  } catch (error) {
+    console.error("[onboarding] Error:", error);
+    const msg = error instanceof Error ? error.message : "Error interno";
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }
