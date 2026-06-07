@@ -69,6 +69,7 @@ export async function POST(request: Request) {
         precioUnitario: new Decimal(precioUnitario),
         stockMinimo: new Decimal(stockMinimo),
         activo: true,
+        tenantId: user.tenantId as number,
       },
       include: {
         categoria: { select: { id: true, nombre: true } },

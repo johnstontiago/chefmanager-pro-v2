@@ -67,6 +67,7 @@ export async function POST(request: Request) {
         unidadId: unidadId || null,
         pinCode: pinCode || null,
         activo: true,
+        tenantId: user.tenantId as number,
       },
     });
 

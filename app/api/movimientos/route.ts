@@ -96,6 +96,7 @@ export async function POST(request: Request) {
         lote: lote || null,
         notas: notas || null,
         unidadId,
+        tenantId: user.tenantId as number,
       },
       include: {
         producto: true,

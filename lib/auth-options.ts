@@ -35,6 +35,7 @@ export const authOptions: NextAuthOptions = {
           email: usuario.email,
           name: usuario.nombre,
           rol: usuario.rol,
+          tenantId: usuario.tenantId,
           unidadId: usuario.unidadId,
           unidadNombre: usuario.unidad?.nombre || null,
           hasPin: !!usuario.pinCode,
@@ -47,6 +48,7 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.id = user.id;
         token.rol = (user as any).rol;
+        token.tenantId = (user as any).tenantId;
         token.unidadId = (user as any).unidadId;
         token.unidadNombre = (user as any).unidadNombre;
         token.pinVerified = false;
@@ -63,6 +65,7 @@ export const authOptions: NextAuthOptions = {
       if (session.user) {
         (session.user as any).id = token.id;
         (session.user as any).rol = token.rol;
+        (session.user as any).tenantId = token.tenantId;
         (session.user as any).unidadId = token.unidadId;
         (session.user as any).unidadNombre = token.unidadNombre;
         (session.user as any).pinVerified = token.pinVerified;

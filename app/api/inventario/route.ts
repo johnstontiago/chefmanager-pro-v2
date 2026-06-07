@@ -100,6 +100,7 @@ export async function POST(request: Request) {
         codigoUnico: codigoUnico || null,
         estado: "disponible",
         unidadId,
+        tenantId: user.tenantId as number,
       },
       include: { producto: true },
     });

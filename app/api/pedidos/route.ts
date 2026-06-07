@@ -98,6 +98,7 @@ export async function POST(request: Request) {
         estado: estado || "borrador",
         total: new Decimal(total),
         notas: notas || null,
+        tenantId: parseInt(String(user.tenantId)),
         items: {
           create: items.map((item: any) => ({
             productoId: item.productoId,

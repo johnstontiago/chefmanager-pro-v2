@@ -74,6 +74,7 @@ export async function POST(request: Request) {
         responsable: responsable || null,
         telefono: telefono || null,
         activo: true,
+        tenantId: user.tenantId as number,
       },
     });
 

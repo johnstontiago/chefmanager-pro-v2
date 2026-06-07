@@ -43,6 +43,7 @@ export async function crearPedidoComplementario(
   itemsFaltantes: Array<{ productoId: number; cantidad: number; precioUnitario: number }>,
   unidadId: number,
   usuarioId: number,
+  tenantId: number,
   proveedorId?: number | null
 ) {
   const total = itemsFaltantes.reduce(
@@ -59,6 +60,7 @@ export async function crearPedidoComplementario(
       estado: "pendiente",
       total: new Decimal(total),
       notas: `Pedido complementario del pedido #${pedidoPadreId}`,
+      tenantId,
       items: {
         create: itemsFaltantes.map((i) => ({
           productoId: i.productoId,

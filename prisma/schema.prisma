@@ -43,8 +43,8 @@ model Unidad {
   activo      Boolean      @default(true)
   createdAt   DateTime     @default(now()) @map("created_at")
   updatedAt   DateTime?    @default(now()) @updatedAt @map("updated_at")
-  tenantId    Int?         @map("tenant_id")
-  tenant      Tenant?      @relation(fields: [tenantId], references: [id])
+  tenantId    Int          @map("tenant_id")
+  tenant      Tenant       @relation(fields: [tenantId], references: [id])
   usuarios    Usuario[]
   pedidos     Pedido[]
   inventario  Inventario[]
@@ -58,10 +58,11 @@ model Categoria {
   nombre    String     @unique
   activo    Boolean    @default(true)
   createdAt DateTime   @default(now()) @map("created_at")
-  tenantId  Int?       @map("tenant_id")
-  tenant    Tenant?    @relation(fields: [tenantId], references: [id])
+  tenantId  Int        @map("tenant_id")
+  tenant    Tenant     @relation(fields: [tenantId], references: [id])
   productos Producto[]
 
+  @@unique([tenantId, nombre])
   @@map("categorias")
 }
 
@@ -74,8 +75,8 @@ model Proveedor {
   activo    Boolean    @default(true)
   createdAt DateTime   @default(now()) @map("created_at")
   updatedAt DateTime?  @default(now()) @updatedAt @map("updated_at")
-  tenantId  Int?       @map("tenant_id")
-  tenant    Tenant?    @relation(fields: [tenantId], references: [id])
+  tenantId  Int        @map("tenant_id")
+  tenant    Tenant     @relation(fields: [tenantId], references: [id])
   productos Producto[]
   pedidos   Pedido[]
 
@@ -92,17 +93,18 @@ model Producto {
   unidadMedida   String       @map("unidad_medida")
   precioUnitario Decimal      @map("precio_unitario") @db.Decimal(10, 2)
   stockMinimo    Decimal      @map("stock_minimo") @db.Decimal(10, 2)
-  qrcode         String?      @unique @map("qrcode")
+  qrcode         String?      @map("qrcode")
   activo         Boolean      @default(true)
   createdAt      DateTime     @default(now()) @map("created_at")
-  tenantId       Int?         @map("tenant_id")
-  tenant         Tenant?      @relation(fields: [tenantId], references: [id])
+  tenantId       Int          @map("tenant_id")
+  tenant         Tenant       @relation(fields: [tenantId], references: [id])
   categoria      Categoria    @relation(fields: [categoriaId], references: [id])
   proveedor      Proveedor?   @relation(fields: [proveedorId], references: [id])
   pedidoItems    PedidoItem[]
   inventario     Inventario[]
   movimientos    Movimiento[]
 
+  @@unique([tenantId, qrcode])
   @@map("productos")
 }
 
@@ -117,8 +119,8 @@ model Usuario {
   activo      Boolean      @default(true)
   createdAt   DateTime     @default(now()) @map("created_at")
   updatedAt   DateTime?    @default(now()) @updatedAt @map("updated_at")
-  tenantId    Int?         @map("tenant_id")
-  tenant      Tenant?      @relation(fields: [tenantId], references: [id])
+  tenantId    Int          @map("tenant_id")
+  tenant      Tenant       @relation(fields: [tenantId], references: [id])
   unidad      Unidad?      @relation(fields: [unidadId], references: [id])
   pedidos     Pedido[]
   movimientos Movimiento[]
@@ -139,8 +141,8 @@ model Pedido {
   notas          String?
   parentPedidoId Int?         @map("parent_pedido_id")
   createdAt      DateTime     @default(now()) @map("created_at")
-  tenantId       Int?         @map("tenant_id")
-  tenant         Tenant?      @relation(fields: [tenantId], references: [id])
+  tenantId       Int          @map("tenant_id")
+  tenant         Tenant       @relation(fields: [tenantId], references: [id])
   unidad         Unidad       @relation(fields: [unidadId], references: [id])
   usuario        Usuario      @relation(fields: [usuarioId], references: [id])
   proveedor      Proveedor?   @relation(fields: [proveedorId], references: [id])
@@ -179,15 +181,16 @@ model Inventario {
   lote           String?
   fechaCaducidad DateTime? @map("fecha_caducidad")
   ubicacion      String?
-  codigoUnico    String?   @unique @map("codigo_unico")
+  codigoUnico    String?   @map("codigo_unico")
   estado         String    @default("disponible")
   unidadId       Int       @map("unidad_id")
   createdAt      DateTime  @default(now()) @map("created_at")
-  tenantId       Int?      @map("tenant_id")
-  tenant         Tenant?   @relation(fields: [tenantId], references: [id])
+  tenantId       Int       @map("tenant_id")
+  tenant         Tenant    @relation(fields: [tenantId], references: [id])
   producto       Producto  @relation(fields: [productoId], references: [id])
   unidad         Unidad    @relation(fields: [unidadId], references: [id])
 
+  @@unique([tenantId, codigoUnico])
   @@map("inventario")
 }
 
@@ -203,8 +206,8 @@ model Movimiento {
   unidadId     Int         @map("unidad_id")
   pedidoItemId Int?        @map("pedido_item_id")
   createdAt    DateTime    @default(now()) @map("created_at")
-  tenantId     Int?        @map("tenant_id")
-  tenant       Tenant?     @relation(fields: [tenantId], references: [id])
+  tenantId     Int         @map("tenant_id")
+  tenant       Tenant      @relation(fields: [tenantId], references: [id])
   producto     Producto    @relation(fields: [productoId], references: [id])
   usuario      Usuario     @relation(fields: [usuarioId], references: [id])
   unidad       Unidad      @relation(fields: [unidadId], references: [id])

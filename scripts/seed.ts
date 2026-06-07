@@ -16,6 +16,7 @@ async function main() {
       direccion: "Calle Mayor 123, Madrid",
       telefono: "+34 912 345 678",
       activo: true,
+      tenantId: 1,
     },
   });
 
@@ -27,6 +28,7 @@ async function main() {
       direccion: "Avenida del Norte 456, Barcelona",
       telefono: "+34 934 567 890",
       activo: true,
+      tenantId: 1,
     },
   });
 
@@ -47,6 +49,7 @@ async function main() {
       unidadId: unidad1.id,
       pinCode: "1234",
       activo: true,
+      tenantId: 1,
     },
   });
 
@@ -61,6 +64,7 @@ async function main() {
       unidadId: unidad1.id,
       pinCode: "1111",
       activo: true,
+      tenantId: 1,
     },
   });
 
@@ -75,6 +79,7 @@ async function main() {
       unidadId: unidad2.id,
       pinCode: "2222",
       activo: true,
+      tenantId: 1,
     },
   });
 
@@ -90,6 +95,7 @@ async function main() {
       unidadId: unidad1.id,
       pinCode: "0000",
       activo: true,
+      tenantId: 1,
     },
   });
 
@@ -102,7 +108,7 @@ async function main() {
   for (const nombre of categoriasNames) {
     let cat = await prisma.categoria.findFirst({ where: { nombre } });
     if (!cat) {
-      cat = await prisma.categoria.create({ data: { nombre, activo: true } });
+      cat = await prisma.categoria.create({ data: { nombre, activo: true, tenantId: 1 } });
     }
     categorias.push(cat);
   }
@@ -122,7 +128,7 @@ async function main() {
   for (const p of proveedoresData) {
     let prov = await prisma.proveedor.findFirst({ where: { nombre: p.nombre } });
     if (!prov) {
-      prov = await prisma.proveedor.create({ data: { ...p, activo: true } });
+      prov = await prisma.proveedor.create({ data: { ...p, activo: true, tenantId: 1 } });
     }
     proveedores.push(prov);
   }
@@ -166,6 +172,7 @@ async function main() {
           precioUnitario: new Decimal(p.precioUnitario),
           stockMinimo: new Decimal(p.stockMinimo),
           activo: true,
+          tenantId: 1,
         },
       });
     }
