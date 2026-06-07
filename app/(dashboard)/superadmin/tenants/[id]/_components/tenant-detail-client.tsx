@@ -51,6 +51,8 @@ export default function TenantDetailClient({ tenant: initial }: { tenant: Tenant
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [enteringAs, setEnteringAs] = useState(false);
+  const [showEnterDialog, setShowEnterDialog] = useState(false);
+  const [selectedUnidad, setSelectedUnidad] = useState<string>("");
 
   // Confirmaciones de borrado
   const [deleteTenantOpen, setDeleteTenantOpen] = useState(false);
@@ -129,14 +131,19 @@ export default function TenantDetailClient({ tenant: initial }: { tenant: Tenant
     }
   };
 
-  // ── Eliminar negocio ───────────────────────────────────────────────────────
+  // ── Entrar como este negocio ───────────────────────────────────────────────
   const handleEnterAs = async () => {
     setEnteringAs(true);
+    const unidad = tenant.unidades.find((u) => String(u.id) === selectedUnidad);
     try {
       const res = await fetch("/api/superadmin/impersonate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tenantId: tenant.id }),
+        body: JSON.stringify({
+          tenantId: tenant.id,
+          unidadId: unidad?.id ?? null,
+          unidadNombre: unidad?.nombre ?? null,
+        }),
       });
       if (!res.ok) { const d = await res.json(); throw new Error(d.error); }
       window.location.href = "/dashboard";
@@ -145,6 +152,8 @@ export default function TenantDetailClient({ tenant: initial }: { tenant: Tenant
       setEnteringAs(false);
     }
   };
+
+  // ── Eliminar negocio ───────────────────────────────────────────────────────
 
   const handleDeleteTenant = async () => {
     setSaving(true);
@@ -291,7 +300,9 @@ export default function TenantDetailClient({ tenant: initial }: { tenant: Tenant
           </div>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
-          <Button variant="outline" size="sm" onClick={handleEnterAs} disabled={enteringAs || saving}
+          <Button variant="outline" size="sm"
+            onClick={() => { setSelectedUnidad(""); setShowEnterDialog(true); }}
+            disabled={enteringAs || saving}
             className="text-blue-600 hover:bg-blue-50 border-blue-200">
             {enteringAs
               ? <><Loader2 className="w-4 h-4 mr-1 animate-spin" />Entrando...</>
@@ -447,6 +458,47 @@ export default function TenantDetailClient({ tenant: initial }: { tenant: Tenant
           )}
         </CardContent>
       </Card>
+
+      {/* Dialog: entrar como este negocio */}
+      <Dialog open={showEnterDialog} onOpenChange={(open) => { setShowEnterDialog(open); if (!open) setSelectedUnidad(""); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Eye className="w-5 h-5 text-blue-600" />
+              Entrar como {tenant.nombre}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <p className="text-sm text-slate-600">Selecciona el local desde el que quieres visualizar el dashboard:</p>
+            {tenant.unidades.length === 0 ? (
+              <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 px-3 py-2 rounded">
+                Este negocio no tiene locales. Crea uno primero antes de entrar.
+              </p>
+            ) : (
+              <Select value={selectedUnidad} onValueChange={setSelectedUnidad}>
+                <SelectTrigger><SelectValue placeholder="Elige un local..." /></SelectTrigger>
+                <SelectContent>
+                  {tenant.unidades.map((u) => (
+                    <SelectItem key={u.id} value={String(u.id)}>{u.nombre}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          </div>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="outline" onClick={() => setShowEnterDialog(false)}>Cancelar</Button>
+            <Button
+              className="bg-blue-600 hover:bg-blue-700"
+              disabled={!selectedUnidad || enteringAs}
+              onClick={() => { setShowEnterDialog(false); handleEnterAs(); }}
+            >
+              {enteringAs
+                ? <><Loader2 className="w-4 h-4 mr-1 animate-spin" />Entrando...</>
+                : <><Eye className="w-4 h-4 mr-1" />Entrar</>}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Modal: añadir unidad */}
       <Dialog open={showAddUnidad} onOpenChange={setShowAddUnidad}>

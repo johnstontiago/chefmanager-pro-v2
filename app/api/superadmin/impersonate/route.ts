@@ -42,7 +42,15 @@ export async function POST(request: Request) {
   });
   if (!tenant) return NextResponse.json({ error: "Negocio no encontrado" }, { status: 404 });
 
-  setCookie({ tenantId, unidadId: null, unidadNombre: null });
+  const unidadId = body.unidadId ? parseInt(body.unidadId, 10) : null;
+  const unidadNombre = body.unidadNombre ?? null;
+
+  if (unidadId) {
+    const unidad = await prisma.unidad.findFirst({ where: { id: unidadId, tenantId } });
+    if (!unidad) return NextResponse.json({ error: "Unidad no pertenece a este negocio" }, { status: 400 });
+  }
+
+  setCookie({ tenantId, unidadId, unidadNombre });
   return NextResponse.json({ ok: true, tenant });
 }
 
