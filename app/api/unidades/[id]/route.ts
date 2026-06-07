@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
 import { prisma } from "@/lib/db";
+import { UnidadUpdateSchema } from "@/lib/schemas";
 
 export const dynamic = "force-dynamic";
 
@@ -54,13 +55,14 @@ export async function PUT(
     const { id: idStr } = await params;
     const id = parseInt(idStr);
     const body = await request.json();
-    const { nombre, direccion, responsable, telefono, activo } = body ?? {};
+    const parsed = UnidadUpdateSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error.errors[0].message }, { status: 400 });
+    }
+    const { nombre, direccion, responsable, telefono, activo } = parsed.data;
 
     if (!nombre) {
-      return NextResponse.json(
-        { error: "El nombre es requerido" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "El nombre es requerido" }, { status: 400 });
     }
 
     const unidad = await prisma.unidad.update({

@@ -82,3 +82,22 @@ export const ProveedorCreateSchema = z.object({
   telefono: z.string().max(50).optional().nullable(),
   email: z.string().email().optional().nullable(),
 });
+
+export const ProveedorUpdateSchema = ProveedorCreateSchema.partial().extend({
+  activo: z.boolean().optional(),
+});
+
+export const UnidadCreateSchema = z.object({
+  nombre: z.string().min(1).max(200),
+  direccion: z.string().max(500).optional().nullable(),
+  responsable: z.string().max(200).optional().nullable(),
+  telefono: z.string().max(50).optional().nullable(),
+});
+
+export const UnidadUpdateSchema = UnidadCreateSchema.partial().extend({
+  activo: z.boolean().optional(),
+});
+
+export const CategoriaUpdateSchema = CategoriaCreateSchema.partial().extend({
+  activo: z.boolean().optional(),
+});
