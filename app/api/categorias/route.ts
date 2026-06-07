@@ -4,6 +4,8 @@ import { authOptions } from "@/lib/auth-options";
 import prisma from "@/lib/db";
 import { CategoriaCreateSchema } from "@/lib/schemas";
 
+import { getActiveTenantId } from "@/lib/get-active-tenant";
+
 export const dynamic = "force-dynamic";
 
 export async function GET() {
@@ -13,7 +15,7 @@ export async function GET() {
       return NextResponse.json({ error: "No autenticado" }, { status: 401 });
     }
 
-    const tenantId = (session.user as any).tenantId as number;
+    const tenantId = getActiveTenantId(session.user as any);
     const categorias = await prisma.categoria.findMany({
       where: { activo: true, tenantId },
       orderBy: { nombre: "asc" },
@@ -45,13 +47,13 @@ export async function POST(request: Request) {
     }
     const { nombre } = parsed.data;
 
-    const existing = await prisma.categoria.findFirst({ where: { nombre, tenantId: user.tenantId as number } });
+    const existing = await prisma.categoria.findFirst({ where: { nombre, tenantId: getActiveTenantId(user) } });
     if (existing) {
       return NextResponse.json({ error: "Ya existe una categoría con ese nombre" }, { status: 400 });
     }
 
     const categoria = await prisma.categoria.create({
-      data: { nombre, activo: true, tenantId: user.tenantId as number },
+      data: { nombre, activo: true, tenantId: getActiveTenantId(user) },
     });
 
     return NextResponse.json({ categoria, message: "Categoría creada" });

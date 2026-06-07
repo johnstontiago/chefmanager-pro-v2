@@ -5,6 +5,8 @@ import prisma from "@/lib/db";
 import { Decimal } from "@prisma/client/runtime/library";
 import { toNumber } from "@/lib/utils";
 
+import { getActiveTenantId } from "@/lib/get-active-tenant";
+
 export const dynamic = "force-dynamic";
 
 // Productos son globales - compartidos entre todas las unidades
@@ -15,7 +17,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 
     const { id } = await params;
     
-    const tenantId = (session.user as any).tenantId as number;
+    const tenantId = getActiveTenantId(session.user as any);
     const producto = await prisma.producto.findFirst({
       where: { id: parseInt(id), tenantId },
       include: { categoria: true, proveedor: true },
@@ -44,7 +46,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     const { id } = await params;
     const { nombre, fabricante, formato, categoriaId, proveedorId, unidadMedida, precioUnitario, stockMinimo, activo } = await request.json();
 
-    const tenantId = user.tenantId as number;
+    const tenantId = getActiveTenantId(user);
     const existing = await prisma.producto.findFirst({ where: { id: parseInt(id), tenantId } });
     if (!existing) return NextResponse.json({ error: "No encontrado" }, { status: 404 });
 
@@ -83,7 +85,7 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
 
     const { id } = await params;
 
-    const tenantId = user.tenantId as number;
+    const tenantId = getActiveTenantId(user);
     const existing = await prisma.producto.findFirst({ where: { id: parseInt(id), tenantId } });
     if (!existing) return NextResponse.json({ error: "No encontrado" }, { status: 404 });
 

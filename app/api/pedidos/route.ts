@@ -6,6 +6,8 @@ import { Decimal } from "@prisma/client/runtime/library";
 import { toNumber } from "@/lib/utils";
 import { PedidoCreateSchema } from "@/lib/schemas";
 
+import { getActiveTenantId } from "@/lib/get-active-tenant";
+
 export const dynamic = "force-dynamic";
 
 export async function GET() {
@@ -22,7 +24,7 @@ export async function GET() {
       return NextResponse.json({ error: "Sin unidad" }, { status: 400 });
     }
 
-    const tenantId = parseInt(String(user.tenantId));
+    const tenantId = getActiveTenantId(user);
     const pedidos = await prisma.pedido.findMany({
       where: { unidadId, tenantId },
       orderBy: { createdAt: "desc" },
@@ -99,7 +101,7 @@ export async function POST(request: Request) {
         estado: estado || "borrador",
         total: new Decimal(total),
         notas: notas || null,
-        tenantId: parseInt(String(user.tenantId)),
+        tenantId: getActiveTenantId(user),
         items: {
           create: items.map((item: any) => ({
             productoId: item.productoId,

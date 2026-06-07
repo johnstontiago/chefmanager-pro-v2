@@ -5,6 +5,8 @@ import prisma from "@/lib/db";
 import { toNumber } from "@/lib/utils";
 import { format } from "date-fns";
 
+import { getActiveTenantId } from "@/lib/get-active-tenant";
+
 export const dynamic = "force-dynamic";
 
 export async function GET(
@@ -22,7 +24,7 @@ export async function GET(
 
   const whereClause: any = {
     id: pedidoId,
-    tenantId: user.tenantId as number,
+    tenantId: getActiveTenantId(user),
     estado: { in: ["recibido", "recibido_parcial"] },
   };
   if (user.rol !== "superuser" && user.unidadId) {

@@ -4,6 +4,8 @@ import { authOptions } from "@/lib/auth-options";
 import { prisma } from "@/lib/db";
 import { UnidadCreateSchema } from "@/lib/schemas";
 
+import { getActiveTenantId } from "@/lib/get-active-tenant";
+
 export const dynamic = "force-dynamic";
 
 export async function GET() {
@@ -14,7 +16,7 @@ export async function GET() {
     }
 
     const user = session.user as any;
-    const tenantId = user.tenantId as number;
+    const tenantId = getActiveTenantId(user);
     let unidades: any[] = [];
 
     if (user.rol === "superuser" || user.rol === "admin") {
@@ -68,7 +70,7 @@ export async function POST(request: Request) {
         responsable: responsable || null,
         telefono: telefono || null,
         activo: true,
-        tenantId: user.tenantId as number,
+        tenantId: getActiveTenantId(user),
       },
     });
 

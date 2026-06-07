@@ -5,6 +5,8 @@ import prisma from "@/lib/db";
 import { toNumber } from "@/lib/utils";
 import { PedidoPatchSchema } from "@/lib/schemas";
 
+import { getActiveTenantId } from "@/lib/get-active-tenant";
+
 export const dynamic = "force-dynamic";
 
 export async function GET(
@@ -21,7 +23,7 @@ export async function GET(
     const { id } = await params;
     const pedidoId = parseInt(id);
 
-    const whereClause: any = { id: pedidoId, tenantId: user.tenantId as number };
+    const whereClause: any = { id: pedidoId, tenantId: getActiveTenantId(user) };
     if (user.rol !== "superuser" && user.unidadId) {
       whereClause.unidadId = user.unidadId;
     }
@@ -90,7 +92,7 @@ export async function PATCH(
     }
     const { estado, notas } = parsed.data;
 
-    const whereClause: any = { id: pedidoId, tenantId: user.tenantId as number };
+    const whereClause: any = { id: pedidoId, tenantId: getActiveTenantId(user) };
     if (user.rol !== "superuser" && user.unidadId) {
       whereClause.unidadId = user.unidadId;
     }
@@ -127,7 +129,7 @@ export async function DELETE(
     const { id } = await params;
     const pedidoId = parseInt(id);
 
-    const whereClause: any = { id: pedidoId, tenantId: user.tenantId as number };
+    const whereClause: any = { id: pedidoId, tenantId: getActiveTenantId(user) };
     if (user.rol !== "superuser" && user.unidadId) {
       whereClause.unidadId = user.unidadId;
     }

@@ -5,6 +5,8 @@ import prisma from "@/lib/db";
 import { toNumber, formatCurrency, formatDate, formatDecimal, getDaysUntilExpiry } from "@/lib/utils";
 import { htmlToPdf } from "@/lib/pdf-generator";
 
+import { getActiveTenantId } from "@/lib/get-active-tenant";
+
 export const dynamic = "force-dynamic";
 
 /** Protege contra CSV injection: valores que Excel/Sheets interpretan como fórmulas */
@@ -43,7 +45,7 @@ export async function GET(request: Request, { params }: { params: { tipo: string
 
     const user = session.user as any;
     const unidadId = user.unidadId;
-    const tenantId = user.tenantId as number;
+    const tenantId = getActiveTenantId(user);
     if (!unidadId) return NextResponse.json({ error: "Sin unidad" }, { status: 400 });
 
     const { searchParams } = new URL(request.url);

@@ -17,6 +17,8 @@ import {
     Building2,
     ChevronDown,
     Crown,
+    Eye,
+    EyeOff,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -26,6 +28,7 @@ import SyncStatus from "@/components/sync-status";
 interface DashboardShellProps {
     user: any;
     children: React.ReactNode;
+    sudoTenant?: { id: number; nombre: string } | null;
 }
 
 const menuItems = [
@@ -38,8 +41,9 @@ const menuItems = [
   { href: "/superadmin", label: "Panel Admin", icon: Crown, roles: ["superuser"] },
   ].map(item => ({ ...item, href: item.href === "/dashboard" ? "/dashboard" : item.href }));
 
-export default function DashboardShell({ user, children }: DashboardShellProps) {
+export default function DashboardShell({ user, children, sudoTenant }: DashboardShellProps) {
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [exitingSudo, setExitingSudo] = useState(false);
     const [showUnitSelector, setShowUnitSelector] = useState(false);
     const [stockBajoCount, setStockBajoCount] = useState(0);
     const pathname = usePathname();
@@ -74,6 +78,12 @@ export default function DashboardShell({ user, children }: DashboardShellProps) 
 
   const handleLogout = async () => {
         await signOut({ redirect: true, callbackUrl: "/login" });
+  };
+
+  const handleExitSudo = async () => {
+    setExitingSudo(true);
+    await fetch("/api/superadmin/impersonate", { method: "DELETE" });
+    window.location.href = "/superadmin";
   };
 
   return (
@@ -196,6 +206,26 @@ export default function DashboardShell({ user, children }: DashboardShellProps) 
                                 </div>
                       </header>
               
+                {/* Banner de modo superadmin (impersonación) */}
+                {sudoTenant && (
+                  <div className="bg-amber-500 text-white px-4 py-2 flex items-center justify-between text-sm">
+                    <div className="flex items-center gap-2">
+                      <Eye className="w-4 h-4 flex-shrink-0" />
+                      <span>
+                        Viendo como superadmin: <strong>{sudoTenant.nombre}</strong>
+                      </span>
+                    </div>
+                    <button
+                      onClick={handleExitSudo}
+                      disabled={exitingSudo}
+                      className="flex items-center gap-1.5 bg-white/20 hover:bg-white/30 px-3 py-1 rounded text-xs font-medium transition-colors"
+                    >
+                      <EyeOff className="w-3 h-3" />
+                      {exitingSudo ? "Saliendo..." : "Salir"}
+                    </button>
+                  </div>
+                )}
+
                 {/* Page content */}
                       <main className="p-4 md:p-6 max-w-7xl mx-auto w-full overflow-x-hidden">
                         {children}

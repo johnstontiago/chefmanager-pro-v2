@@ -5,6 +5,8 @@ import prisma from "@/lib/db";
 import bcrypt from "bcryptjs";
 import { UsuarioUpdateSchema } from "@/lib/schemas";
 
+import { getActiveTenantId } from "@/lib/get-active-tenant";
+
 export const dynamic = "force-dynamic";
 
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -23,7 +25,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     }
     const { email, nombre, rol, unidadId, password, pinCode, activo } = parsed.data;
 
-    const tenantId = user.tenantId as number;
+    const tenantId = getActiveTenantId(user);
     const existing = await prisma.usuario.findFirst({ where: { id: parseInt(id), tenantId } });
     if (!existing) return NextResponse.json({ error: "No encontrado" }, { status: 404 });
 

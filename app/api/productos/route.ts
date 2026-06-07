@@ -6,6 +6,8 @@ import { Decimal } from "@prisma/client/runtime/library";
 import { toNumber } from "@/lib/utils";
 import { ProductoCreateSchema } from "@/lib/schemas";
 
+import { getActiveTenantId } from "@/lib/get-active-tenant";
+
 export const dynamic = "force-dynamic";
 
 // Productos son globales - compartidos entre todas las unidades
@@ -16,7 +18,7 @@ export async function GET() {
       return NextResponse.json({ error: "No autenticado" }, { status: 401 });
     }
 
-    const tenantId = (session.user as any).tenantId as number;
+    const tenantId = getActiveTenantId(session.user as any);
     const productos = await prisma.producto.findMany({
       where: { activo: true, tenantId },
       orderBy: { nombre: "asc" },
@@ -70,7 +72,7 @@ export async function POST(request: Request) {
         precioUnitario: new Decimal(precioUnitario),
         stockMinimo: new Decimal(stockMinimo),
         activo: true,
-        tenantId: user.tenantId as number,
+        tenantId: getActiveTenantId(user),
       },
       include: {
         categoria: { select: { id: true, nombre: true } },

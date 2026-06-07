@@ -3,6 +3,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
 import prisma from "@/lib/db";
 
+import { getActiveTenantId } from "@/lib/get-active-tenant";
+
 export const dynamic = "force-dynamic";
 
 // Proveedores son globales - compartidos entre todas las unidades
@@ -20,7 +22,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     const { id } = await params;
     const { nombre, contacto, telefono, email, activo } = await request.json();
 
-    const tenantId = user.tenantId as number;
+    const tenantId = getActiveTenantId(user);
     const existing = await prisma.proveedor.findFirst({ where: { id: parseInt(id), tenantId } });
     if (!existing) return NextResponse.json({ error: "No encontrado" }, { status: 404 });
 
@@ -49,7 +51,7 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
 
     const { id } = await params;
 
-    const tenantId = user.tenantId as number;
+    const tenantId = getActiveTenantId(user);
     const existing = await prisma.proveedor.findFirst({ where: { id: parseInt(id), tenantId } });
     if (!existing) return NextResponse.json({ error: "No encontrado" }, { status: 404 });
 

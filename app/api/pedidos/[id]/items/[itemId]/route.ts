@@ -3,6 +3,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
 import prisma from "@/lib/db";
 
+import { getActiveTenantId } from "@/lib/get-active-tenant";
+
 export const dynamic = "force-dynamic";
 
 export async function PATCH(
@@ -19,7 +21,7 @@ export async function PATCH(
     const body = await request.json();
     const { cantidadRecibida, estadoLinea, lote, fechaCaducidad } = body;
 
-    const tenantId = (session.user as any).tenantId as number;
+    const tenantId = getActiveTenantId(session.user as any);
     // Verifica IDOR: el pedido debe pertenecer al tenant del usuario
     const pedido = await prisma.pedido.findFirst({ where: { id: parseInt(id), tenantId } });
     if (!pedido) return NextResponse.json({ error: "Pedido no encontrado" }, { status: 404 });

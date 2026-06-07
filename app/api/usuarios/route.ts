@@ -5,6 +5,8 @@ import prisma from "@/lib/db";
 import bcrypt from "bcryptjs";
 import { UsuarioCreateSchema } from "@/lib/schemas";
 
+import { getActiveTenantId } from "@/lib/get-active-tenant";
+
 export const dynamic = "force-dynamic";
 
 export async function GET() {
@@ -15,7 +17,7 @@ export async function GET() {
     const user = session.user as any;
     if (user.rol !== "superuser") return NextResponse.json({ error: "Sin permisos" }, { status: 403 });
 
-    const tenantId = user.tenantId as number;
+    const tenantId = getActiveTenantId(user);
     const usuarios = await prisma.usuario.findMany({
       where: { tenantId },
       orderBy: { nombre: "asc" },
@@ -69,7 +71,7 @@ export async function POST(request: Request) {
         unidadId: unidadId || null,
         pinCode: pinCode || null,
         activo: true,
-        tenantId: user.tenantId as number,
+        tenantId: getActiveTenantId(user),
       },
     });
 

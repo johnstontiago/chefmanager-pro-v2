@@ -14,7 +14,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useToast } from "@/hooks/use-toast";
 import {
   Building2, Users, MapPin, Calendar, Loader2, Save,
-  ShieldCheck, ShieldOff, UserCircle, Crown, Plus, Trash2, Edit,
+  ShieldCheck, ShieldOff, UserCircle, Crown, Plus, Trash2, Edit, Eye,
 } from "lucide-react";
 
 type Unidad = { id: number; nombre: string; direccion: string | null; activo: boolean };
@@ -50,6 +50,7 @@ export default function TenantDetailClient({ tenant: initial }: { tenant: Tenant
   const [tenant, setTenant] = useState(initial);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [enteringAs, setEnteringAs] = useState(false);
 
   // Confirmaciones de borrado
   const [deleteTenantOpen, setDeleteTenantOpen] = useState(false);
@@ -129,6 +130,22 @@ export default function TenantDetailClient({ tenant: initial }: { tenant: Tenant
   };
 
   // ── Eliminar negocio ───────────────────────────────────────────────────────
+  const handleEnterAs = async () => {
+    setEnteringAs(true);
+    try {
+      const res = await fetch("/api/superadmin/impersonate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tenantId: tenant.id }),
+      });
+      if (!res.ok) { const d = await res.json(); throw new Error(d.error); }
+      window.location.href = "/dashboard";
+    } catch (e: any) {
+      toast({ title: e.message, variant: "destructive" });
+      setEnteringAs(false);
+    }
+  };
+
   const handleDeleteTenant = async () => {
     setSaving(true);
     try {
@@ -274,6 +291,12 @@ export default function TenantDetailClient({ tenant: initial }: { tenant: Tenant
           </div>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
+          <Button variant="outline" size="sm" onClick={handleEnterAs} disabled={enteringAs || saving}
+            className="text-blue-600 hover:bg-blue-50 border-blue-200">
+            {enteringAs
+              ? <><Loader2 className="w-4 h-4 mr-1 animate-spin" />Entrando...</>
+              : <><Eye className="w-4 h-4 mr-1" />Ver como este negocio</>}
+          </Button>
           <Button variant="outline" size="sm" onClick={toggleActivo} disabled={saving}
             className={tenant.activo ? "text-red-600 hover:bg-red-50" : "text-green-600 hover:bg-green-50"}>
             {tenant.activo

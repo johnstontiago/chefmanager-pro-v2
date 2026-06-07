@@ -4,6 +4,8 @@ import { authOptions } from "@/lib/auth-options";
 import { prisma } from "@/lib/db";
 import { toNumber } from "@/lib/utils";
 
+import { getActiveTenantId } from "@/lib/get-active-tenant";
+
 export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
@@ -14,7 +16,7 @@ export async function GET(request: Request) {
     }
 
     const user = session.user as any;
-    const tenantId = user.tenantId as number;
+    const tenantId = getActiveTenantId(user);
     const { searchParams } = new URL(request.url);
     const unidadId = searchParams.get("unidadId") || user.unidadId;
 

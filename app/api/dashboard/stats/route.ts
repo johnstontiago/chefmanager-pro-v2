@@ -4,6 +4,8 @@ import { authOptions } from "@/lib/auth-options";
 import prisma from "@/lib/db";
 import { toNumber } from "@/lib/utils";
 
+import { getActiveTenantId } from "@/lib/get-active-tenant";
+
 export const dynamic = "force-dynamic";
 
 export async function GET() {
@@ -15,7 +17,7 @@ export async function GET() {
 
     const user = session.user as any;
     const unidadId = user.unidadId;
-    const tenantId = user.tenantId as number;
+    const tenantId = getActiveTenantId(user);
 
     if (!unidadId) {
       return NextResponse.json({ error: "Usuario sin unidad asignada" }, { status: 400 });

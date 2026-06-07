@@ -6,6 +6,8 @@ import { Decimal } from "@prisma/client/runtime/library";
 import { toNumber } from "@/lib/utils";
 import { InventarioCreateSchema } from "@/lib/schemas";
 
+import { getActiveTenantId } from "@/lib/get-active-tenant";
+
 export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
@@ -25,7 +27,7 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const productoId = searchParams.get("productoId");
 
-    const tenantId = user.tenantId as number;
+    const tenantId = getActiveTenantId(user);
     const where: any = { unidadId, tenantId, estado: "disponible" };
     if (productoId) {
       where.productoId = parseInt(productoId);
@@ -101,7 +103,7 @@ export async function POST(request: Request) {
         codigoUnico: codigoUnico || null,
         estado: "disponible",
         unidadId,
-        tenantId: user.tenantId as number,
+        tenantId: getActiveTenantId(user),
       },
       include: { producto: true },
     });

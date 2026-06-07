@@ -4,6 +4,8 @@ import { authOptions } from "@/lib/auth-options";
 import { prisma } from "@/lib/db";
 import { UnidadUpdateSchema } from "@/lib/schemas";
 
+import { getActiveTenantId } from "@/lib/get-active-tenant";
+
 export const dynamic = "force-dynamic";
 
 export async function GET(
@@ -18,7 +20,7 @@ export async function GET(
 
     const { id: idStr } = await params;
     const id = parseInt(idStr);
-    const tenantId = (session.user as any).tenantId as number;
+    const tenantId = getActiveTenantId(session.user as any);
     const unidad = await prisma.unidad.findFirst({
       where: { id, tenantId },
     });
@@ -105,7 +107,7 @@ export async function DELETE(
     const id = parseInt(idStr);
 
     // Check if unidad has related data (usuarios, pedidos, inventario, movimientos)
-    const tenantId = user.tenantId as number;
+    const tenantId = getActiveTenantId(user);
     const unidad = await prisma.unidad.findFirst({
       where: { id, tenantId },
       include: {

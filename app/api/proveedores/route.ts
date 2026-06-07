@@ -4,6 +4,8 @@ import { authOptions } from "@/lib/auth-options";
 import prisma from "@/lib/db";
 import { ProveedorCreateSchema } from "@/lib/schemas";
 
+import { getActiveTenantId } from "@/lib/get-active-tenant";
+
 export const dynamic = "force-dynamic";
 
 // Proveedores son globales - compartidos entre todas las unidades
@@ -14,7 +16,7 @@ export async function GET() {
       return NextResponse.json({ error: "No autenticado" }, { status: 401 });
     }
 
-    const tenantId = (session.user as any).tenantId as number;
+    const tenantId = getActiveTenantId(session.user as any);
     const proveedores = await prisma.proveedor.findMany({
       where: { activo: true, tenantId },
       orderBy: { nombre: "asc" },
@@ -54,7 +56,7 @@ export async function POST(request: Request) {
         telefono: telefono || null,
         email: email || null,
         activo: true,
-        tenantId: user.tenantId as number,
+        tenantId: getActiveTenantId(user),
       },
     });
 
