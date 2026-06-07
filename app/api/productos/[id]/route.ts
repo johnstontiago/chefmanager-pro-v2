@@ -15,8 +15,9 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 
     const { id } = await params;
     
-    const producto = await prisma.producto.findUnique({
-      where: { id: parseInt(id) },
+    const tenantId = (session.user as any).tenantId as number;
+    const producto = await prisma.producto.findFirst({
+      where: { id: parseInt(id), tenantId },
       include: { categoria: true, proveedor: true },
     });
 
@@ -43,7 +44,8 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     const { id } = await params;
     const { nombre, fabricante, formato, categoriaId, proveedorId, unidadMedida, precioUnitario, stockMinimo, activo } = await request.json();
 
-    const existing = await prisma.producto.findUnique({ where: { id: parseInt(id) } });
+    const tenantId = user.tenantId as number;
+    const existing = await prisma.producto.findFirst({ where: { id: parseInt(id), tenantId } });
     if (!existing) return NextResponse.json({ error: "No encontrado" }, { status: 404 });
 
     const producto = await prisma.producto.update({
@@ -81,7 +83,8 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
 
     const { id } = await params;
 
-    const existing = await prisma.producto.findUnique({ where: { id: parseInt(id) } });
+    const tenantId = user.tenantId as number;
+    const existing = await prisma.producto.findFirst({ where: { id: parseInt(id), tenantId } });
     if (!existing) return NextResponse.json({ error: "No encontrado" }, { status: 404 });
 
     // Soft delete

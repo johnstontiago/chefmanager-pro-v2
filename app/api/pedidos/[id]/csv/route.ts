@@ -22,6 +22,7 @@ export async function GET(
 
   const whereClause: any = {
     id: pedidoId,
+    tenantId: user.tenantId as number,
     estado: { in: ["recibido", "recibido_parcial"] },
   };
   if (user.rol !== "superuser" && user.unidadId) {

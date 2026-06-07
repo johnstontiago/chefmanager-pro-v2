@@ -25,7 +25,8 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const productoId = searchParams.get("productoId");
 
-    const where: any = { unidadId, estado: "disponible" };
+    const tenantId = user.tenantId as number;
+    const where: any = { unidadId, tenantId, estado: "disponible" };
     if (productoId) {
       where.productoId = parseInt(productoId);
     }

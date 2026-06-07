@@ -21,7 +21,7 @@ export async function GET(
     const { id } = await params;
     const pedidoId = parseInt(id);
 
-    const whereClause: any = { id: pedidoId };
+    const whereClause: any = { id: pedidoId, tenantId: user.tenantId as number };
     if (user.rol !== "superuser" && user.unidadId) {
       whereClause.unidadId = user.unidadId;
     }
@@ -90,7 +90,7 @@ export async function PATCH(
     }
     const { estado, notas } = parsed.data;
 
-    const whereClause: any = { id: pedidoId };
+    const whereClause: any = { id: pedidoId, tenantId: user.tenantId as number };
     if (user.rol !== "superuser" && user.unidadId) {
       whereClause.unidadId = user.unidadId;
     }
@@ -127,7 +127,7 @@ export async function DELETE(
     const { id } = await params;
     const pedidoId = parseInt(id);
 
-    const whereClause: any = { id: pedidoId };
+    const whereClause: any = { id: pedidoId, tenantId: user.tenantId as number };
     if (user.rol !== "superuser" && user.unidadId) {
       whereClause.unidadId = user.unidadId;
     }

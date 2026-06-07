@@ -26,7 +26,8 @@ export async function GET(request: Request) {
     const tipo = searchParams.get("tipo");
     const limit = parseInt(searchParams.get("limit") || "100");
 
-    const where: any = { unidadId };
+    const tenantId = user.tenantId as number;
+    const where: any = { unidadId, tenantId };
     if (tipo) {
       where.tipo = tipo;
     }

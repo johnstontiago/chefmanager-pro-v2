@@ -13,22 +13,18 @@ export async function GET() {
     }
 
     const user = session.user as any;
+    const tenantId = user.tenantId as number;
     let unidades: any[] = [];
 
-    // Superuser y Admin pueden ver todas las unidades (para asignar usuarios)
     if (user.rol === "superuser" || user.rol === "admin") {
       unidades = await prisma.unidad.findMany({
-        where: { activo: true },
+        where: { activo: true, tenantId },
         orderBy: { nombre: "asc" },
       });
     } else {
-      // Otros roles solo ven su propia unidad
       if (user.unidadId) {
         unidades = await prisma.unidad.findMany({
-          where: {
-            id: user.unidadId,
-            activo: true,
-          },
+          where: { id: user.unidadId, tenantId, activo: true },
         });
       } else {
         unidades = [];

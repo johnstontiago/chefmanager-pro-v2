@@ -13,8 +13,9 @@ export async function GET() {
       return NextResponse.json({ error: "No autenticado" }, { status: 401 });
     }
 
+    const tenantId = (session.user as any).tenantId as number;
     const proveedores = await prisma.proveedor.findMany({
-      where: { activo: true },
+      where: { activo: true, tenantId },
       orderBy: { nombre: "asc" },
     });
 

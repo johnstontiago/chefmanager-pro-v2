@@ -22,8 +22,9 @@ export async function GET() {
       return NextResponse.json({ error: "Sin unidad" }, { status: 400 });
     }
 
+    const tenantId = parseInt(String(user.tenantId));
     const pedidos = await prisma.pedido.findMany({
-      where: { unidadId },
+      where: { unidadId, tenantId },
       orderBy: { createdAt: "desc" },
       include: {
         proveedor: { select: { nombre: true } },

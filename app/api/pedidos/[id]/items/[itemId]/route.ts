@@ -19,6 +19,11 @@ export async function PATCH(
     const body = await request.json();
     const { cantidadRecibida, estadoLinea, lote, fechaCaducidad } = body;
 
+    const tenantId = (session.user as any).tenantId as number;
+    // Verifica IDOR: el pedido debe pertenecer al tenant del usuario
+    const pedido = await prisma.pedido.findFirst({ where: { id: parseInt(id), tenantId } });
+    if (!pedido) return NextResponse.json({ error: "Pedido no encontrado" }, { status: 404 });
+
     const existing = await prisma.pedidoItem.findFirst({
       where: { id: parseInt(itemId), pedidoId: parseInt(id) },
     });

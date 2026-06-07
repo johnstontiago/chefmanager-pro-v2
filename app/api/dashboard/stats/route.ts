@@ -15,6 +15,7 @@ export async function GET() {
 
     const user = session.user as any;
     const unidadId = user.unidadId;
+    const tenantId = user.tenantId as number;
 
     if (!unidadId) {
       return NextResponse.json({ error: "Usuario sin unidad asignada" }, { status: 400 });
@@ -25,11 +26,11 @@ export async function GET() {
     const in7Days = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
 
     const productos = await prisma.producto.findMany({
-      where: { activo: true },
+      where: { activo: true, tenantId },
     });
 
     const inventarioUnidad = await prisma.inventario.findMany({
-      where: { unidadId, estado: "disponible" },
+      where: { unidadId, tenantId, estado: "disponible" },
       include: { producto: true },
     });
 
@@ -50,6 +51,7 @@ export async function GET() {
     const proximosACaducar = await prisma.inventario.count({
       where: {
         unidadId,
+        tenantId,
         estado: "disponible",
         fechaCaducidad: {
           gte: today,
@@ -61,6 +63,7 @@ export async function GET() {
     const pedidosPendientes = await prisma.pedido.count({
       where: {
         unidadId,
+        tenantId,
         estado: { in: ["borrador", "enviado"] },
       },
     });
@@ -71,7 +74,7 @@ export async function GET() {
     }
 
     const ultimosMovimientos = await prisma.movimiento.findMany({
-      where: { unidadId },
+      where: { unidadId, tenantId },
       orderBy: { createdAt: "desc" },
       take: 10,
       include: {
@@ -95,6 +98,7 @@ export async function GET() {
     const pedidosParaRecibir = await prisma.pedido.count({
       where: {
         unidadId,
+        tenantId,
         estado: "enviado",
       },
     });

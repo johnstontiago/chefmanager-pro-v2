@@ -15,7 +15,9 @@ export async function GET() {
     const user = session.user as any;
     if (user.rol !== "superuser") return NextResponse.json({ error: "Sin permisos" }, { status: 403 });
 
+    const tenantId = user.tenantId as number;
     const usuarios = await prisma.usuario.findMany({
+      where: { tenantId },
       orderBy: { nombre: "asc" },
       select: {
         id: true,

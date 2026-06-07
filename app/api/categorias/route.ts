@@ -12,8 +12,9 @@ export async function GET() {
       return NextResponse.json({ error: "No autenticado" }, { status: 401 });
     }
 
+    const tenantId = (session.user as any).tenantId as number;
     const categorias = await prisma.categoria.findMany({
-      where: { activo: true },
+      where: { activo: true, tenantId },
       orderBy: { nombre: "asc" },
     });
 
@@ -42,7 +43,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Nombre requerido" }, { status: 400 });
     }
 
-    const existing = await prisma.categoria.findFirst({ where: { nombre } });
+    const existing = await prisma.categoria.findFirst({ where: { nombre, tenantId: user.tenantId as number } });
     if (existing) {
       return NextResponse.json({ error: "Ya existe una categoría con ese nombre" }, { status: 400 });
     }

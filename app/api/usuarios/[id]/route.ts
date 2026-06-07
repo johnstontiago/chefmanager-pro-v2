@@ -23,7 +23,8 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     }
     const { email, nombre, rol, unidadId, password, pinCode, activo } = parsed.data;
 
-    const existing = await prisma.usuario.findUnique({ where: { id: parseInt(id) } });
+    const tenantId = user.tenantId as number;
+    const existing = await prisma.usuario.findFirst({ where: { id: parseInt(id), tenantId } });
     if (!existing) return NextResponse.json({ error: "No encontrado" }, { status: 404 });
 
     const data: any = {};

@@ -17,8 +17,9 @@ export async function GET(
 
     const { id: idStr } = await params;
     const id = parseInt(idStr);
-    const unidad = await prisma.unidad.findUnique({
-      where: { id },
+    const tenantId = (session.user as any).tenantId as number;
+    const unidad = await prisma.unidad.findFirst({
+      where: { id, tenantId },
     });
 
     if (!unidad) {
@@ -102,8 +103,9 @@ export async function DELETE(
     const id = parseInt(idStr);
 
     // Check if unidad has related data (usuarios, pedidos, inventario, movimientos)
-    const unidad = await prisma.unidad.findUnique({
-      where: { id },
+    const tenantId = user.tenantId as number;
+    const unidad = await prisma.unidad.findFirst({
+      where: { id, tenantId },
       include: {
         _count: {
           select: {
