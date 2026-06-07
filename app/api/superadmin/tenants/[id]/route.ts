@@ -36,6 +36,37 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
   }
 }
 
+export async function DELETE(_req: Request, { params }: { params: { id: string } }) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user) return NextResponse.json({ error: "No autenticado" }, { status: 401 });
+    const user = session.user as any;
+    if (user.rol !== "superuser") return NextResponse.json({ error: "Acceso denegado" }, { status: 403 });
+
+    const id = parseInt(params.id);
+    if (isNaN(id)) return NextResponse.json({ error: "ID inválido" }, { status: 400 });
+
+    // Elimina en cascada: usuarios, unidades, productos, pedidos, etc.
+    await prisma.$transaction([
+      prisma.movimiento.deleteMany({ where: { tenantId: id } }),
+      prisma.inventario.deleteMany({ where: { tenantId: id } }),
+      prisma.pedidoItem.deleteMany({ where: { pedido: { tenantId: id } } }),
+      prisma.pedido.deleteMany({ where: { tenantId: id } }),
+      prisma.producto.deleteMany({ where: { tenantId: id } }),
+      prisma.categoria.deleteMany({ where: { tenantId: id } }),
+      prisma.proveedor.deleteMany({ where: { tenantId: id } }),
+      prisma.usuario.deleteMany({ where: { tenantId: id } }),
+      prisma.unidad.deleteMany({ where: { tenantId: id } }),
+      prisma.tenant.delete({ where: { id } }),
+    ]);
+
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    console.error("[superadmin] DELETE tenant:", error);
+    return NextResponse.json({ error: "Error al eliminar el negocio" }, { status: 500 });
+  }
+}
+
 export async function PUT(request: Request, { params }: { params: { id: string } }) {
   try {
     const session = await getServerSession(authOptions);
