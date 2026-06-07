@@ -8,6 +8,32 @@ datasource db {
     url      = env("DATABASE_URL")
 }
 
+// ─── TENANT ──────────────────────────────────────────────────────────────────
+
+model Tenant {
+  id        Int       @id @default(autoincrement())
+  nombre    String
+  cif       String?   @unique
+  email     String
+  regionUE  Boolean   @default(true)  @map("region_ue")
+  activo    Boolean   @default(true)
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @default(now()) @updatedAt @map("updated_at")
+
+  unidades    Unidad[]
+  usuarios    Usuario[]
+  productos   Producto[]
+  categorias  Categoria[]
+  proveedores Proveedor[]
+  pedidos     Pedido[]
+  inventario  Inventario[]
+  movimientos Movimiento[]
+
+  @@map("tenants")
+}
+
+// ─── MODELOS DE NEGOCIO ───────────────────────────────────────────────────────
+
 model Unidad {
   id          Int          @id @default(autoincrement())
   nombre      String
@@ -17,6 +43,8 @@ model Unidad {
   activo      Boolean      @default(true)
   createdAt   DateTime     @default(now()) @map("created_at")
   updatedAt   DateTime?    @default(now()) @updatedAt @map("updated_at")
+  tenantId    Int?         @map("tenant_id")
+  tenant      Tenant?      @relation(fields: [tenantId], references: [id])
   usuarios    Usuario[]
   pedidos     Pedido[]
   inventario  Inventario[]
@@ -30,6 +58,8 @@ model Categoria {
   nombre    String     @unique
   activo    Boolean    @default(true)
   createdAt DateTime   @default(now()) @map("created_at")
+  tenantId  Int?       @map("tenant_id")
+  tenant    Tenant?    @relation(fields: [tenantId], references: [id])
   productos Producto[]
 
   @@map("categorias")
@@ -44,6 +74,8 @@ model Proveedor {
   activo    Boolean    @default(true)
   createdAt DateTime   @default(now()) @map("created_at")
   updatedAt DateTime?  @default(now()) @updatedAt @map("updated_at")
+  tenantId  Int?       @map("tenant_id")
+  tenant    Tenant?    @relation(fields: [tenantId], references: [id])
   productos Producto[]
   pedidos   Pedido[]
 
@@ -63,6 +95,8 @@ model Producto {
   qrcode         String?      @unique @map("qrcode")
   activo         Boolean      @default(true)
   createdAt      DateTime     @default(now()) @map("created_at")
+  tenantId       Int?         @map("tenant_id")
+  tenant         Tenant?      @relation(fields: [tenantId], references: [id])
   categoria      Categoria    @relation(fields: [categoriaId], references: [id])
   proveedor      Proveedor?   @relation(fields: [proveedorId], references: [id])
   pedidoItems    PedidoItem[]
@@ -73,20 +107,22 @@ model Producto {
 }
 
 model Usuario {
-  id           Int          @id @default(autoincrement())
-  email        String       @unique
-  password     String       @map("password_hash")
-  nombre       String
-  rol          String       @default("viewer")
-  unidadId     Int?         @map("unidad_id")
-  pinCode      String?      @map("pin_code")
-  activo       Boolean      @default(true)
-  createdAt    DateTime     @default(now()) @map("created_at")
-  updatedAt    DateTime?    @default(now()) @updatedAt @map("updated_at")
-  unidad       Unidad?      @relation(fields: [unidadId], references: [id])
-  pedidos      Pedido[]
-  movimientos  Movimiento[]
-  recepciones  PedidoItem[]
+  id          Int          @id @default(autoincrement())
+  email       String       @unique
+  password    String       @map("password_hash")
+  nombre      String
+  rol         String       @default("viewer")
+  unidadId    Int?         @map("unidad_id")
+  pinCode     String?      @map("pin_code")
+  activo      Boolean      @default(true)
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime?    @default(now()) @updatedAt @map("updated_at")
+  tenantId    Int?         @map("tenant_id")
+  tenant      Tenant?      @relation(fields: [tenantId], references: [id])
+  unidad      Unidad?      @relation(fields: [unidadId], references: [id])
+  pedidos     Pedido[]
+  movimientos Movimiento[]
+  recepciones PedidoItem[]
 
   @@map("usuarios")
 }
@@ -103,6 +139,8 @@ model Pedido {
   notas          String?
   parentPedidoId Int?         @map("parent_pedido_id")
   createdAt      DateTime     @default(now()) @map("created_at")
+  tenantId       Int?         @map("tenant_id")
+  tenant         Tenant?      @relation(fields: [tenantId], references: [id])
   unidad         Unidad       @relation(fields: [unidadId], references: [id])
   usuario        Usuario      @relation(fields: [usuarioId], references: [id])
   proveedor      Proveedor?   @relation(fields: [proveedorId], references: [id])
@@ -114,21 +152,21 @@ model Pedido {
 }
 
 model PedidoItem {
-  id               Int       @id @default(autoincrement())
-  pedidoId         Int       @map("pedido_id")
-  productoId       Int       @map("producto_id")
-  cantidad         Decimal   @db.Decimal(10, 2)
-  precioUnitario   Decimal   @map("precio_unitario") @db.Decimal(10, 2)
-  cantidadRecibida Decimal   @default(0) @map("cantidad_recibida") @db.Decimal(10, 2)
+  id               Int          @id @default(autoincrement())
+  pedidoId         Int          @map("pedido_id")
+  productoId       Int          @map("producto_id")
+  cantidad         Decimal      @db.Decimal(10, 2)
+  precioUnitario   Decimal      @map("precio_unitario") @db.Decimal(10, 2)
+  cantidadRecibida Decimal      @default(0) @map("cantidad_recibida") @db.Decimal(10, 2)
   lote             String?
-  fechaCaducidad   DateTime? @map("fecha_caducidad")
-  fechaRecepcion   DateTime? @map("fecha_recepcion")
-  recibidoPorId    Int?      @map("recibido_por_id")
-  estadoLinea      String    @default("pendiente") @map("estado_linea")
+  fechaCaducidad   DateTime?    @map("fecha_caducidad")
+  fechaRecepcion   DateTime?    @map("fecha_recepcion")
+  recibidoPorId    Int?         @map("recibido_por_id")
+  estadoLinea      String       @default("pendiente") @map("estado_linea")
   // estadoLinea: pendiente | recibida | parcial
-  pedido           Pedido    @relation(fields: [pedidoId], references: [id], onDelete: Cascade)
-  producto         Producto  @relation(fields: [productoId], references: [id])
-  recibidoPor      Usuario?  @relation(fields: [recibidoPorId], references: [id])
+  pedido           Pedido       @relation(fields: [pedidoId], references: [id], onDelete: Cascade)
+  producto         Producto     @relation(fields: [productoId], references: [id])
+  recibidoPor      Usuario?     @relation(fields: [recibidoPorId], references: [id])
   movimientos      Movimiento[]
 
   @@map("pedido_items")
@@ -145,6 +183,8 @@ model Inventario {
   estado         String    @default("disponible")
   unidadId       Int       @map("unidad_id")
   createdAt      DateTime  @default(now()) @map("created_at")
+  tenantId       Int?      @map("tenant_id")
+  tenant         Tenant?   @relation(fields: [tenantId], references: [id])
   producto       Producto  @relation(fields: [productoId], references: [id])
   unidad         Unidad    @relation(fields: [unidadId], references: [id])
 
@@ -152,37 +192,39 @@ model Inventario {
 }
 
 model Movimiento {
-  id            Int         @id @default(autoincrement())
-  productoId    Int         @map("producto_id")
-  tipo          String
-  cantidad      Decimal     @db.Decimal(10, 2)
-  usuarioId     Int         @map("usuario_id")
-  fecha         DateTime    @default(now())
-  lote          String?
-  notas         String?
-  unidadId      Int         @map("unidad_id")
-  pedidoItemId  Int?        @map("pedido_item_id")
-  createdAt     DateTime    @default(now()) @map("created_at")
-  producto      Producto    @relation(fields: [productoId], references: [id])
-  usuario       Usuario     @relation(fields: [usuarioId], references: [id])
-  unidad        Unidad      @relation(fields: [unidadId], references: [id])
-  pedidoItem    PedidoItem? @relation(fields: [pedidoItemId], references: [id])
+  id           Int         @id @default(autoincrement())
+  productoId   Int         @map("producto_id")
+  tipo         String
+  cantidad     Decimal     @db.Decimal(10, 2)
+  usuarioId    Int         @map("usuario_id")
+  fecha        DateTime    @default(now())
+  lote         String?
+  notas        String?
+  unidadId     Int         @map("unidad_id")
+  pedidoItemId Int?        @map("pedido_item_id")
+  createdAt    DateTime    @default(now()) @map("created_at")
+  tenantId     Int?        @map("tenant_id")
+  tenant       Tenant?     @relation(fields: [tenantId], references: [id])
+  producto     Producto    @relation(fields: [productoId], references: [id])
+  usuario      Usuario     @relation(fields: [usuarioId], references: [id])
+  unidad       Unidad      @relation(fields: [unidadId], references: [id])
+  pedidoItem   PedidoItem? @relation(fields: [pedidoItemId], references: [id])
 
   @@map("movimientos")
 }
 
-// Configuración de la etiqueta de impresión CPCL (fila única, id=1)
+// Configuración de la etiqueta de impresión CPCL (singleton por ahora, pendiente multi-tenant)
 model ConfigEtiqueta {
-  id         Int      @id @default(1)
-  titulo     String   @default("CHEFMANAGER PRO")
-  altoLabel  Int      @default(417)  @map("alto_label")
-  xMargen    Int      @default(15)   @map("x_margen")
-  espaciado  Int      @default(38)
-  fuente     Int      @default(4)
-  xQR        Int      @default(205)  @map("x_qr")
-  yQR        Int      @default(300)  @map("y_qr")
-  tamanoQR   Int      @default(3)    @map("tamano_qr")
-  updatedAt  DateTime @updatedAt     @map("updated_at")
+  id        Int      @id @default(1)
+  titulo    String   @default("CHEFMANAGER PRO")
+  altoLabel Int      @default(417) @map("alto_label")
+  xMargen   Int      @default(15)  @map("x_margen")
+  espaciado Int      @default(38)
+  fuente    Int      @default(4)
+  xQR       Int      @default(205) @map("x_qr")
+  yQR       Int      @default(300) @map("y_qr")
+  tamanoQR  Int      @default(3)   @map("tamano_qr")
+  updatedAt DateTime @updatedAt    @map("updated_at")
 
   @@map("config_etiqueta")
 }
