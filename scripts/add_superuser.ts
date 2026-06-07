@@ -16,7 +16,8 @@ async function main() {
         nombre: 'Restaurante Principal',
         direccion: 'Dirección Principal',
         telefono: '000000000',
-        activo: true
+        activo: true,
+        tenantId: 1,
       }
     });
   }
@@ -35,7 +36,8 @@ async function main() {
       rol: 'superuser',
       unidadId: unidad.id,
       pinCode: '1234',
-      activo: true
+      activo: true,
+      tenantId: 1,
     }
   });
   

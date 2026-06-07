@@ -20,7 +20,8 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     const { id } = await params;
     const { nombre, activo } = await request.json();
 
-    const existing = await prisma.categoria.findUnique({ where: { id: parseInt(id) } });
+    const tenantId = user.tenantId as number;
+    const existing = await prisma.categoria.findFirst({ where: { id: parseInt(id), tenantId } });
     if (!existing) return NextResponse.json({ error: "No encontrado" }, { status: 404 });
 
     const categoria = await prisma.categoria.update({
@@ -47,8 +48,9 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
     }
 
     const { id } = await params;
+    const tenantId = user.tenantId as number;
 
-    const existing = await prisma.categoria.findUnique({ where: { id: parseInt(id) } });
+    const existing = await prisma.categoria.findFirst({ where: { id: parseInt(id), tenantId } });
     if (!existing) return NextResponse.json({ error: "No encontrado" }, { status: 404 });
 
     // Verificar si tiene productos asociados

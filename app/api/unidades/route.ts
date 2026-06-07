@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
 import { prisma } from "@/lib/db";
+import { UnidadCreateSchema } from "@/lib/schemas";
 
 export const dynamic = "force-dynamic";
 
@@ -13,22 +14,18 @@ export async function GET() {
     }
 
     const user = session.user as any;
+    const tenantId = user.tenantId as number;
     let unidades: any[] = [];
 
-    // Superuser y Admin pueden ver todas las unidades (para asignar usuarios)
     if (user.rol === "superuser" || user.rol === "admin") {
       unidades = await prisma.unidad.findMany({
-        where: { activo: true },
+        where: { activo: true, tenantId },
         orderBy: { nombre: "asc" },
       });
     } else {
-      // Otros roles solo ven su propia unidad
       if (user.unidadId) {
         unidades = await prisma.unidad.findMany({
-          where: {
-            id: user.unidadId,
-            activo: true,
-          },
+          where: { id: user.unidadId, tenantId, activo: true },
         });
       } else {
         unidades = [];
@@ -58,14 +55,11 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { nombre, direccion, responsable, telefono } = body ?? {};
-
-    if (!nombre) {
-      return NextResponse.json(
-        { error: "El nombre es requerido" },
-        { status: 400 }
-      );
+    const parsed = UnidadCreateSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error.errors[0].message }, { status: 400 });
     }
+    const { nombre, direccion, responsable, telefono } = parsed.data;
 
     const unidad = await prisma.unidad.create({
       data: {
@@ -74,6 +68,7 @@ export async function POST(request: Request) {
         responsable: responsable || null,
         telefono: telefono || null,
         activo: true,
+        tenantId: user.tenantId as number,
       },
     });
 

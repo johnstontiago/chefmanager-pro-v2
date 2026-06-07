@@ -14,6 +14,7 @@ export async function GET(request: Request) {
     }
 
     const user = session.user as any;
+    const tenantId = user.tenantId as number;
     const { searchParams } = new URL(request.url);
     const unidadId = searchParams.get("unidadId") || user.unidadId;
 
@@ -23,19 +24,18 @@ export async function GET(request: Request) {
 
     const parsedUnidadId = parseInt(String(unidadId));
 
-    // Productos son globales, incluir categoría y proveedor
     const productos = await prisma.producto.findMany({
-      where: { activo: true },
+      where: { activo: true, tenantId },
       include: {
         categoria: true,
         proveedor: true,
       },
     });
 
-    // Inventario es por unidad
     const inventario = await prisma.inventario.findMany({
       where: {
         unidadId: parsedUnidadId,
+        tenantId,
         estado: "disponible",
       },
     });
@@ -109,6 +109,7 @@ export async function GET(request: Request) {
     const pedidosPendientes = await prisma.pedido.count({
       where: {
         unidadId: parsedUnidadId,
+        tenantId,
         estado: "enviado",
       },
     });

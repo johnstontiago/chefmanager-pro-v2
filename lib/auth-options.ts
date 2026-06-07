@@ -2,6 +2,7 @@ import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { prisma } from "@/lib/db";
 import bcrypt from "bcryptjs";
+import { audit } from "@/lib/audit";
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -18,23 +19,32 @@ export const authOptions: NextAuthOptions = {
 
         const usuario = await prisma.usuario.findUnique({
           where: { email: credentials.email },
-          include: { unidad: true },
+          include: { unidad: true, tenant: true },
         });
 
         if (!usuario || !usuario.activo) {
+          audit({ action: "login_fail", detail: `email: ${credentials.email}` });
           throw new Error("Usuario no encontrado o inactivo");
+        }
+
+        if (!usuario.tenant || !usuario.tenant.activo) {
+          audit({ action: "login_tenant_inactive", tenantId: usuario.tenantId, userId: usuario.id });
+          throw new Error("Cuenta de empresa inactiva");
         }
 
         const isValid = await bcrypt.compare(credentials.password, usuario.password);
         if (!isValid) {
+          audit({ action: "login_fail", tenantId: usuario.tenantId, userId: usuario.id, detail: "wrong_password" });
           throw new Error("Contraseña incorrecta");
         }
 
+        audit({ action: "login_ok", tenantId: usuario.tenantId, userId: usuario.id });
         return {
           id: String(usuario.id),
           email: usuario.email,
           name: usuario.nombre,
           rol: usuario.rol,
+          tenantId: usuario.tenantId,
           unidadId: usuario.unidadId,
           unidadNombre: usuario.unidad?.nombre || null,
           hasPin: !!usuario.pinCode,
@@ -47,6 +57,7 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.id = user.id;
         token.rol = (user as any).rol;
+        token.tenantId = (user as any).tenantId;
         token.unidadId = (user as any).unidadId;
         token.unidadNombre = (user as any).unidadNombre;
         token.pinVerified = false;
@@ -63,6 +74,7 @@ export const authOptions: NextAuthOptions = {
       if (session.user) {
         (session.user as any).id = token.id;
         (session.user as any).rol = token.rol;
+        (session.user as any).tenantId = token.tenantId;
         (session.user as any).unidadId = token.unidadId;
         (session.user as any).unidadNombre = token.unidadNombre;
         (session.user as any).pinVerified = token.pinVerified;

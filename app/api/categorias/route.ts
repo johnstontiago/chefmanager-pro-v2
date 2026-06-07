@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
 import prisma from "@/lib/db";
+import { CategoriaCreateSchema } from "@/lib/schemas";
 
 export const dynamic = "force-dynamic";
 
@@ -12,8 +13,9 @@ export async function GET() {
       return NextResponse.json({ error: "No autenticado" }, { status: 401 });
     }
 
+    const tenantId = (session.user as any).tenantId as number;
     const categorias = await prisma.categoria.findMany({
-      where: { activo: true },
+      where: { activo: true, tenantId },
       orderBy: { nombre: "asc" },
     });
 
@@ -36,19 +38,20 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Sin permisos" }, { status: 403 });
     }
 
-    const { nombre } = await request.json();
-
-    if (!nombre) {
-      return NextResponse.json({ error: "Nombre requerido" }, { status: 400 });
+    const body = await request.json();
+    const parsed = CategoriaCreateSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error.errors[0].message }, { status: 400 });
     }
+    const { nombre } = parsed.data;
 
-    const existing = await prisma.categoria.findFirst({ where: { nombre } });
+    const existing = await prisma.categoria.findFirst({ where: { nombre, tenantId: user.tenantId as number } });
     if (existing) {
       return NextResponse.json({ error: "Ya existe una categoría con ese nombre" }, { status: 400 });
     }
 
     const categoria = await prisma.categoria.create({
-      data: { nombre, activo: true },
+      data: { nombre, activo: true, tenantId: user.tenantId as number },
     });
 
     return NextResponse.json({ categoria, message: "Categoría creada" });

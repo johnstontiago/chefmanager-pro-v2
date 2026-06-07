@@ -20,7 +20,8 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     const { id } = await params;
     const { nombre, contacto, telefono, email, activo } = await request.json();
 
-    const existing = await prisma.proveedor.findUnique({ where: { id: parseInt(id) } });
+    const tenantId = user.tenantId as number;
+    const existing = await prisma.proveedor.findFirst({ where: { id: parseInt(id), tenantId } });
     if (!existing) return NextResponse.json({ error: "No encontrado" }, { status: 404 });
 
     const proveedor = await prisma.proveedor.update({
@@ -48,7 +49,8 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
 
     const { id } = await params;
 
-    const existing = await prisma.proveedor.findUnique({ where: { id: parseInt(id) } });
+    const tenantId = user.tenantId as number;
+    const existing = await prisma.proveedor.findFirst({ where: { id: parseInt(id), tenantId } });
     if (!existing) return NextResponse.json({ error: "No encontrado" }, { status: 404 });
 
     // Soft delete

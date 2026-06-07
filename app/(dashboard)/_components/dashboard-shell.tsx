@@ -16,6 +16,7 @@ import {
     X,
     Building2,
     ChevronDown,
+    Crown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -34,6 +35,7 @@ const menuItems = [
   { href: "/inventario", label: "Inventario", icon: Package, roles: ["superuser", "admin", "recepcion", "cocina", "viewer"] },
   { href: "/consumo", label: "Consumo", icon: UtensilsCrossed, roles: ["superuser", "admin", "cocina"] },
   { href: "/admin", label: "Administración", icon: Settings, roles: ["superuser", "admin"] },
+  { href: "/superadmin", label: "Panel Admin", icon: Crown, roles: ["superuser"] },
   ].map(item => ({ ...item, href: item.href === "/dashboard" ? "/dashboard" : item.href }));
 
 export default function DashboardShell({ user, children }: DashboardShellProps) {

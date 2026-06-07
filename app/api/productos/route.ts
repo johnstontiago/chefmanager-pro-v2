@@ -16,8 +16,9 @@ export async function GET() {
       return NextResponse.json({ error: "No autenticado" }, { status: 401 });
     }
 
+    const tenantId = (session.user as any).tenantId as number;
     const productos = await prisma.producto.findMany({
-      where: { activo: true },
+      where: { activo: true, tenantId },
       orderBy: { nombre: "asc" },
       include: {
         categoria: { select: { id: true, nombre: true } },
@@ -69,6 +70,7 @@ export async function POST(request: Request) {
         precioUnitario: new Decimal(precioUnitario),
         stockMinimo: new Decimal(stockMinimo),
         activo: true,
+        tenantId: user.tenantId as number,
       },
       include: {
         categoria: { select: { id: true, nombre: true } },

@@ -43,6 +43,7 @@ export async function GET(request: Request, { params }: { params: { tipo: string
 
     const user = session.user as any;
     const unidadId = user.unidadId;
+    const tenantId = user.tenantId as number;
     if (!unidadId) return NextResponse.json({ error: "Sin unidad" }, { status: 400 });
 
     const { searchParams } = new URL(request.url);
@@ -54,7 +55,7 @@ export async function GET(request: Request, { params }: { params: { tipo: string
 
     if (tipo === "inventario") {
       const inventario = await prisma.inventario.findMany({
-        where: { unidadId, estado: "disponible" },
+        where: { unidadId, tenantId, estado: "disponible" },
         include: { producto: { include: { categoria: true, proveedor: true } } },
         orderBy: { producto: { nombre: "asc" } },
       });
@@ -105,7 +106,7 @@ export async function GET(request: Request, { params }: { params: { tipo: string
       }
     } else if (tipo === "pedidos") {
       const pedidos = await prisma.pedido.findMany({
-        where: { unidadId },
+        where: { unidadId, tenantId },
         include: { items: { include: { producto: true } } },
         orderBy: { createdAt: "desc" },
         take: 100,
@@ -154,7 +155,7 @@ export async function GET(request: Request, { params }: { params: { tipo: string
       }
     } else if (tipo === "consumos") {
       const movimientos = await prisma.movimiento.findMany({
-        where: { unidadId, tipo: { in: ["consumo", "merma"] } },
+        where: { unidadId, tenantId, tipo: { in: ["consumo", "merma"] } },
         include: { producto: true, usuario: { select: { nombre: true } } },
         orderBy: { createdAt: "desc" },
         take: 200,
@@ -210,6 +211,7 @@ export async function GET(request: Request, { params }: { params: { tipo: string
       const inventario = await prisma.inventario.findMany({
         where: {
           unidadId,
+          tenantId,
           estado: "disponible",
           fechaCaducidad: { lte: in30Days },
         },
