@@ -13,6 +13,14 @@ export default withAuth(
       }
     }
 
+    // Solo superuser puede acceder al panel de administración de la plataforma
+    if (req.nextUrl.pathname.startsWith("/superadmin")) {
+      const userRole = token?.rol as string;
+      if (userRole !== "superuser") {
+        return NextResponse.redirect(new URL("/dashboard", req.url));
+      }
+    }
+
     return NextResponse.next();
   },
   {
@@ -29,6 +37,7 @@ export const config = {
   matcher: [
     "/dashboard/:path*",
     "/admin/:path*",
+    "/superadmin/:path*",
     "/pedidos/:path*",
     "/categorias/:path*",
     "/movimientos/:path*",

@@ -101,3 +101,40 @@ export const UnidadUpdateSchema = UnidadCreateSchema.partial().extend({
 export const CategoriaUpdateSchema = CategoriaCreateSchema.partial().extend({
   activo: z.boolean().optional(),
 });
+
+// ─── SUPERADMIN ───────────────────────────────────────────────────────────────
+
+export const TenantCreateSchema = z.object({
+  nombre: z.string().min(1).max(200),
+  cif: z.string().max(50).optional().nullable(),
+  email: z.string().email(),
+  regionUE: z.boolean().optional(),
+  plan: z.enum(["basico", "profesional", "enterprise"]).optional(),
+  fechaVencimiento: z.string().datetime({ offset: true }).optional().nullable()
+    .or(z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().nullable()),
+  notasInternas: z.string().max(1000).optional().nullable(),
+});
+
+export const TenantUpdateSchema = TenantCreateSchema.partial().extend({
+  activo: z.boolean().optional(),
+});
+
+export const OnboardingSchema = z.object({
+  // Datos del negocio
+  tenantNombre: z.string().min(1, "Nombre del negocio requerido").max(200),
+  tenantCif: z.string().max(50).optional().nullable(),
+  tenantEmail: z.string().email("Email inválido"),
+  plan: z.enum(["basico", "profesional", "enterprise"]).default("basico"),
+  fechaVencimiento: z.string().datetime({ offset: true }).optional().nullable()
+    .or(z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().nullable()),
+  notasInternas: z.string().max(1000).optional().nullable(),
+  // Unidad principal
+  unidadNombre: z.string().min(1, "Nombre de la unidad requerido").max(200),
+  unidadDireccion: z.string().max(500).optional().nullable(),
+  unidadTelefono: z.string().max(50).optional().nullable(),
+  // Usuario administrador del tenant
+  adminEmail: z.string().email("Email del admin inválido"),
+  adminNombre: z.string().min(1, "Nombre del admin requerido").max(200),
+  adminPassword: z.string().min(8, "Mínimo 8 caracteres").max(100),
+  adminPin: z.string().regex(/^\d{4,6}$/, "PIN debe ser 4-6 dígitos").optional().nullable(),
+});

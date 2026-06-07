@@ -11,14 +11,17 @@ datasource db {
 // ─── TENANT ──────────────────────────────────────────────────────────────────
 
 model Tenant {
-  id        Int       @id @default(autoincrement())
-  nombre    String
-  cif       String?   @unique
-  email     String
-  regionUE  Boolean   @default(true)  @map("region_ue")
-  activo    Boolean   @default(true)
-  createdAt DateTime  @default(now()) @map("created_at")
-  updatedAt DateTime? @default(now()) @updatedAt @map("updated_at")
+  id               Int       @id @default(autoincrement())
+  nombre           String
+  cif              String?   @unique
+  email            String
+  regionUE         Boolean   @default(true)  @map("region_ue")
+  activo           Boolean   @default(true)
+  plan             String    @default("basico")
+  fechaVencimiento DateTime? @map("fecha_vencimiento")
+  notasInternas    String?   @map("notas_internas")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime? @default(now()) @updatedAt @map("updated_at")
 
   unidades    Unidad[]
   usuarios    Usuario[]
