@@ -18,11 +18,15 @@ export const authOptions: NextAuthOptions = {
 
         const usuario = await prisma.usuario.findUnique({
           where: { email: credentials.email },
-          include: { unidad: true },
+          include: { unidad: true, tenant: true },
         });
 
         if (!usuario || !usuario.activo) {
           throw new Error("Usuario no encontrado o inactivo");
+        }
+
+        if (!usuario.tenant || !usuario.tenant.activo) {
+          throw new Error("Cuenta de empresa inactiva");
         }
 
         const isValid = await bcrypt.compare(credentials.password, usuario.password);
