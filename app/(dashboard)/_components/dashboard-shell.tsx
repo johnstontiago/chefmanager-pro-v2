@@ -28,7 +28,7 @@ import SyncStatus from "@/components/sync-status";
 interface DashboardShellProps {
     user: any;
     children: React.ReactNode;
-    sudoTenant?: { id: number; nombre: string } | null;
+    sudoTenant?: { id: number; nombre: string; unidadId: number | null; unidadNombre: string | null } | null;
 }
 
 const menuItems = [
@@ -190,7 +190,9 @@ export default function DashboardShell({ user, children, sudoTenant }: Dashboard
                                                                           >
                                                                           <Building2 className="w-5 h-5 text-blue-600 flex-shrink-0" />
                                                                           <span className="font-medium text-blue-900 truncate">
-                                                                            {currentUser?.unidadNombre || "Sin unidad asignada"}
+                                                                            {sudoTenant
+                                                                              ? (sudoTenant.unidadNombre || "Seleccionar unidad")
+                                                                              : (currentUser?.unidadNombre || "Sin unidad asignada")}
                                                                           </span>
                                                             {currentUser?.rol === "superuser" && (
                                                                                               <ChevronDown className="w-4 h-4 text-blue-600 flex-shrink-0" />
@@ -243,7 +245,15 @@ export default function DashboardShell({ user, children, sudoTenant }: Dashboard
                               isSuperuser={currentUser?.rol === "superuser"}
                               onClose={() => setShowUnitSelector(false)}
                               onSelect={async (unidadId, unidadNombre) => {
-                                            await update?.({ unidadId, unidadNombre });
+                                            if (sudoTenant) {
+                                              await fetch("/api/superadmin/impersonate", {
+                                                method: "PATCH",
+                                                headers: { "Content-Type": "application/json" },
+                                                body: JSON.stringify({ unidadId, unidadNombre }),
+                                              });
+                                            } else {
+                                              await update?.({ unidadId, unidadNombre });
+                                            }
                                             setShowUnitSelector(false);
                                             window.location.reload();
                               }}

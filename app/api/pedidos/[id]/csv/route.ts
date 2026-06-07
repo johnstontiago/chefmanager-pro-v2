@@ -5,7 +5,7 @@ import prisma from "@/lib/db";
 import { toNumber } from "@/lib/utils";
 import { format } from "date-fns";
 
-import { getActiveTenantId } from "@/lib/get-active-tenant";
+import { getActiveTenantId, getActiveUnidadId } from "@/lib/get-active-tenant";
 
 export const dynamic = "force-dynamic";
 
@@ -27,8 +27,9 @@ export async function GET(
     tenantId: getActiveTenantId(user),
     estado: { in: ["recibido", "recibido_parcial"] },
   };
-  if (user.rol !== "superuser" && user.unidadId) {
-    whereClause.unidadId = user.unidadId;
+  const activeUnidadId = getActiveUnidadId(user);
+  if (activeUnidadId) {
+    whereClause.unidadId = activeUnidadId;
   }
 
   const pedido = await prisma.pedido.findFirst({

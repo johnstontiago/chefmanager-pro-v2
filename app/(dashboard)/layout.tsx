@@ -18,17 +18,37 @@ export default async function DashboardLayout({
 
   const user = session.user as any;
 
-  let sudoTenant: { id: number; nombre: string } | null = null;
+  let sudoTenant: { id: number; nombre: string; unidadId: number | null; unidadNombre: string | null } | null = null;
+
   if (user.rol === "superuser") {
-    const sudo = cookies().get("superadmin_sudo")?.value;
-    if (sudo) {
-      const id = parseInt(sudo, 10);
-      if (!isNaN(id)) {
-        const t = await prisma.tenant.findUnique({
-          where: { id },
-          select: { id: true, nombre: true },
-        });
-        if (t) sudoTenant = t;
+    const raw = cookies().get("superadmin_sudo")?.value;
+    if (raw) {
+      try {
+        const ctx = JSON.parse(raw);
+        if (ctx.tenantId) {
+          const t = await prisma.tenant.findUnique({
+            where: { id: ctx.tenantId },
+            select: { id: true, nombre: true },
+          });
+          if (t) {
+            sudoTenant = {
+              id: t.id,
+              nombre: t.nombre,
+              unidadId: ctx.unidadId ?? null,
+              unidadNombre: ctx.unidadNombre ?? null,
+            };
+          }
+        }
+      } catch {
+        // Cookie en formato legacy (solo tenantId como número)
+        const id = parseInt(raw, 10);
+        if (!isNaN(id)) {
+          const t = await prisma.tenant.findUnique({
+            where: { id },
+            select: { id: true, nombre: true },
+          });
+          if (t) sudoTenant = { id: t.id, nombre: t.nombre, unidadId: null, unidadNombre: null };
+        }
       }
     }
   }

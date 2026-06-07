@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
 import prisma from "@/lib/db";
 import { toNumber, formatCurrency, formatDate, formatDecimal } from "@/lib/utils";
+import { getActiveTenantId, getActiveUnidadId } from "@/lib/get-active-tenant";
 import archiver from "archiver";
 import { htmlToPdf } from "@/lib/pdf-generator";
 
@@ -130,7 +131,7 @@ export async function POST(request: Request) {
     }
 
     const pedido = await prisma.pedido.findFirst({
-      where: { id: pedidoId, unidadId: user.unidadId },
+      where: { id: pedidoId, tenantId: getActiveTenantId(user), unidadId: getActiveUnidadId(user) ?? undefined },
       include: {
         proveedor: { select: { id: true, nombre: true } },
         items: {

@@ -6,7 +6,7 @@ import { Decimal } from "@prisma/client/runtime/library";
 import { toNumber } from "@/lib/utils";
 import { PedidoCreateSchema } from "@/lib/schemas";
 
-import { getActiveTenantId } from "@/lib/get-active-tenant";
+import { getActiveTenantId, getActiveUnidadId } from "@/lib/get-active-tenant";
 
 export const dynamic = "force-dynamic";
 
@@ -18,7 +18,7 @@ export async function GET() {
     }
 
     const user = session.user as any;
-    const unidadId = user.unidadId;
+    const unidadId = getActiveUnidadId(user);
 
     if (!unidadId) {
       return NextResponse.json({ error: "Sin unidad" }, { status: 400 });
@@ -74,7 +74,7 @@ export async function POST(request: Request) {
     }
 
     const user = session.user as any;
-    const unidadId = parseInt(String(user.unidadId));
+    const unidadId = getActiveUnidadId(user);
     const usuarioId = parseInt(String(user.id));
 
     if (!unidadId) {

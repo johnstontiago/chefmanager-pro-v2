@@ -5,7 +5,7 @@ import prisma from "@/lib/db";
 import { toNumber, formatCurrency, formatDate, formatDecimal, getDaysUntilExpiry } from "@/lib/utils";
 import { htmlToPdf } from "@/lib/pdf-generator";
 
-import { getActiveTenantId } from "@/lib/get-active-tenant";
+import { getActiveTenantId, getActiveUnidadId } from "@/lib/get-active-tenant";
 
 export const dynamic = "force-dynamic";
 
@@ -44,7 +44,7 @@ export async function GET(request: Request, { params }: { params: { tipo: string
     if (!session?.user) return NextResponse.json({ error: "No autenticado" }, { status: 401 });
 
     const user = session.user as any;
-    const unidadId = user.unidadId;
+    const unidadId = getActiveUnidadId(user);
     const tenantId = getActiveTenantId(user);
     if (!unidadId) return NextResponse.json({ error: "Sin unidad" }, { status: 400 });
 

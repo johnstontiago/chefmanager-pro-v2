@@ -4,7 +4,7 @@ import { authOptions } from "@/lib/auth-options";
 import { prisma } from "@/lib/db";
 import { UnidadCreateSchema } from "@/lib/schemas";
 
-import { getActiveTenantId } from "@/lib/get-active-tenant";
+import { getActiveTenantId, getActiveUnidadId } from "@/lib/get-active-tenant";
 
 export const dynamic = "force-dynamic";
 
@@ -25,9 +25,10 @@ export async function GET() {
         orderBy: { nombre: "asc" },
       });
     } else {
-      if (user.unidadId) {
+      const activeUnidadId = getActiveUnidadId(user);
+      if (activeUnidadId) {
         unidades = await prisma.unidad.findMany({
-          where: { id: user.unidadId, tenantId, activo: true },
+          where: { id: activeUnidadId, tenantId, activo: true },
         });
       } else {
         unidades = [];
