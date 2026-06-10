@@ -42,6 +42,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { formatCurrency, formatDecimal, toNumber } from "@/lib/utils";
+import { UNIDADES_MEDIDA } from "@/lib/unidades-medida";
 
 export default function ProductosTab() {
   const { toast } = useToast();
@@ -336,13 +337,11 @@ export default function ProductosTab() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="kg">kg</SelectItem>
-                    <SelectItem value="g">g</SelectItem>
-                    <SelectItem value="l">l</SelectItem>
-                    <SelectItem value="ml">ml</SelectItem>
-                    <SelectItem value="unidad">unidad</SelectItem>
-                    <SelectItem value="docena">docena</SelectItem>
-                    <SelectItem value="botella">botella</SelectItem>
+                    {UNIDADES_MEDIDA.map((u) => (
+                      <SelectItem key={u.value} value={u.value}>
+                        {u.label}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>

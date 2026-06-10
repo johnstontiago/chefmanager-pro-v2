@@ -28,12 +28,36 @@ export interface LiveCostMaps {
 }
 
 /**
- * En cocina se trabaja en g y ml aunque se compre en kg y l.
+ * En cocina se trabaja en g y ml aunque se compre en kg, l o envases.
  * Convierte la unidad de compra del producto a unidad de receta:
- * kg → g y l → ml (precio ÷ 1000); el resto queda igual.
+ *   kg → g (÷1000)            l → ml (÷1000)
+ *   "Bolsa 25Kg" → g (÷25000) "Botella 33Cl" → ml (÷330)
+ * Cualquier envase con contenido declarado ("<algo> <número><kg|g|l|cl|ml>")
+ * se convierte; el resto (un, caja...) queda igual.
  */
 export function unidadDeReceta(unidadMedida: string): { unidad: string; factor: number } {
-  const u = unidadMedida.trim().toLowerCase();
+  const u = unidadMedida.trim().toLowerCase().replace(/\s+/g, " ");
+
+  // Envases con contenido: "bolsa 25kg", "botella 33cl", "saco 10 kg"...
+  const envase = u.match(/(\d+(?:[.,]\d+)?)\s*(kg|g|l|cl|ml)$/);
+  if (envase) {
+    const cantidad = parseFloat(envase[1].replace(",", "."));
+    if (cantidad > 0) {
+      switch (envase[2]) {
+        case "kg":
+          return { unidad: "g", factor: cantidad * 1000 };
+        case "g":
+          return { unidad: "g", factor: cantidad };
+        case "l":
+          return { unidad: "ml", factor: cantidad * 1000 };
+        case "cl":
+          return { unidad: "ml", factor: cantidad * 10 };
+        case "ml":
+          return { unidad: "ml", factor: cantidad };
+      }
+    }
+  }
+
   if (["kg", "kilo", "kilos", "kilogramo", "kilogramos"].includes(u)) {
     return { unidad: "g", factor: 1000 };
   }
