@@ -32,6 +32,11 @@ model Tenant {
   inventario  Inventario[]
   movimientos Movimiento[]
 
+  fichaCategorias FichaCategoria[]
+  insumos         Insumo[]
+  preparaciones   Preparacion[]
+  fichasTecnicas  FichaTecnica[]
+
   @@map("tenants")
 }
 
@@ -106,6 +111,7 @@ model Producto {
   pedidoItems    PedidoItem[]
   inventario     Inventario[]
   movimientos    Movimiento[]
+  insumos        Insumo[]
 
   @@unique([tenantId, qrcode])
   @@map("productos")
@@ -128,6 +134,9 @@ model Usuario {
   pedidos     Pedido[]
   movimientos Movimiento[]
   recepciones PedidoItem[]
+
+  fichasCreadas      FichaTecnica[] @relation("FichasCreadas")
+  fichasActualizadas FichaTecnica[] @relation("FichasActualizadas")
 
   @@map("usuarios")
 }
@@ -233,4 +242,114 @@ model ConfigEtiqueta {
   updatedAt DateTime @updatedAt    @map("updated_at")
 
   @@map("config_etiqueta")
+}
+
+// ─── MÓDULO FICHAS TÉCNICAS ──────────────────────────────────────────────────
+// Tablas aditivas: no modifican datos ni columnas de las tablas existentes.
+// Un Insumo es el adaptador entre recetas y fuentes de costo:
+//   - productoId    → ingrediente del catálogo de inventario (precio en vivo)
+//   - preparacionId → elaboración base usada como ingrediente
+//   - ambos null    → insumo manual (no existe en inventario)
+
+model FichaCategoria {
+  id        Int            @id @default(autoincrement())
+  nombre    String
+  createdAt DateTime       @default(now()) @map("created_at")
+  tenantId  Int            @map("tenant_id")
+  tenant    Tenant         @relation(fields: [tenantId], references: [id])
+  fichas    FichaTecnica[]
+
+  @@unique([tenantId, nombre])
+  @@map("ficha_categorias")
+}
+
+model Insumo {
+  id             Int      @id @default(autoincrement())
+  nombre         String
+  unidad         String
+  valorPorUnidad Float    @default(0) @map("valor_por_unidad")
+  esPreparacion  Boolean  @default(false) @map("es_preparacion")
+  preparacionId  Int?     @map("preparacion_id")
+  productoId     Int?     @map("producto_id")
+  createdAt      DateTime @default(now()) @map("created_at")
+  tenantId       Int      @map("tenant_id")
+
+  tenant      Tenant       @relation(fields: [tenantId], references: [id])
+  preparacion Preparacion? @relation("InsumoGenerado", fields: [preparacionId], references: [id])
+  producto    Producto?    @relation(fields: [productoId], references: [id])
+
+  fichaIngredientes       FichaIngrediente[]
+  preparacionIngredientes PreparacionIngrediente[]
+
+  @@unique([tenantId, productoId])
+  @@map("insumos")
+}
+
+model Preparacion {
+  id              Int      @id @default(autoincrement())
+  nombre          String
+  porciones       Float
+  costoTotal      Float    @default(0) @map("costo_total")
+  costoPorPorcion Float    @default(0) @map("costo_por_porcion")
+  procedimiento   String?
+  createdAt       DateTime @default(now()) @map("created_at")
+  tenantId        Int      @map("tenant_id")
+
+  tenant         Tenant                   @relation(fields: [tenantId], references: [id])
+  ingredientes   PreparacionIngrediente[]
+  insumoGenerado Insumo[]                 @relation("InsumoGenerado")
+
+  @@map("preparaciones")
+}
+
+model PreparacionIngrediente {
+  id            Int   @id @default(autoincrement())
+  preparacionId Int   @map("preparacion_id")
+  insumoId      Int   @map("insumo_id")
+  cantidad      Float
+
+  preparacion Preparacion @relation(fields: [preparacionId], references: [id], onDelete: Cascade)
+  insumo      Insumo      @relation(fields: [insumoId], references: [id])
+
+  @@map("preparacion_ingredientes")
+}
+
+model FichaTecnica {
+  id               Int      @id @default(autoincrement())
+  nombre           String
+  categoriaId      Int?     @map("categoria_id")
+  descripcion      String?
+  porciones        Float    @default(1)
+  tiempoMin        Int      @default(0) @map("tiempo_min")
+  urlImagen        String?  @map("url_imagen")
+  alergenos        String[] @default([])
+  procedimiento    String?
+  costoTotal       Float    @default(0) @map("costo_total")
+  costoPorPorcion  Float    @default(0) @map("costo_por_porcion")
+  creadoPorId      Int?     @map("creado_por_id")
+  actualizadoPorId Int?     @map("actualizado_por_id")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+  tenantId         Int      @map("tenant_id")
+
+  tenant         Tenant             @relation(fields: [tenantId], references: [id])
+  categoria      FichaCategoria?    @relation(fields: [categoriaId], references: [id])
+  creadoPor      Usuario?           @relation("FichasCreadas", fields: [creadoPorId], references: [id])
+  actualizadoPor Usuario?           @relation("FichasActualizadas", fields: [actualizadoPorId], references: [id])
+  ingredientes   FichaIngrediente[]
+
+  @@map("fichas_tecnicas")
+}
+
+model FichaIngrediente {
+  id             Int   @id @default(autoincrement())
+  fichaId        Int   @map("ficha_id")
+  insumoId       Int   @map("insumo_id")
+  cantidad       Float
+  costoCalculado Float @default(0) @map("costo_calculado")
+
+  ficha  FichaTecnica @relation(fields: [fichaId], references: [id], onDelete: Cascade)
+  insumo Insumo       @relation(fields: [insumoId], references: [id])
+
+  @@map("ficha_ingredientes")
 }
