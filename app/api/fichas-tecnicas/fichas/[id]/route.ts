@@ -96,6 +96,23 @@ export async function PUT(
         return { insumoId, cantidad, costoCalculado: valor * cantidad };
       }
     );
+
+    // El mapa contiene exactamente los insumos del tenant: rechaza ajenos
+    if (lineas.some((l: { insumoId: number }) => !maps.insumoValue.has(l.insumoId))) {
+      return NextResponse.json({ error: "Insumo inválido" }, { status: 400 });
+    }
+
+    const categoriaIdNum = categoriaId ? parseInt(String(categoriaId), 10) : null;
+    if (categoriaIdNum !== null) {
+      const categoria = await prisma.fichaCategoria.findFirst({
+        where: { id: categoriaIdNum, tenantId: ctx.tenantId },
+        select: { id: true },
+      });
+      if (!categoria) {
+        return NextResponse.json({ error: "Categoría inválida" }, { status: 400 });
+      }
+    }
+
     const costoTotal = lineas.reduce(
       (acc: number, l: { costoCalculado: number }) => acc + l.costoCalculado,
       0
@@ -108,7 +125,7 @@ export async function PUT(
         where: { id },
         data: {
           nombre,
-          categoriaId: categoriaId ? parseInt(String(categoriaId), 10) : null,
+          categoriaId: categoriaIdNum,
           descripcion,
           porciones: porcionesNum,
           tiempoMin: parseInt(tiempoMin) || 0,

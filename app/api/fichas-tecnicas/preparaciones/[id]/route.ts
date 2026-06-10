@@ -82,6 +82,10 @@ export async function PUT(
     let costoTotal = 0;
     for (const ing of ingredientes || []) {
       const insumoId = parseInt(String(ing.insumoId), 10);
+      // El mapa contiene exactamente los insumos del tenant: rechaza ajenos
+      if (!maps.insumoValue.has(insumoId)) {
+        return NextResponse.json({ error: "Insumo inválido" }, { status: 400 });
+      }
       const valor = maps.insumoValue.get(insumoId) ?? 0;
       costoTotal += valor * (parseFloat(String(ing.cantidad)) || 0);
     }
