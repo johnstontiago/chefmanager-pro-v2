@@ -42,6 +42,7 @@ interface Insumo {
   valorPorUnidad: number;
   esPreparacion: boolean;
   productoId?: number | null;
+  preparacionId?: number | null;
 }
 
 interface Preparacion {
@@ -96,9 +97,9 @@ export default function PreparacionesPage() {
       }
       if (insRes.ok) {
         const ins = await insRes.json();
-        if (Array.isArray(ins)) {
-          setInsumos(ins.filter((i: Insumo) => !i.esPreparacion));
-        }
+        // Incluye preparaciones: pueden usarse como ingrediente de otra
+        // preparación (ej: masa de pizza hecha con biga)
+        if (Array.isArray(ins)) setInsumos(ins);
       }
     } catch (error) {
       console.error(error);
@@ -134,6 +135,11 @@ export default function PreparacionesPage() {
     );
     setModalOpen(true);
   }
+
+  // Al editar, la propia preparación no puede ser su ingrediente
+  const insumosDisponibles = editando
+    ? insumos.filter((i) => !(i.esPreparacion && i.preparacionId === editando.id))
+    : insumos;
 
   const costoTotal = ingredientes.reduce((acc, ing) => {
     const insumo = insumos.find((i) => String(i.id) === ing.insumoId);
@@ -393,11 +399,14 @@ export default function PreparacionesPage() {
                               <SelectValue placeholder="Seleccionar" />
                             </SelectTrigger>
                             <SelectContent>
-                              {insumos.map((i) => (
+                              {insumosDisponibles.map((i) => (
                                 <SelectItem key={i.id} value={String(i.id)}>
                                   <span className="flex items-center gap-1.5">
                                     {i.productoId != null && (
                                       <Package className="h-3 w-3 text-emerald-600" />
+                                    )}
+                                    {i.esPreparacion && (
+                                      <Soup className="h-3 w-3 text-blue-500" />
                                     )}
                                     {i.nombre}
                                   </span>

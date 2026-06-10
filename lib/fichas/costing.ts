@@ -8,8 +8,10 @@ import { toNumber } from "@/lib/utils";
 //   - preparacionId → costo por porción de la preparación, recalculado en vivo
 //   - manual        → valorPorUnidad almacenado en el propio insumo
 //
-// Las preparaciones solo contienen insumos base (producto o manual), nunca
-// otras preparaciones, por lo que el cálculo no es recursivo.
+// Las preparaciones pueden contener otras preparaciones como ingrediente
+// (ej: masa de pizza hecha con biga). El cálculo es recursivo con
+// memoización; los ciclos se rechazan al escribir (wouldCreateCycle) y,
+// como defensa adicional, se cortan en lectura valorándolos en 0.
 
 interface InsumoBase {
   id: number;
@@ -32,7 +34,8 @@ function baseValue(insumo: InsumoBase): number {
 
 /**
  * Construye los mapas de valores en vivo para todos los insumos y
- * preparaciones de un tenant. Dos consultas planas, sin recursión.
+ * preparaciones de un tenant. Dos consultas planas; la resolución de
+ * preparaciones anidadas es recursiva con memoización y corte de ciclos.
  */
 export async function getLiveCostMaps(tenantId: number): Promise<LiveCostMaps> {
   const [insumos, preparaciones] = await Promise.all([
@@ -57,32 +60,110 @@ export async function getLiveCostMaps(tenantId: number): Promise<LiveCostMaps> {
     }),
   ]);
 
+  const insumoById = new Map(insumos.map((i) => [i.id, i]));
+  const prepById = new Map(preparaciones.map((p) => [p.id, p]));
+
   const insumoValue = new Map<number, number>();
-  for (const insumo of insumos) {
-    if (!insumo.esPreparacion) {
-      insumoValue.set(insumo.id, baseValue(insumo));
+  const prepCosts = new Map<number, { costoTotal: number; costoPorPorcion: number }>();
+
+  function resolveInsumo(insumoId: number, visiting: Set<number>): number {
+    const memo = insumoValue.get(insumoId);
+    if (memo !== undefined) return memo;
+    const insumo = insumoById.get(insumoId);
+    if (!insumo) return 0;
+
+    let valor: number;
+    if (insumo.esPreparacion && insumo.preparacionId != null) {
+      valor = resolvePrep(insumo.preparacionId, visiting).costoPorPorcion;
+    } else {
+      valor = baseValue(insumo);
     }
+    insumoValue.set(insumoId, valor);
+    return valor;
   }
 
-  const prepCosts = new Map<number, { costoTotal: number; costoPorPorcion: number }>();
-  for (const prep of preparaciones) {
+  function resolvePrep(
+    prepId: number,
+    visiting: Set<number>
+  ): { costoTotal: number; costoPorPorcion: number } {
+    const memo = prepCosts.get(prepId);
+    if (memo !== undefined) return memo;
+    const prep = prepById.get(prepId);
+    // Ciclo o preparación inexistente: corta valorando en 0
+    if (!prep || visiting.has(prepId)) {
+      return { costoTotal: 0, costoPorPorcion: 0 };
+    }
+
+    visiting.add(prepId);
     const costoTotal = prep.ingredientes.reduce(
-      (acc, ing) => acc + (insumoValue.get(ing.insumoId) ?? 0) * ing.cantidad,
+      (acc, ing) => acc + resolveInsumo(ing.insumoId, visiting) * ing.cantidad,
       0
     );
-    const costoPorPorcion = costoTotal / (prep.porciones || 1);
-    prepCosts.set(prep.id, { costoTotal, costoPorPorcion });
+    visiting.delete(prepId);
+
+    const result = { costoTotal, costoPorPorcion: costoTotal / (prep.porciones || 1) };
+    prepCosts.set(prepId, result);
+    return result;
   }
 
-  // Insumos generados por preparaciones: su valor es el costo/porción en vivo
-  for (const insumo of insumos) {
-    if (insumo.esPreparacion && insumo.preparacionId != null) {
-      const prep = prepCosts.get(insumo.preparacionId);
-      insumoValue.set(insumo.id, prep ? prep.costoPorPorcion : insumo.valorPorUnidad);
-    }
-  }
+  for (const prep of preparaciones) resolvePrep(prep.id, new Set());
+  for (const insumo of insumos) resolveInsumo(insumo.id, new Set());
 
   return { insumoValue, prepCosts };
+}
+
+/**
+ * Verifica si guardar `insumoIds` como ingredientes de la preparación
+ * `prepId` crearía un ciclo (una preparación que, directa o
+ * transitivamente, se contiene a sí misma).
+ */
+export async function wouldCreateCycle(
+  tenantId: number,
+  prepId: number,
+  insumoIds: number[]
+): Promise<boolean> {
+  const [insumos, preparaciones] = await Promise.all([
+    prisma.insumo.findMany({
+      where: { tenantId, esPreparacion: true },
+      select: { id: true, preparacionId: true },
+    }),
+    prisma.preparacion.findMany({
+      where: { tenantId },
+      select: { id: true, ingredientes: { select: { insumoId: true } } },
+    }),
+  ]);
+
+  const prepDeInsumo = new Map<number, number>();
+  for (const insumo of insumos) {
+    if (insumo.preparacionId != null) prepDeInsumo.set(insumo.id, insumo.preparacionId);
+  }
+
+  // Grafo: preparación → preparaciones que usa como ingrediente
+  const deps = new Map<number, number[]>();
+  for (const prep of preparaciones) {
+    deps.set(
+      prep.id,
+      prep.ingredientes
+        .map((ing) => prepDeInsumo.get(ing.insumoId))
+        .filter((id): id is number => id !== undefined)
+    );
+  }
+
+  // ¿Alguna preparación seleccionada alcanza a prepId siguiendo sus deps?
+  const inicio = insumoIds
+    .map((id) => prepDeInsumo.get(id))
+    .filter((id): id is number => id !== undefined);
+
+  const stack = [...inicio];
+  const visitados = new Set<number>();
+  while (stack.length > 0) {
+    const actual = stack.pop()!;
+    if (actual === prepId) return true;
+    if (visitados.has(actual)) continue;
+    visitados.add(actual);
+    stack.push(...(deps.get(actual) || []));
+  }
+  return false;
 }
 
 /** Reemplaza el valorPorUnidad almacenado por el valor en vivo. */

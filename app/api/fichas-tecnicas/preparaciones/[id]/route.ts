@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
 import { getFichasContext, canEditFichas, canDeleteFichas } from "@/lib/fichas/permissions";
-import { getLiveCostMaps, decoratePreparacion } from "@/lib/fichas/costing";
+import { getLiveCostMaps, decoratePreparacion, wouldCreateCycle } from "@/lib/fichas/costing";
 
 export const dynamic = "force-dynamic";
 
@@ -79,6 +79,7 @@ export async function PUT(
     }
 
     const maps = await getLiveCostMaps(ctx.tenantId);
+    const insumoIds: number[] = [];
     let costoTotal = 0;
     for (const ing of ingredientes || []) {
       const insumoId = parseInt(String(ing.insumoId), 10);
@@ -86,9 +87,19 @@ export async function PUT(
       if (!maps.insumoValue.has(insumoId)) {
         return NextResponse.json({ error: "Insumo inválido" }, { status: 400 });
       }
+      insumoIds.push(insumoId);
       const valor = maps.insumoValue.get(insumoId) ?? 0;
       costoTotal += valor * (parseFloat(String(ing.cantidad)) || 0);
     }
+
+    // Preparaciones anidadas permitidas, pero sin ciclos (A→B→A)
+    if (await wouldCreateCycle(ctx.tenantId, id, insumoIds)) {
+      return NextResponse.json(
+        { error: "Ciclo detectado: una preparación no puede contenerse a sí misma, ni directa ni indirectamente" },
+        { status: 400 }
+      );
+    }
+
     const costoPorPorcion = costoTotal / porcionesNum;
 
     const preparacion = await prisma.$transaction(async (tx) => {
@@ -162,18 +173,28 @@ export async function DELETE(
       return NextResponse.json({ error: "No encontrado" }, { status: 404 });
     }
 
-    // El insumo generado puede estar en uso en fichas: verificar antes
+    // El insumo generado puede estar en uso en fichas u otras preparaciones
     const insumoGenerado = await prisma.insumo.findFirst({
       where: { preparacionId: id, tenantId: ctx.tenantId },
-      include: { _count: { select: { fichaIngredientes: true } } },
+      include: {
+        _count: { select: { fichaIngredientes: true, preparacionIngredientes: true } },
+      },
     });
-    if (insumoGenerado && insumoGenerado._count.fichaIngredientes > 0) {
-      return NextResponse.json(
-        {
-          error: `No se puede eliminar: la preparación se usa como ingrediente en ${insumoGenerado._count.fichaIngredientes} ficha(s)`,
-        },
-        { status: 400 }
-      );
+    if (insumoGenerado) {
+      const enFichas = insumoGenerado._count.fichaIngredientes;
+      const enPreps = insumoGenerado._count.preparacionIngredientes;
+      if (enFichas > 0 || enPreps > 0) {
+        const usos = [
+          enFichas > 0 ? `${enFichas} ficha(s)` : null,
+          enPreps > 0 ? `${enPreps} preparación(es)` : null,
+        ]
+          .filter(Boolean)
+          .join(" y ");
+        return NextResponse.json(
+          { error: `No se puede eliminar: la preparación se usa como ingrediente en ${usos}` },
+          { status: 400 }
+        );
+      }
     }
 
     await prisma.$transaction(async (tx) => {
