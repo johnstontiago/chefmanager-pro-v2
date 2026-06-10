@@ -32,14 +32,15 @@ export interface LiveCostMaps {
  * Convierte la unidad de compra del producto a unidad de receta:
  *   kg → g (÷1000)            l → ml (÷1000)
  *   "Bolsa 25Kg" → g (÷25000) "Botella 33Cl" → ml (÷330)
- * Cualquier envase con contenido declarado ("<algo> <número><kg|g|l|cl|ml>")
+ *   "Caja 12Un" → un (÷12)
+ * Cualquier envase con contenido declarado ("<algo> <número><kg|g|l|cl|ml|un>")
  * se convierte; el resto (un, caja...) queda igual.
  */
 export function unidadDeReceta(unidadMedida: string): { unidad: string; factor: number } {
   const u = unidadMedida.trim().toLowerCase().replace(/\s+/g, " ");
 
-  // Envases con contenido: "bolsa 25kg", "botella 33cl", "saco 10 kg"...
-  const envase = u.match(/(\d+(?:[.,]\d+)?)\s*(kg|g|l|cl|ml)$/);
+  // Envases con contenido: "bolsa 25kg", "botella 33cl", "caja 12un"...
+  const envase = u.match(/(\d+(?:[.,]\d+)?)\s*(kg|g|l|cl|ml|un|ud|uds|unidades)$/);
   if (envase) {
     const cantidad = parseFloat(envase[1].replace(",", "."));
     if (cantidad > 0) {
@@ -54,6 +55,9 @@ export function unidadDeReceta(unidadMedida: string): { unidad: string; factor: 
           return { unidad: "ml", factor: cantidad * 10 };
         case "ml":
           return { unidad: "ml", factor: cantidad };
+        default:
+          // un / ud / uds / unidades: envases por conteo
+          return { unidad: "un", factor: cantidad };
       }
     }
   }

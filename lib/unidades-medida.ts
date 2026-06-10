@@ -12,8 +12,11 @@ export const UNIDADES_MEDIDA = [
   { value: "bolsa 10kg", label: "Bolsa 10Kg" },
   { value: "bolsa 25kg", label: "Bolsa 25Kg" },
   { value: "caja", label: "Caja" },
+  { value: "caja 12un", label: "Caja 12Un" },
   { value: "un", label: "Un" },
   { value: "botella 5l", label: "Botella 5L" },
   { value: "botella 3l", label: "Botella 3L" },
+  { value: "botella 75cl", label: "Botella 75Cl" },
+  { value: "botella 50cl", label: "Botella 50Cl" },
   { value: "botella 33cl", label: "Botella 33Cl" },
 ];
