@@ -19,7 +19,7 @@ interface InsumoBase {
   esPreparacion: boolean;
   preparacionId: number | null;
   productoId: number | null;
-  producto: { precioUnitario: unknown } | null;
+  producto: { precioUnitario: unknown; unidadMedida: string } | null;
 }
 
 export interface LiveCostMaps {
@@ -27,8 +27,27 @@ export interface LiveCostMaps {
   prepCosts: Map<number, { costoTotal: number; costoPorPorcion: number }>;
 }
 
+/**
+ * En cocina se trabaja en g y ml aunque se compre en kg y l.
+ * Convierte la unidad de compra del producto a unidad de receta:
+ * kg → g y l → ml (precio ÷ 1000); el resto queda igual.
+ */
+export function unidadDeReceta(unidadMedida: string): { unidad: string; factor: number } {
+  const u = unidadMedida.trim().toLowerCase();
+  if (["kg", "kilo", "kilos", "kilogramo", "kilogramos"].includes(u)) {
+    return { unidad: "g", factor: 1000 };
+  }
+  if (["l", "lt", "litro", "litros"].includes(u)) {
+    return { unidad: "ml", factor: 1000 };
+  }
+  return { unidad: unidadMedida, factor: 1 };
+}
+
 function baseValue(insumo: InsumoBase): number {
-  if (insumo.producto) return toNumber(insumo.producto.precioUnitario as any);
+  if (insumo.producto) {
+    const { factor } = unidadDeReceta(insumo.producto.unidadMedida);
+    return toNumber(insumo.producto.precioUnitario as any) / factor;
+  }
   return insumo.valorPorUnidad;
 }
 
@@ -47,7 +66,7 @@ export async function getLiveCostMaps(tenantId: number): Promise<LiveCostMaps> {
         esPreparacion: true,
         preparacionId: true,
         productoId: true,
-        producto: { select: { precioUnitario: true } },
+        producto: { select: { precioUnitario: true, unidadMedida: true } },
       },
     }),
     prisma.preparacion.findMany({
@@ -246,7 +265,7 @@ export async function syncProductosAsInsumos(tenantId: number): Promise<void> {
     .filter((p) => !porProducto.has(p.id))
     .map((p) => ({
       nombre: p.nombre,
-      unidad: p.unidadMedida,
+      unidad: unidadDeReceta(p.unidadMedida).unidad,
       productoId: p.id,
       tenantId,
     }));
@@ -257,14 +276,16 @@ export async function syncProductosAsInsumos(tenantId: number): Promise<void> {
 
   const desactualizados = productos.filter((p) => {
     const insumo = porProducto.get(p.id);
-    return insumo && (insumo.nombre !== p.nombre || insumo.unidad !== p.unidadMedida);
+    if (!insumo) return false;
+    const { unidad } = unidadDeReceta(p.unidadMedida);
+    return insumo.nombre !== p.nombre || insumo.unidad !== unidad;
   });
 
   for (const p of desactualizados) {
     const insumo = porProducto.get(p.id)!;
     await prisma.insumo.update({
       where: { id: insumo.id },
-      data: { nombre: p.nombre, unidad: p.unidadMedida },
+      data: { nombre: p.nombre, unidad: unidadDeReceta(p.unidadMedida).unidad },
     });
   }
 }
