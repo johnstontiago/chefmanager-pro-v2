@@ -19,6 +19,7 @@ import {
     Crown,
     Eye,
     EyeOff,
+    ExternalLink,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -78,6 +79,12 @@ export default function DashboardShell({ user, children, sudoTenant }: Dashboard
 
   const handleLogout = async () => {
         await signOut({ redirect: true, callbackUrl: "/login" });
+  };
+
+  const handleGoToRegistros = async () => {
+    const res  = await fetch('/api/registros-url');
+    const data = await res.json();
+    if (data.url) window.location.href = data.url;
   };
 
   const handleExitSudo = async () => {
@@ -157,8 +164,15 @@ export default function DashboardShell({ user, children, sudoTenant }: Dashboard
                       })}
                                 </nav>
                       
-                        {/* Logout */}
-                                <div className="p-4 border-t border-slate-800">
+                        {/* Footer actions */}
+                                <div className="p-4 border-t border-slate-800 space-y-1">
+                                            <button
+                                                            onClick={handleGoToRegistros}
+                                                            className="flex items-center w-full px-4 py-3 rounded-lg text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"
+                                                          >
+                                                          <ExternalLink className="w-5 h-5 mr-3" />
+                                                          Registros APPCC
+                                            </button>
                                             <button
                                                             onClick={handleLogout}
                                                             className="flex items-center w-full px-4 py-3 rounded-lg text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"
