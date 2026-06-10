@@ -46,5 +46,6 @@ export const config = {
     "/recepcion/:path*",
     "/inventario/:path*",
     "/consumo/:path*",
+    "/fichas/:path*",
   ],
 };

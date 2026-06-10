@@ -10,6 +10,7 @@ import {
     Package,
     ClipboardList,
     UtensilsCrossed,
+    ChefHat,
     Settings,
     LogOut,
     Menu,
@@ -38,6 +39,7 @@ const menuItems = [
   { href: "/recepcion", label: "Recepción", icon: ClipboardList, roles: ["superuser", "admin", "recepcion"] },
   { href: "/inventario", label: "Inventario", icon: Package, roles: ["superuser", "admin", "recepcion", "cocina", "viewer"] },
   { href: "/consumo", label: "Consumo", icon: UtensilsCrossed, roles: ["superuser", "admin", "cocina"] },
+  { href: "/fichas", label: "Fichas Técnicas", icon: ChefHat, roles: ["superuser", "admin", "recepcion", "cocina", "viewer"] },
   { href: "/admin", label: "Administración", icon: Settings, roles: ["superuser", "admin"] },
   { href: "/superadmin", label: "Panel Admin", icon: Crown, roles: ["superuser"] },
   ].map(item => ({ ...item, href: item.href === "/dashboard" ? "/dashboard" : item.href }));
