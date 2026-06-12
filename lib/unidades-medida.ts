@@ -8,6 +8,7 @@ export const UNIDADES_MEDIDA = [
   { value: "g", label: "G" },
   { value: "l", label: "L" },
   { value: "ml", label: "Ml" },
+  { value: "bolsa 3kg", label: "Bolsa 3Kg" },
   { value: "bolsa 5kg", label: "Bolsa 5Kg" },
   { value: "bolsa 10kg", label: "Bolsa 10Kg" },
   { value: "bolsa 25kg", label: "Bolsa 25Kg" },
