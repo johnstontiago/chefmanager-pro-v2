@@ -36,6 +36,7 @@ model Tenant {
   insumos         Insumo[]
   preparaciones   Preparacion[]
   fichasTecnicas  FichaTecnica[]
+  festivos        Festivo[]
 
   @@map("tenants")
 }
@@ -357,4 +358,21 @@ model FichaIngrediente {
   insumo Insumo       @relation(fields: [insumoId], references: [id])
 
   @@map("ficha_ingredientes")
+}
+
+// ─── MÓDULO PREDICCIONES ─────────────────────────────────────────────────────
+// Festivos y eventos de alta demanda por tenant. El motor de sugerencias de
+// pedidos aplica `factor` al consumo previsto si la semana incluye un festivo.
+
+model Festivo {
+  id        Int      @id @default(autoincrement())
+  fecha     DateTime @db.Date
+  nombre    String
+  factor    Float    @default(1.25)
+  createdAt DateTime @default(now()) @map("created_at")
+  tenantId  Int      @map("tenant_id")
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+
+  @@unique([tenantId, fecha, nombre])
+  @@map("festivos")
 }

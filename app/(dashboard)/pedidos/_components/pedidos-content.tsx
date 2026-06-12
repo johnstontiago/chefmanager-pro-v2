@@ -1,12 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import {
   ShoppingCart,
   Plus,
   History,
   Loader2,
   AlertTriangle,
+  Sparkles,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -29,11 +31,17 @@ export default function PedidosContent({ userRole }: PedidosContentProps) {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-slate-800">Gestión de Pedidos</h1>
           <p className="text-slate-500">Crea y administra pedidos a proveedores</p>
         </div>
+        <Link href="/pedidos/sugerencias">
+          <Button variant="outline" className="border-blue-200 text-blue-700 hover:bg-blue-50">
+            <Sparkles className="w-4 h-4 mr-2" />
+            Sugerir pedido
+          </Button>
+        </Link>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
