@@ -44,11 +44,19 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     }
 
     const { id } = await params;
-    const { nombre, fabricante, formato, categoriaId, proveedorId, unidadMedida, precioUnitario, stockMinimo, activo } = await request.json();
+    const { nombre, fabricante, formato, categoriaId, proveedorId, unidadMedida, precioUnitario, stockMinimo, activo, contenidoNeto, contenidoUnidad } = await request.json();
 
     const tenantId = getActiveTenantId(user);
     const existing = await prisma.producto.findFirst({ where: { id: parseInt(id), tenantId } });
     if (!existing) return NextResponse.json({ error: "No encontrado" }, { status: 404 });
+
+    const contenidoNetoNum =
+      contenidoNeto !== undefined && contenidoNeto !== null && contenidoNeto !== ""
+        ? parseFloat(String(contenidoNeto))
+        : null;
+    const contenidoUnidadValida = ["g", "ml", "un"].includes(contenidoUnidad)
+      ? contenidoUnidad
+      : null;
 
     const producto = await prisma.producto.update({
       where: { id: parseInt(id) },
@@ -61,6 +69,18 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
         unidadMedida,
         precioUnitario: new Decimal(precioUnitario),
         stockMinimo: new Decimal(stockMinimo),
+        contenidoNeto:
+          contenidoNeto !== undefined
+            ? contenidoNetoNum && contenidoNetoNum > 0
+              ? new Decimal(contenidoNetoNum)
+              : null
+            : existing.contenidoNeto,
+        contenidoUnidad:
+          contenidoNeto !== undefined
+            ? contenidoNetoNum && contenidoNetoNum > 0
+              ? contenidoUnidadValida
+              : null
+            : existing.contenidoUnidad,
         activo: activo !== undefined ? activo : existing.activo,
       },
     });

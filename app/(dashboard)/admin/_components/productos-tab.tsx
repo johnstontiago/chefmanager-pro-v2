@@ -65,6 +65,8 @@ export default function ProductosTab() {
     unidadMedida: "kg",
     precioUnitario: "",
     stockMinimo: "",
+    contenidoNeto: "",
+    contenidoUnidad: "g",
   });
 
   useEffect(() => {
@@ -114,6 +116,8 @@ export default function ProductosTab() {
       unidadMedida: "kg",
       precioUnitario: "",
       stockMinimo: "",
+      contenidoNeto: "",
+      contenidoUnidad: "g",
     });
     setShowDialog(true);
   };
@@ -129,6 +133,8 @@ export default function ProductosTab() {
       unidadMedida: product.unidadMedida || "kg",
       precioUnitario: toNumber(product.precioUnitario).toString(),
       stockMinimo: toNumber(product.stockMinimo).toString(),
+      contenidoNeto: product.contenidoNeto != null ? toNumber(product.contenidoNeto).toString() : "",
+      contenidoUnidad: product.contenidoUnidad || "g",
     });
     setShowDialog(true);
   };
@@ -150,6 +156,8 @@ export default function ProductosTab() {
         unidadMedida: formData.unidadMedida,
         precioUnitario: parseFloat(formData.precioUnitario),
         stockMinimo: parseFloat(formData.stockMinimo),
+        contenidoNeto: formData.contenidoNeto ? parseFloat(formData.contenidoNeto) : null,
+        contenidoUnidad: formData.contenidoNeto ? formData.contenidoUnidad : null,
       };
 
       const res = await apiFetch(
@@ -366,6 +374,45 @@ export default function ProductosTab() {
                   onChange={(e) => setFormData({ ...formData, stockMinimo: e.target.value })}
                   placeholder="0"
                 />
+              </div>
+            </div>
+            <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 space-y-2">
+              <Label className="text-blue-800">
+                Contenido por unidad de compra (para fichas técnicas)
+              </Label>
+              <p className="text-xs text-blue-700">
+                Peso, volumen o unidades exactas que contiene cada unidad comprada.
+                Ej: lata de tomate → 3600 g · paquete de levadura → 50 g · caja de cannolis → 12 un.
+                Las fichas técnicas costearán por esa unidad mínima (precio ÷ contenido).
+              </p>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Contenido</Label>
+                  <Input
+                    type="number"
+                    step="0.001"
+                    min="0"
+                    value={formData.contenidoNeto}
+                    onChange={(e) => setFormData({ ...formData, contenidoNeto: e.target.value })}
+                    placeholder="Ej: 3600"
+                  />
+                </div>
+                <div>
+                  <Label>Unidad mínima</Label>
+                  <Select
+                    value={formData.contenidoUnidad}
+                    onValueChange={(v) => setFormData({ ...formData, contenidoUnidad: v })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="g">g (gramos)</SelectItem>
+                      <SelectItem value="ml">ml (mililitros)</SelectItem>
+                      <SelectItem value="un">un (unidades)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </div>
             <div className="flex justify-end space-x-2 pt-4">

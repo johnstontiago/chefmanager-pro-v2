@@ -27,6 +27,8 @@ export const ProductoCreateSchema = z.object({
   unidadMedida: z.string().min(1).max(50).optional(),
   precioUnitario: z.number().nonnegative(),
   stockMinimo: z.number().nonnegative(),
+  contenidoNeto: z.number().positive().optional().nullable(),
+  contenidoUnidad: z.enum(["g", "ml", "un"]).optional().nullable(),
 });
 
 export const ProductoUpdateSchema = ProductoCreateSchema.partial().extend({

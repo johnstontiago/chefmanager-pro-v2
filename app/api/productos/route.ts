@@ -59,7 +59,7 @@ export async function POST(request: Request) {
     if (!parsed.success) {
       return NextResponse.json({ error: parsed.error.errors[0].message }, { status: 400 });
     }
-    const { nombre, fabricante, formato, categoriaId, proveedorId, unidadMedida, precioUnitario, stockMinimo } = parsed.data;
+    const { nombre, fabricante, formato, categoriaId, proveedorId, unidadMedida, precioUnitario, stockMinimo, contenidoNeto, contenidoUnidad } = parsed.data;
 
     const producto = await prisma.producto.create({
       data: {
@@ -71,6 +71,8 @@ export async function POST(request: Request) {
         unidadMedida: unidadMedida || "kg",
         precioUnitario: new Decimal(precioUnitario),
         stockMinimo: new Decimal(stockMinimo),
+        contenidoNeto: contenidoNeto != null ? new Decimal(contenidoNeto) : null,
+        contenidoUnidad: contenidoNeto != null ? contenidoUnidad || null : null,
         activo: true,
         tenantId: getActiveTenantId(user),
       },

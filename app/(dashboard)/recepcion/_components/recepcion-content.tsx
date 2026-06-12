@@ -38,6 +38,7 @@ interface ItemForm {
   fechaCaducidad: string;
   ubicacion: string;
   codigoUnico: string;
+  nuevoPrecio: string;
 }
 
 type EstadoLinea = "pendiente" | "recibida" | "parcial";
@@ -124,6 +125,7 @@ export default function RecepcionContent({ userRole }: RecepcionContentProps) {
             : "",
           ubicacion: "",
           codigoUnico: "",
+          nuevoPrecio: "",
           estado: item.estadoLinea as EstadoLinea,
         };
       } else {
@@ -133,6 +135,7 @@ export default function RecepcionContent({ userRole }: RecepcionContentProps) {
           fechaCaducidad: "",
           ubicacion: "",
           codigoUnico: generateUniqueCode(),
+          nuevoPrecio: "",
           estado: "pendiente",
         };
       }
@@ -161,6 +164,7 @@ export default function RecepcionContent({ userRole }: RecepcionContentProps) {
       fechaCaducidad: state?.fechaCaducidad ?? "",
       ubicacion: state?.ubicacion ?? "",
       codigoUnico: state?.codigoUnico ?? generateUniqueCode(),
+      nuevoPrecio: state?.nuevoPrecio ?? "",
     });
   };
 
@@ -244,6 +248,7 @@ export default function RecepcionContent({ userRole }: RecepcionContentProps) {
             estadoLinea,
             lote: drawerForm.lote || null,
             fechaCaducidad: drawerForm.fechaCaducidad || null,
+            nuevoPrecio: drawerForm.nuevoPrecio || null,
           }),
         }),
         // Marcar el pedido como en recepción para que permanezca en la lista
@@ -647,6 +652,28 @@ export default function RecepcionContent({ userRole }: RecepcionContentProps) {
                   }
                   className="mt-1"
                 />
+              </div>
+
+              <div>
+                <Label htmlFor="precio-input">
+                  Precio de llegada (€/unidad) — opcional
+                </Label>
+                <Input
+                  id="precio-input"
+                  type="number"
+                  inputMode="decimal"
+                  step="0.01"
+                  min="0"
+                  placeholder={`Actual: ${formatCurrency(drawerItem?.precioUnitario)}`}
+                  value={drawerForm.nuevoPrecio}
+                  onChange={(e) =>
+                    setDrawerForm((f) => f ? { ...f, nuevoPrecio: e.target.value } : f)
+                  }
+                  className="mt-1"
+                />
+                <p className="text-xs text-slate-500 mt-1">
+                  Vacío = mantiene el precio actual. Con valor = actualiza este lote y el precio del producto.
+                </p>
               </div>
 
               <div>

@@ -101,6 +101,11 @@ model Producto {
   unidadMedida   String       @map("unidad_medida")
   precioUnitario Decimal      @map("precio_unitario") @db.Decimal(10, 2)
   stockMinimo    Decimal      @map("stock_minimo") @db.Decimal(10, 2)
+  // Contenido neto por unidad de compra (ej: lata de 3600 g, paquete de
+  // 50 g, caja de 12 un). Lo usan las fichas técnicas para costear por
+  // unidad mínima. Si es null, se infiere del nombre de unidadMedida.
+  contenidoNeto    Decimal? @map("contenido_neto") @db.Decimal(12, 3)
+  contenidoUnidad  String?  @map("contenido_unidad")
   qrcode         String?      @map("qrcode")
   activo         Boolean      @default(true)
   createdAt      DateTime     @default(now()) @map("created_at")

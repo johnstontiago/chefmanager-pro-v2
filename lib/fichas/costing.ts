@@ -13,13 +13,19 @@ import { toNumber } from "@/lib/utils";
 // memoización; los ciclos se rechazan al escribir (wouldCreateCycle) y,
 // como defensa adicional, se cortan en lectura valorándolos en 0.
 
+interface ProductoCosteable {
+  unidadMedida: string;
+  contenidoNeto: unknown | null;
+  contenidoUnidad: string | null;
+}
+
 interface InsumoBase {
   id: number;
   valorPorUnidad: number;
   esPreparacion: boolean;
   preparacionId: number | null;
   productoId: number | null;
-  producto: { precioUnitario: unknown; unidadMedida: string } | null;
+  producto: (ProductoCosteable & { precioUnitario: unknown }) | null;
 }
 
 export interface LiveCostMaps {
@@ -71,9 +77,26 @@ export function unidadDeReceta(unidadMedida: string): { unidad: string; factor: 
   return { unidad: unidadMedida, factor: 1 };
 }
 
+/**
+ * Unidad mínima y contenido de un producto para costear en recetas.
+ * Prioridad: contenido neto declarado en el producto (ej: lata de 3600 g,
+ * paquete de 50 g, caja de 12 un); si no existe, se infiere del nombre
+ * de la unidad de medida ("bolsa 25kg" → 25000 g).
+ */
+export function contenidoDeProducto(producto: ProductoCosteable): {
+  unidad: string;
+  factor: number;
+} {
+  const neto = toNumber(producto.contenidoNeto as any);
+  if (neto > 0 && producto.contenidoUnidad) {
+    return { unidad: producto.contenidoUnidad, factor: neto };
+  }
+  return unidadDeReceta(producto.unidadMedida);
+}
+
 function baseValue(insumo: InsumoBase): number {
   if (insumo.producto) {
-    const { factor } = unidadDeReceta(insumo.producto.unidadMedida);
+    const { factor } = contenidoDeProducto(insumo.producto);
     return toNumber(insumo.producto.precioUnitario as any) / factor;
   }
   return insumo.valorPorUnidad;
@@ -94,7 +117,14 @@ export async function getLiveCostMaps(tenantId: number): Promise<LiveCostMaps> {
         esPreparacion: true,
         preparacionId: true,
         productoId: true,
-        producto: { select: { precioUnitario: true, unidadMedida: true } },
+        producto: {
+          select: {
+            precioUnitario: true,
+            unidadMedida: true,
+            contenidoNeto: true,
+            contenidoUnidad: true,
+          },
+        },
       },
     }),
     prisma.preparacion.findMany({
@@ -279,7 +309,13 @@ export async function syncProductosAsInsumos(tenantId: number): Promise<void> {
   const [productos, existentes] = await Promise.all([
     prisma.producto.findMany({
       where: { tenantId, activo: true },
-      select: { id: true, nombre: true, unidadMedida: true },
+      select: {
+        id: true,
+        nombre: true,
+        unidadMedida: true,
+        contenidoNeto: true,
+        contenidoUnidad: true,
+      },
     }),
     prisma.insumo.findMany({
       where: { tenantId, productoId: { not: null } },
@@ -293,7 +329,7 @@ export async function syncProductosAsInsumos(tenantId: number): Promise<void> {
     .filter((p) => !porProducto.has(p.id))
     .map((p) => ({
       nombre: p.nombre,
-      unidad: unidadDeReceta(p.unidadMedida).unidad,
+      unidad: contenidoDeProducto(p).unidad,
       productoId: p.id,
       tenantId,
     }));
@@ -305,7 +341,7 @@ export async function syncProductosAsInsumos(tenantId: number): Promise<void> {
   const desactualizados = productos.filter((p) => {
     const insumo = porProducto.get(p.id);
     if (!insumo) return false;
-    const { unidad } = unidadDeReceta(p.unidadMedida);
+    const { unidad } = contenidoDeProducto(p);
     return insumo.nombre !== p.nombre || insumo.unidad !== unidad;
   });
 
@@ -313,7 +349,7 @@ export async function syncProductosAsInsumos(tenantId: number): Promise<void> {
     const insumo = porProducto.get(p.id)!;
     await prisma.insumo.update({
       where: { id: insumo.id },
-      data: { nombre: p.nombre, unidad: unidadDeReceta(p.unidadMedida).unidad },
+      data: { nombre: p.nombre, unidad: contenidoDeProducto(p).unidad },
     });
   }
 }
