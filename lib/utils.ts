@@ -15,9 +15,15 @@ export function toNumber(value: number | Decimal | string | null | undefined): n
 
 export function formatCurrency(value: number | Decimal | null | undefined): string {
   const num = toNumber(value);
+  // Para valores muy pequeños (precio por g/ml) aumentar decimales para no mostrar 0,00
+  let fractionDigits = 2;
+  if (num > 0 && num < 0.005) fractionDigits = 4;
+  else if (num > 0 && num < 0.05) fractionDigits = 3;
   return new Intl.NumberFormat("es-ES", {
     style: "currency",
     currency: "EUR",
+    minimumFractionDigits: fractionDigits,
+    maximumFractionDigits: fractionDigits,
   }).format(num);
 }
 
