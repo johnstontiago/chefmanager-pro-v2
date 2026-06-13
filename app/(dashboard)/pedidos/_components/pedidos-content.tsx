@@ -23,10 +23,16 @@ interface PedidosContentProps {
 export default function PedidosContent({ userRole }: PedidosContentProps) {
   const [activeTab, setActiveTab] = useState("nuevo");
   const [refreshKey, setRefreshKey] = useState(0);
+  const [pedidoEditando, setPedidoEditando] = useState<any | null>(null);
 
   const handlePedidoCreated = () => {
     setRefreshKey((prev) => prev + 1);
     setActiveTab("historial");
+  };
+
+  const handleEditarPedido = (pedido: any) => {
+    setPedidoEditando(pedido);
+    setActiveTab("nuevo");
   };
 
   return (
@@ -57,11 +63,19 @@ export default function PedidosContent({ userRole }: PedidosContentProps) {
         </TabsList>
 
         <TabsContent value="nuevo" className="mt-6">
-          <NuevoPedido onPedidoCreated={handlePedidoCreated} />
+          <NuevoPedido
+            onPedidoCreated={handlePedidoCreated}
+            pedidoEditar={pedidoEditando}
+            onCancelarEdicion={() => setPedidoEditando(null)}
+          />
         </TabsContent>
 
         <TabsContent value="historial" className="mt-6">
-          <HistorialPedidos key={refreshKey} userRole={userRole} />
+          <HistorialPedidos
+            key={refreshKey}
+            userRole={userRole}
+            onEditarPedido={handleEditarPedido}
+          />
         </TabsContent>
       </Tabs>
     </div>

@@ -52,9 +52,10 @@ import { formatCurrency, formatDate, formatDecimal, toNumber } from "@/lib/utils
 
 interface HistorialPedidosProps {
   userRole: string;
+  onEditarPedido?: (pedido: any) => void;
 }
 
-export default function HistorialPedidos({ userRole }: HistorialPedidosProps) {
+export default function HistorialPedidos({ userRole, onEditarPedido }: HistorialPedidosProps) {
   const { toast } = useToast();
   const [pedidos, setPedidos] = useState<any[]>([]);
   const [proveedores, setProveedores] = useState<any[]>([]);
@@ -385,6 +386,12 @@ export default function HistorialPedidos({ userRole }: HistorialPedidosProps) {
                           Copiar al portapapeles
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
+                        {pedido.estado === "borrador" && onEditarPedido && (
+                          <DropdownMenuItem onClick={() => onEditarPedido(pedido)}>
+                            <Edit2 className="w-4 h-4 mr-2" />
+                            Editar borrador
+                          </DropdownMenuItem>
+                        )}
                         {pedido.estado === "borrador" && (
                           <DropdownMenuItem onClick={() => cambiarEstado(pedido.id, "enviado")}>
                             Marcar como Enviado

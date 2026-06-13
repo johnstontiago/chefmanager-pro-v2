@@ -13,6 +13,13 @@ export const PedidoCreateSchema = z.object({
   proveedorId: z.number().int().positive().optional().nullable(),
 });
 
+export const PedidoUpdateSchema = z.object({
+  items: z.array(PedidoItemSchema).min(1, "Se requiere al menos un ítem"),
+  notas: z.string().max(500).optional().nullable(),
+  proveedorId: z.number().int().positive().optional().nullable(),
+  estado: z.enum(["borrador", "enviado"]).optional(),
+});
+
 export const PedidoPatchSchema = z.object({
   estado: z.enum(["borrador", "pendiente", "enviado", "en_recepcion", "recibido", "recibido_parcial", "cancelado"]),
   notas: z.string().max(500).optional(),

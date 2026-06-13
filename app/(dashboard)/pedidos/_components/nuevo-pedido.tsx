@@ -33,9 +33,11 @@ import { CartItem } from "@/lib/types";
 
 interface NuevoPedidoProps {
   onPedidoCreated: () => void;
+  pedidoEditar?: any | null;
+  onCancelarEdicion?: () => void;
 }
 
-export default function NuevoPedido({ onPedidoCreated }: NuevoPedidoProps) {
+export default function NuevoPedido({ onPedidoCreated, pedidoEditar, onCancelarEdicion }: NuevoPedidoProps) {
   const { data: session } = useSession() || {};
   const { toast } = useToast();
   const [productos, setProductos] = useState<any[]>([]);
@@ -55,6 +57,24 @@ export default function NuevoPedido({ onPedidoCreated }: NuevoPedidoProps) {
   useEffect(() => {
     fetchData();
   }, []);
+
+  // Modo edición: precarga el carrito con las líneas del borrador
+  useEffect(() => {
+    if (pedidoEditar) {
+      setCarrito(
+        (pedidoEditar.items || []).map((item: any) => ({
+          productoId: item.productoId,
+          producto: item.producto,
+          cantidad: toNumber(item.cantidad),
+          precioUnitario: toNumber(item.precioUnitario),
+        }))
+      );
+      setNotas(pedidoEditar.notas || "");
+    } else {
+      setCarrito([]);
+      setNotas("");
+    }
+  }, [pedidoEditar]);
 
   const fetchData = async () => {
     try {
@@ -150,15 +170,19 @@ export default function NuevoPedido({ onPedidoCreated }: NuevoPedidoProps) {
         precioUnitario: item.precioUnitario,
       }));
 
-      const res = await apiFetch("/api/pedidos", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          items,
-          notas,
-          estado,
-        }),
-      });
+      const esEdicion = !!pedidoEditar;
+      const res = await apiFetch(
+        esEdicion ? `/api/pedidos/${pedidoEditar.id}` : "/api/pedidos",
+        {
+          method: esEdicion ? "PUT" : "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            items,
+            notas,
+            estado,
+          }),
+        }
+      );
 
       if (!res.ok && res.status !== 202) {
         const err = await res.json();
@@ -166,12 +190,19 @@ export default function NuevoPedido({ onPedidoCreated }: NuevoPedidoProps) {
       }
 
       toast({
-        title: estado === "borrador" ? "Pedido guardado como borrador" : "Pedido enviado",
+        title: esEdicion
+          ? estado === "borrador"
+            ? `Borrador #${pedidoEditar.id} actualizado`
+            : `Pedido #${pedidoEditar.id} actualizado y enviado`
+          : estado === "borrador"
+            ? "Pedido guardado como borrador"
+            : "Pedido enviado",
         description: `${carrito.length} productos en el pedido`,
       });
 
       setCarrito([]);
       setNotas("");
+      if (esEdicion) onCancelarEdicion?.();
       onPedidoCreated();
     } catch (error: any) {
       toast({
@@ -219,6 +250,22 @@ export default function NuevoPedido({ onPedidoCreated }: NuevoPedidoProps) {
   }
 
   return (
+    <div className="space-y-4">
+      {pedidoEditar && (
+        <div className="bg-blue-50 border border-blue-300 rounded-lg p-3 flex flex-wrap items-center justify-between gap-2">
+          <p className="text-sm font-medium text-blue-800">
+            ✏️ Editando borrador <strong>#{pedidoEditar.id}</strong> — modifica el carrito y guarda
+          </p>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onCancelarEdicion?.()}
+            className="border-blue-300 text-blue-700"
+          >
+            Cancelar edición
+          </Button>
+        </div>
+      )}
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       {/* Product List */}
       <div className="lg:col-span-2 space-y-4">
@@ -446,7 +493,7 @@ export default function NuevoPedido({ onPedidoCreated }: NuevoPedidoProps) {
                     ) : (
                       <Save className="w-4 h-4 mr-2" />
                     )}
-                    Borrador
+                    {pedidoEditar ? "Guardar cambios" : "Borrador"}
                   </Button>
                   <Button
                     onClick={() => guardarPedido("enviado")}
@@ -466,6 +513,7 @@ export default function NuevoPedido({ onPedidoCreated }: NuevoPedidoProps) {
           </CardContent>
         </Card>
       </div>
+    </div>
     </div>
   );
 }

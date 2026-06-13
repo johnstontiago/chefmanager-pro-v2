@@ -2,8 +2,9 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
 import prisma from "@/lib/db";
+import { Decimal } from "@prisma/client/runtime/library";
 import { toNumber } from "@/lib/utils";
-import { PedidoPatchSchema } from "@/lib/schemas";
+import { PedidoPatchSchema, PedidoUpdateSchema } from "@/lib/schemas";
 
 import { getActiveTenantId, getActiveUnidadId } from "@/lib/get-active-tenant";
 
@@ -70,6 +71,94 @@ export async function GET(
   } catch (error) {
     console.error("Error fetching pedido:", error);
     return NextResponse.json({ error: "Error interno" }, { status: 500 });
+  }
+}
+
+// Edición completa de un pedido: solo permitida mientras es borrador.
+// Reemplaza las líneas, recalcula el total y opcionalmente lo envía.
+export async function PUT(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user) {
+      return NextResponse.json({ error: "No autenticado" }, { status: 401 });
+    }
+
+    const user = session.user as any;
+    const { id } = await params;
+    const pedidoId = parseInt(id);
+    if (isNaN(pedidoId)) {
+      return NextResponse.json({ error: "ID inválido" }, { status: 400 });
+    }
+
+    const body = await request.json();
+    const parsed = PedidoUpdateSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error.errors[0].message }, { status: 400 });
+    }
+    const { items, notas, proveedorId, estado } = parsed.data;
+
+    const tenantId = getActiveTenantId(user);
+    const whereClause: any = { id: pedidoId, tenantId };
+    const activeUnidadId = getActiveUnidadId(user);
+    if (activeUnidadId) {
+      whereClause.unidadId = activeUnidadId;
+    }
+
+    const existing = await prisma.pedido.findFirst({ where: whereClause });
+    if (!existing) {
+      return NextResponse.json({ error: "Pedido no encontrado" }, { status: 404 });
+    }
+    if (existing.estado !== "borrador") {
+      return NextResponse.json(
+        { error: "Solo se pueden editar pedidos en estado borrador" },
+        { status: 400 }
+      );
+    }
+
+    // Los productos referenciados deben pertenecer al tenant
+    const productoIds = Array.from(new Set(items.map((i) => i.productoId)));
+    const propios = await prisma.producto.count({
+      where: { id: { in: productoIds }, tenantId },
+    });
+    if (propios !== productoIds.length) {
+      return NextResponse.json({ error: "Producto inválido" }, { status: 400 });
+    }
+
+    let total = 0;
+    for (const item of items) {
+      total += item.cantidad * item.precioUnitario;
+    }
+
+    const pedido = await prisma.$transaction(async (tx) => {
+      await tx.pedidoItem.deleteMany({ where: { pedidoId } });
+      return tx.pedido.update({
+        where: { id: pedidoId },
+        data: {
+          total: new Decimal(total),
+          notas: notas !== undefined ? notas : existing.notas,
+          proveedorId: proveedorId !== undefined ? proveedorId : existing.proveedorId,
+          ...(estado ? { estado } : {}),
+          items: {
+            create: items.map((item) => ({
+              productoId: item.productoId,
+              cantidad: new Decimal(item.cantidad),
+              precioUnitario: new Decimal(item.precioUnitario),
+            })),
+          },
+        },
+        include: {
+          items: { include: { producto: true } },
+        },
+      });
+    });
+
+    return NextResponse.json({ pedido, message: "Pedido actualizado" });
+  } catch (error) {
+    console.error("Error editing pedido:", error);
+    return NextResponse.json({ error: "Error al actualizar" }, { status: 500 });
   }
 }
 
