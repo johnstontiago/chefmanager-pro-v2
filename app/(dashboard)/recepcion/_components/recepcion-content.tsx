@@ -27,6 +27,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { formatCurrency, formatDate, formatDecimal, toNumber, generateUniqueCode } from "@/lib/utils";
 import { useBluetoothPrinter } from "@/hooks/use-bluetooth-printer";
+import ScanEtiqueta from "./scan-etiqueta";
 
 interface RecepcionContentProps {
   userRole: string;
@@ -676,26 +677,42 @@ export default function RecepcionContent({ userRole }: RecepcionContentProps) {
                 </p>
               </div>
 
-              <div>
-                <Label htmlFor="lote-input">Lote</Label>
-                <Input
-                  id="lote-input"
-                  placeholder="LOT-XXXX"
-                  value={drawerForm.lote}
-                  onChange={(e) => setDrawerForm((f) => f ? { ...f, lote: e.target.value } : f)}
-                  className="mt-1"
+              <div className="border border-slate-200 rounded-lg p-3 space-y-3 bg-slate-50">
+                <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">Lote y caducidad</p>
+                <ScanEtiqueta
+                  disabled={savingItem}
+                  onScan={(result) =>
+                    setDrawerForm((f) =>
+                      f
+                        ? {
+                            ...f,
+                            lote: result.lote ?? f.lote,
+                            fechaCaducidad: result.fechaCaducidad ?? f.fechaCaducidad,
+                          }
+                        : f
+                    )
+                  }
                 />
-              </div>
-
-              <div>
-                <Label htmlFor="cad-input">Fecha de caducidad</Label>
-                <Input
-                  id="cad-input"
-                  type="date"
-                  value={drawerForm.fechaCaducidad}
-                  onChange={(e) => setDrawerForm((f) => f ? { ...f, fechaCaducidad: e.target.value } : f)}
-                  className="mt-1"
-                />
+                <div>
+                  <Label htmlFor="lote-input">Lote</Label>
+                  <Input
+                    id="lote-input"
+                    placeholder="LOT-XXXX"
+                    value={drawerForm.lote}
+                    onChange={(e) => setDrawerForm((f) => f ? { ...f, lote: e.target.value } : f)}
+                    className="mt-1 bg-white"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="cad-input">Fecha de caducidad</Label>
+                  <Input
+                    id="cad-input"
+                    type="date"
+                    value={drawerForm.fechaCaducidad}
+                    onChange={(e) => setDrawerForm((f) => f ? { ...f, fechaCaducidad: e.target.value } : f)}
+                    className="mt-1 bg-white"
+                  />
+                </div>
               </div>
 
               <div>
