@@ -30,7 +30,7 @@ export default function ScanEtiqueta({ onScan, disabled }: ScanEtiquetaProps) {
     setMensaje("");
 
     try {
-      const base64 = await fileToBase64(file);
+      const base64 = await prepararImagen(file);
 
       const res = await fetch("/api/recepcion/scan", {
         method: "POST",
@@ -117,11 +117,34 @@ export default function ScanEtiqueta({ onScan, disabled }: ScanEtiquetaProps) {
   );
 }
 
-function fileToBase64(file: File): Promise<string> {
+// Redimensiona la imagen a máx 1400px y la convierte a JPEG de alta calidad.
+// Reduce el payload sin perder detalle legible en etiquetas.
+function prepararImagen(file: File): Promise<string> {
+  const MAX_PX = 1400;
+  const QUALITY = 0.92;
+
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
     reader.onerror = reject;
+    reader.onload = () => {
+      const img = new Image();
+      img.onerror = reject;
+      img.onload = () => {
+        const ratio = Math.min(1, MAX_PX / Math.max(img.width, img.height));
+        const w = Math.round(img.width * ratio);
+        const h = Math.round(img.height * ratio);
+
+        const canvas = document.createElement("canvas");
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) { reject(new Error("Canvas no disponible")); return; }
+
+        ctx.drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL("image/jpeg", QUALITY));
+      };
+      img.src = reader.result as string;
+    };
     reader.readAsDataURL(file);
   });
 }

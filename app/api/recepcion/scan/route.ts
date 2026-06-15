@@ -4,15 +4,29 @@ import { authOptions } from "@/lib/auth-options";
 
 export const dynamic = "force-dynamic";
 
-const PROMPT = `Analiza esta etiqueta de producto alimentario y extrae:
-1. Número de lote (puede aparecer como "LOT", "LOTE", "L:", "Lot No.", "Batch", "L/N", o simplemente un código alfanumérico)
-2. Fecha de caducidad (puede aparecer como "CAD", "CADU", "F.CAD", "BBD", "EXP", "Best Before", "Consume antes de", con formatos DD/MM/YYYY, MM/YYYY, DD.MM.YY, etc.)
+const PROMPT = `Eres un sistema de lectura de etiquetas de productos alimentarios. Analiza la imagen con atención y extrae DOS campos:
 
-Responde ÚNICAMENTE con JSON válido, sin texto adicional:
-{"lote": "VALOR_O_NULL", "fechaCaducidad": "YYYY-MM-DD_O_NULL"}
+**LOTE** — busca cualquiera de estas variantes:
+- Prefijos: LOT, LOTE, L/, L:, LT, Lot No., Batch, Batch No., B/, Nº Lote, Nro. Lote, N° Lot
+- Puede ser alfanumérico (ej: L2507A, LOT240615, B-12345X, 2507001A)
+- Suele estar impreso en relieve, tinta negra sobre fondo claro, o al revés
+- En productos italianos: LOTTO; en franceses: LOT; en alemanes: Charge/Ch.
 
-Para fechas con solo mes/año (como 12/26 o 12/2026), usa el último día del mes: 2026-12-31.
-Si no encuentras algún campo, usa null.`;
+**FECHA DE CADUCIDAD** — busca cualquiera de estas variantes:
+- Prefijos: CAD, CADU, F.CAD, F.C., Fecha Cad., Consumir antes de, BBD, BB, Best Before, EXP, Exp. Date, Use By, Ablaufdatum, DLC, DLUO
+- Formatos posibles: DD/MM/YYYY · DD/MM/YY · MM/YYYY · MM/YY · DD.MM.YY · YYYY-MM-DD · MES/YYYY (ej: ENE/2027)
+- Para MM/YY o MM/YYYY usa siempre el ÚLTIMO día del mes (ej: 06/26 → 2026-06-30, 12/2026 → 2026-12-31)
+- Años de 2 dígitos: 25→2025, 26→2026, 27→2027, 28→2028
+
+Instrucciones:
+- Lee TODA la imagen, incluyendo bordes, laterales y texto pequeño
+- Si hay varios lotes o fechas, elige el más prominente o el primero que aparezca
+- No confundas la fecha de fabricación (FAB, MFG, Fabricación) con la de caducidad
+- Devuelve el lote TAL COMO APARECE en la etiqueta, sin interpretar ni modificar
+- Si un campo no está visible o no puedes leerlo con certeza, usa null
+
+Responde ÚNICAMENTE con JSON válido, sin explicaciones ni texto adicional:
+{"lote": "VALOR_EXACTO_O_NULL", "fechaCaducidad": "YYYY-MM-DD_O_NULL"}`;
 
 export async function POST(request: Request) {
   const session = await getServerSession(authOptions);
@@ -72,7 +86,8 @@ export async function POST(request: Request) {
         },
         body: JSON.stringify({
           model: llmModel ?? "claude-haiku-4-5-20251001",
-          max_tokens: 256,
+          max_tokens: 512,
+          temperature: 0,
           messages: [
             {
               role: "user",
@@ -104,7 +119,8 @@ export async function POST(request: Request) {
         },
         body: JSON.stringify({
           model: llmModel ?? "gpt-4o-mini",
-          max_tokens: 256,
+          max_tokens: 512,
+          temperature: 0,
           messages: [
             {
               role: "user",
