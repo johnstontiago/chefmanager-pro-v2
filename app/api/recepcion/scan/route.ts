@@ -18,12 +18,16 @@ const PROMPT = `Eres un sistema de lectura de etiquetas de productos alimentario
 - Para MM/YY o MM/YYYY usa siempre el ÚLTIMO día del mes (ej: 06/26 → 2026-06-30, 12/2026 → 2026-12-31)
 - Años de 2 dígitos: 25→2025, 26→2026, 27→2027, 28→2028
 
-Instrucciones:
+Instrucciones CRÍTICAS — léelas antes de responder:
 - Lee TODA la imagen, incluyendo bordes, laterales y texto pequeño
-- Si hay varios lotes o fechas, elige el más prominente o el primero que aparezca
-- No confundas la fecha de fabricación (FAB, MFG, Fabricación) con la de caducidad
-- Devuelve el lote TAL COMO APARECE en la etiqueta, sin interpretar ni modificar
-- Si un campo no está visible o no puedes leerlo con certeza, usa null
+- NUNCA inventes, supongas ni completes datos que no estén visibles en la imagen
+- Si no puedes leer un valor con certeza absoluta, devuelve null para ese campo
+- Es preferible devolver null que devolver un valor incorrecto
+- Devuelve el lote y la fecha TAL COMO APARECEN en la imagen, solo convierte el formato de fecha a YYYY-MM-DD
+- No confundas la fecha de fabricación (FAB, MFG, Fabricación, Prod. Date) con la de caducidad
+- Para años de 2 dígitos (ej: 26, 27) solo conviértelos si esos dígitos son claramente visibles en la imagen
+- Para MM/YY o MM/YYYY usa el último día del mes ÚNICAMENTE si el mes y año son legibles con certeza
+- Si la imagen está borrosa, mal iluminada o el texto no es legible, devuelve null en ambos campos
 
 Responde ÚNICAMENTE con JSON válido, sin explicaciones ni texto adicional:
 {"lote": "VALOR_EXACTO_O_NULL", "fechaCaducidad": "YYYY-MM-DD_O_NULL"}`;
