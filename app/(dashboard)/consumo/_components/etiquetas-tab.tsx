@@ -270,7 +270,7 @@ export default function EtiquetasTab({ inventario }: EtiquetasTabProps) {
           ) : (
             <p className="text-sm text-slate-500">
               Se imprimirá una etiqueta con todos los campos vacíos para rellenar a mano:
-              nombre, código, caducidad, fecha de apertura, caducidad tras apertura y peso/porción.
+              nombre, código, caducidad, fecha de apertura, caducidad tras apertura y porción.
             </p>
           )}
         </CardContent>

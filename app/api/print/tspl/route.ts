@@ -17,14 +17,16 @@ export async function POST(req: Request) {
   const loteStr = lote        || "---";
   const cadStr  = cadEmbalaje || "---";
 
-  // Variante de etiqueta: consumo muestra "Peso/Porcion:" en lugar de "Mermas:".
-  const variant      = data.variant ?? "recepcion";
-  const etiquetaSexta = variant === "consumo" ? "Peso/Porcion:" : "Mermas:";
+  // Variante de etiqueta: consumo muestra "Porcion:" en lugar de "Mermas:".
+  const variant       = data.variant ?? "recepcion";
+  const esConsumo     = variant === "consumo";
+  const etiquetaSexta = esConsumo ? "Porcion:" : "Mermas:";
   // Etiqueta "en blanco": sin código no se imprime QR ni la línea del código.
-  const tieneCodigo  = Boolean(codigoUnico && codigoUnico.trim());
+  const tieneCodigo   = Boolean(codigoUnico && codigoUnico.trim());
 
   const f  = String(cfg.fuente);
-  const xm = cfg.xMargen;
+  // En consumo se separa el texto del borde izquierdo (la margen base queda muy justa).
+  const xm = cfg.xMargen + (esConsumo ? 15 : 0);
   const s  = cfg.espaciado;
 
   const xTitulo   = Math.max(0, Math.floor((394 - cfg.titulo.length * 11) / 2));
@@ -64,7 +66,8 @@ export async function POST(req: Request) {
     t(xm, yApertura, f, "Fecha Apertura:"),
     t(xm, yFechaCad, f, "Fecha Cad.:"),
     t(xm, yMermas,   f, etiquetaSexta),
-    `BOX ${boxX1},${boxY1},${boxX2},${boxY2},2`,
+    // El recuadro de Mermas no aplica en la etiqueta de consumo.
+    ...(esConsumo ? [] : [`BOX ${boxX1},${boxY1},${boxX2},${boxY2},2`]),
     t(xm, yCodUnico, f, "Cod. Unico:"),
     ...(tieneCodigo
       ? [
