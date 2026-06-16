@@ -58,13 +58,19 @@ export async function POST(req: Request) {
   const s  = cfg.espaciado;
 
   const xTitulo   = Math.max(0, Math.floor((394 - cfg.titulo.length * 11) / 2));
-  const y0        = 57;
+  // En consumo se baja el encabezado (título, línea separadora y nombre)
+  // para dar más aire arriba.
+  const yTit      = esConsumo ? 30 : 12;
+  const yRule     = esConsumo ? 58 : 43;
+  const y0        = esConsumo ? 72 : 57;
   const yFab      = y0 + s;
-  const yLote     = y0 + 2 * s;
-  const yCad      = y0 + 3 * s;
-  const yApertura = y0 + 4 * s;
-  const yFechaCad = y0 + 5 * s;
-  const yMermas   = y0 + 6 * s;
+  // En consumo no hay fabricante: los campos arrancan justo bajo el nombre
+  // (+s), eliminando la línea vacía. En recepción se mantiene el hueco (+2s).
+  const yLote     = y0 + (esConsumo ? s : 2 * s);
+  const yCad      = yLote + s;
+  const yApertura = yCad + s;
+  const yFechaCad = yApertura + s;
+  const yMermas   = yFechaCad + s;
   const yCodUnico = yMermas + s;
   const yCodValor = yCodUnico + 28;
   const boxX1 = xm + 110;
@@ -85,8 +91,8 @@ export async function POST(req: Request) {
     `DENSITY 8`,
     `CLS`,
     `DIRECTION 0`,
-    t(xTitulo, 12, f, cfg.titulo),
-    `LINE 15,43,374,43,2`,
+    t(xTitulo, yTit, f, cfg.titulo),
+    `LINE 15,${yRule},374,${yRule},2`,
     t(xm, y0, f, nombre),
     ...(fabricante ? [t(xm, yFab, f, fabricante)] : []),
     t(xm, yLote, f, `Lote: ${loteStr}`),
