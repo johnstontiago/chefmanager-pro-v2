@@ -17,6 +17,12 @@ export async function POST(req: Request) {
   const loteStr = lote        || "---";
   const cadStr  = cadEmbalaje || "---";
 
+  // Variante de etiqueta: consumo muestra "Peso/Porcion:" en lugar de "Mermas:".
+  const variant      = data.variant ?? "recepcion";
+  const etiquetaSexta = variant === "consumo" ? "Peso/Porcion:" : "Mermas:";
+  // Etiqueta "en blanco": sin código no se imprime QR ni la línea del código.
+  const tieneCodigo  = Boolean(codigoUnico && codigoUnico.trim());
+
   const f  = String(cfg.fuente);
   const xm = cfg.xMargen;
   const s  = cfg.espaciado;
@@ -57,11 +63,15 @@ export async function POST(req: Request) {
     t(xm, yCad,  f, `Cad. Emb.: ${cadStr}`),
     t(xm, yApertura, f, "Fecha Apertura:"),
     t(xm, yFechaCad, f, "Fecha Cad.:"),
-    t(xm, yMermas,   f, "Mermas:"),
+    t(xm, yMermas,   f, etiquetaSexta),
     `BOX ${boxX1},${boxY1},${boxX2},${boxY2},2`,
     t(xm, yCodUnico, f, "Cod. Unico:"),
-    t(xm, yCodValor, "3", codigoUnico),
-    `QRCODE ${cfg.xQR},${cfg.yQR},L,${qrCell},A,0,"${codigoUnico}"`,
+    ...(tieneCodigo
+      ? [
+          t(xm, yCodValor, "3", codigoUnico),
+          `QRCODE ${cfg.xQR},${cfg.yQR},L,${qrCell},A,0,"${codigoUnico}"`,
+        ]
+      : []),
     `PRINT 1,${copies}`,
     ``,
   ];

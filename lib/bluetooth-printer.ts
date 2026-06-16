@@ -10,6 +10,9 @@ export interface LabelData {
   cadEmbalaje: string;
   codigoUnico: string;
   cantidad:    number;
+  // "recepcion" (por defecto) imprime "Mermas:"; "consumo" imprime "Peso/Porcion:".
+  // Opcional para no alterar a los llamadores existentes (Recepción).
+  variant?:    "recepcion" | "consumo";
 }
 
 export interface LabelConfig {

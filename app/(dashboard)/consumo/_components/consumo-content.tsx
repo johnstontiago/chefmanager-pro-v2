@@ -12,6 +12,7 @@ import {
   AlertTriangle,
   History,
   Tag,
+  Printer,
   MapPin,
   Calendar,
   CheckCircle,
@@ -40,6 +41,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { formatDecimal, formatDate, formatDateTime, toNumber, getDaysUntilExpiry, getExpiryStatus } from "@/lib/utils";
 import QrScanner from "@/components/qr-scanner";
+import EtiquetasTab from "./etiquetas-tab";
 
 interface ConsumoContentProps {
   userRole: string;
@@ -249,6 +251,10 @@ export default function ConsumoContent({ userRole }: ConsumoContentProps) {
           <TabsTrigger value="registrar" className="flex-1 sm:flex-none flex items-center justify-center gap-2">
             <UtensilsCrossed className="w-4 h-4" />
             <span>Registrar</span>
+          </TabsTrigger>
+          <TabsTrigger value="etiquetas" className="flex-1 sm:flex-none flex items-center justify-center gap-2">
+            <Printer className="w-4 h-4" />
+            <span>Etiquetas</span>
           </TabsTrigger>
           <TabsTrigger value="historial" className="flex-1 sm:flex-none flex items-center justify-center gap-2">
             <History className="w-4 h-4" />
@@ -517,6 +523,10 @@ export default function ConsumoContent({ userRole }: ConsumoContentProps) {
               </Card>
             </div>
           </div>
+        </TabsContent>
+
+        <TabsContent value="etiquetas" className="mt-6">
+          <EtiquetasTab inventario={inventario} />
         </TabsContent>
 
         <TabsContent value="historial" className="mt-6">
