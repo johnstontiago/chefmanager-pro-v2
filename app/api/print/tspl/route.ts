@@ -1,8 +1,36 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
+import { create as qrCreate } from "qrcode";
 import { authOptions } from "@/lib/auth-options";
 import type { LabelData, LabelConfig } from "@/lib/bluetooth-printer";
 import { DEFAULT_LABEL_CONFIG } from "@/lib/bluetooth-printer";
+
+// La VAVUPO P1 no soporta el comando TSPL nativo "QRCODE" (aborta el trabajo).
+// Dibujamos el QR como bitmap con comandos BAR (rectángulos negros), que sí
+// soporta. Cada fila se agrupa en tramos de módulos oscuros contiguos.
+function buildQRBars(text: string, x0: number, y0: number, cell: number): string[] {
+  const qr = qrCreate(text, { errorCorrectionLevel: "L" });
+  const n = qr.modules.size;
+  const bits = qr.modules.data;
+  const bars: string[] = [];
+
+  for (let row = 0; row < n; row++) {
+    let start = -1;
+    for (let col = 0; col <= n; col++) {
+      const dark = col < n && bits[row * n + col] !== 0;
+      if (dark && start === -1) {
+        start = col;
+      } else if (!dark && start !== -1) {
+        const x = x0 + start * cell;
+        const y = y0 + row * cell;
+        const w = (col - start) * cell;
+        bars.push(`BAR ${x},${y},${w},${cell}`);
+        start = -1;
+      }
+    }
+  }
+  return bars;
+}
 
 export async function POST(req: Request) {
   const session = await getServerSession(authOptions);
@@ -72,7 +100,7 @@ export async function POST(req: Request) {
     ...(tieneCodigo
       ? [
           t(xm, yCodValor, "3", codigoUnico),
-          `QRCODE ${cfg.xQR},${cfg.yQR},L,${qrCell},A,0,"${codigoUnico}"`,
+          ...buildQRBars(codigoUnico, cfg.xQR, cfg.yQR, qrCell),
         ]
       : []),
     `PRINT 1,${copies}`,
