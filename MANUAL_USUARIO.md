@@ -51,7 +51,7 @@ Tus credenciales te las facilita el administrador del negocio. La sesión perman
 
 ### Código PIN
 
-Algunas acciones o accesos pueden requerir un **PIN** de seguridad adicional, independiente de tu contraseña. Si tu cuenta lo tiene configurado, se te pedirá tras iniciar sesión.
+El **PIN** es una **segunda verificación** de seguridad, independiente de tu contraseña. Si tu cuenta lo tiene configurado, se te pedirá tras iniciar sesión para confirmar tu identidad.
 
 ### Seleccionar la unidad de negocio
 
@@ -82,7 +82,7 @@ El menú lateral solo muestra los módulos a los que tu rol tiene acceso, así q
 - **Menú lateral (izquierda):** navegación entre módulos. En móvil se abre con el icono ☰.
 - **Barra superior:** selector de unidad y tu correo.
 - **Indicador de sincronización:** muestra si estás conectado o si hay cambios pendientes de enviar (ver [sección 13](#13-trabajar-sin-conexión-offline)).
-- **Registros APPCC:** acceso directo (en el pie del menú) al sistema de registros de control sanitario.
+- **Registros APPCC:** acceso directo (en el pie del menú) a la **aplicación de registros sanitarios (APPCC)**. Se abre con **inicio de sesión automático**: usas el mismo usuario que en ChefManager, sin necesidad de volver a identificarte.
 - **Cerrar sesión:** en el pie del menú.
 
 El menú de **Inventario** muestra un **globo rojo** con el número de productos en stock bajo, para que lo veas de un vistazo.
@@ -106,7 +106,7 @@ Módulo para crear y gestionar los pedidos a proveedores.
 3. Indica las cantidades. Puedes añadir **notas** al pedido.
 4. El pedido se guarda como **Borrador**, que puedes seguir editando antes de enviarlo.
 
-> El sistema puede ofrecer **sugerencias** de pedido basadas en el consumo y el stock, y tiene en cuenta los **festivos** configurados para ajustar las previsiones.
+> **Sugerencias de pedido:** el sistema calcula una propuesta de pedido a partir de las **estadísticas de consumo**. Si dentro de la semana del pedido hay **festivos** configurados, **incrementa automáticamente** las cantidades sugeridas para anticipar la mayor demanda.
 
 ### Estados de un pedido
 
@@ -246,7 +246,7 @@ Disponible solo para **Administradores** y **Superusuarios**. Centraliza la conf
 | **Proveedores** | Gestión de proveedores (nombre, teléfono, email) |
 | **Unidades** | Gestión de las unidades de negocio (locales) |
 | **Usuarios** | Alta y baja de usuarios y asignación de roles. La contraseña es obligatoria al crear un usuario nuevo |
-| **Reportes** | Generación de informes del negocio |
+| **Reportes** | Generación de informes de **inventario, consumo, mermas y pedidos** |
 | **Etiqueta** | Configuración y calibración de la etiqueta de impresión (tamaño, márgenes, posición del QR), con **vista previa** |
 
 > Las acciones de borrado piden confirmación. Eliminar un producto, proveedor, unidad o usuario es una acción sensible: revisa siempre antes de confirmar.
