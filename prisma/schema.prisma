@@ -64,7 +64,7 @@ model Unidad {
 
 model Categoria {
   id        Int        @id @default(autoincrement())
-  nombre    String     @unique
+  nombre    String
   activo    Boolean    @default(true)
   createdAt DateTime   @default(now()) @map("created_at")
   tenantId  Int        @map("tenant_id")

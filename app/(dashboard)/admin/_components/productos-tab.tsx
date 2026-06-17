@@ -43,6 +43,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { formatCurrency, formatDecimal, toNumber } from "@/lib/utils";
 import { UNIDADES_MEDIDA } from "@/lib/unidades-medida";
+import ImportarProductosDialog from "./importar-productos-dialog";
 
 export default function ProductosTab() {
   const { toast } = useToast();
@@ -226,6 +227,7 @@ export default function ProductosTab() {
                   className="pl-10 w-48"
                 />
               </div>
+              <ImportarProductosDialog onImported={fetchData} />
               <Button onClick={openNewDialog}>
                 <Plus className="w-4 h-4 mr-2" />
                 Nuevo
