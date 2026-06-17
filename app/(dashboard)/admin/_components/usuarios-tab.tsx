@@ -31,6 +31,7 @@ export default function UsuariosTab() {
   const [editingItem, setEditingItem] = useState<any>(null);
   const [deleteItem, setDeleteItem] = useState<any>(null);
   const [saving, setSaving] = useState(false);
+  const [anonymizing, setAnonymizing] = useState(false);
   const [formData, setFormData] = useState({ email: "", nombre: "", rol: "viewer", unidadId: "", password: "", pinCode: "" });
 
   useEffect(() => { fetchData(); }, []);
@@ -107,11 +108,27 @@ export default function UsuariosTab() {
     try {
       const res = await apiFetch(`/api/usuarios/${deleteItem.id}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Error");
-      toast({ title: "Usuario eliminado" });
+      toast({ title: "Usuario desactivado" });
       setDeleteItem(null);
       fetchData();
     } catch (error) {
-      toast({ title: "Error al eliminar", variant: "destructive" });
+      toast({ title: "Error al desactivar", variant: "destructive" });
+    }
+  };
+
+  const handleAnonymize = async () => {
+    if (!deleteItem) return;
+    try {
+      setAnonymizing(true);
+      const res = await apiFetch(`/api/usuarios/${deleteItem.id}/anonimizar`, { method: "POST" });
+      if (!res.ok) throw new Error("Error");
+      toast({ title: "Usuario anonimizado", description: "Se eliminaron sus datos personales" });
+      setDeleteItem(null);
+      fetchData();
+    } catch (error) {
+      toast({ title: "Error al anonimizar", variant: "destructive" });
+    } finally {
+      setAnonymizing(false);
     }
   };
 
@@ -215,12 +232,21 @@ export default function UsuariosTab() {
       <AlertDialog open={!!deleteItem} onOpenChange={() => setDeleteItem(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>¿Eliminar usuario?</AlertDialogTitle>
-            <AlertDialogDescription>Se eliminará "{deleteItem?.nombre}".</AlertDialogDescription>
+            <AlertDialogTitle>Dar de baja a "{deleteItem?.nombre}"</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2 text-sm">
+                <p><strong>Desactivar:</strong> el usuario pierde el acceso pero se conservan sus datos. Es reversible (puedes reactivarlo).</p>
+                <p><strong>Anonimizar (RGPD):</strong> elimina de forma <strong>irreversible</strong> sus datos personales (email, nombre, PIN), conservando el historial operativo. Úsalo para atender el derecho de supresión.</p>
+              </div>
+            </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
+          <AlertDialogFooter className="flex-col sm:flex-row gap-2">
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700">Eliminar</AlertDialogAction>
+            <Button variant="outline" onClick={handleDelete} disabled={anonymizing}>Desactivar</Button>
+            <Button onClick={handleAnonymize} disabled={anonymizing} className="bg-red-600 hover:bg-red-700 text-white">
+              {anonymizing ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+              Anonimizar (RGPD)
+            </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
