@@ -83,12 +83,12 @@ El sistema lo forman **dos aplicaciones independientes** que comparten usuarios 
 
 Ambas apps y sus dos bases de datos están en **Railway**, una empresa estadounidense.
 
-**Acción requerida (crítica):**
-1. **Confirmar la región de despliegue.** Railway permite elegir región; verificar que tanto las apps como las **bases de datos PostgreSQL** estén en **región europea (EU-West)**. Si están fuera de la UE, hay una transferencia internacional que necesita garantías.
-2. **Firmar el DPA (Data Processing Agreement) de Railway.** Es el contrato que regula que Railway trata datos por tu cuenta. Railway lo ofrece; hay que aceptarlo/firmarlo formalmente.
-3. Documentar a Railway como **sub-encargado** en tu propio DPA hacia los clientes.
+**Estado:**
+1. ✅ **Región confirmada: EU-West (Ámsterdam).** Tanto las dos aplicaciones como las dos bases de datos PostgreSQL están desplegadas en la UE. **No hay transferencia internacional de datos** — el dato no sale del territorio europeo.
+2. ⏳ **Pendiente: firmar el DPA (Data Processing Agreement) de Railway.** Es el contrato que regula que Railway trata datos por tu cuenta. Railway lo ofrece; hay que aceptarlo/firmarlo formalmente.
+3. ⏳ **Pendiente: documentar a Railway como sub-encargado** en tu propio DPA hacia los clientes (incluyendo que el tratamiento ocurre en EU-West/Ámsterdam).
 
-> Sin la región confirmada y el DPA firmado, este es el incumplimiento más probable de cara a un cliente o una inspección.
+> Con la región europea ya confirmada, el riesgo principal queda neutralizado. Solo falta la formalización contractual (DPA), que es trámite, no infraestructura.
 
 ---
 
@@ -109,7 +109,7 @@ Ordenado por prioridad:
 
 | # | Acción | Prioridad | Tipo |
 |---|---|---|---|
-| H-1 | Confirmar **región EU** de Railway (apps + las dos BBDD) | 🔴 Crítica | Infra |
+| H-1 | ✅ **HECHO** — Región EU confirmada: EU-West (Ámsterdam), apps + las dos BBDD | — | Infra |
 | H-2 | Firmar el **DPA de Railway** | 🔴 Crítica | Legal/Infra |
 | H-3 | Publicar **política de privacidad** y **aviso legal** | 🔴 Alta | Documento (GDPR) |
 | H-4 | Preparar **DPA propio** para ofrecer a tus clientes | 🔴 Alta | Documento (GDPR) |
