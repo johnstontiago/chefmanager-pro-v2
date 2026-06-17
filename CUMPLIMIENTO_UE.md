@@ -113,9 +113,9 @@ Ordenado por prioridad:
 | H-2 | Firmar el **DPA de Railway** | 🔴 Crítica | Legal/Infra |
 | H-3 | Publicar **política de privacidad** y **aviso legal** | 🔴 Alta | Documento (GDPR) |
 | H-4 | Preparar **DPA propio** para ofrecer a tus clientes | 🔴 Alta | Documento (GDPR) |
-| H-5 | Procedimiento de **supresión/anonimización real** de usuario | 🟠 Media | Código + proceso |
+| H-5 | ✅ **HECHO** — Anonimización RGPD de usuario (`POST /api/usuarios/[id]/anonimizar`) + opción en la UI | — | Código |
 | H-6 | Procedimiento de **exportación** de datos de usuario | 🟠 Media | Código + proceso |
-| H-7 | Endurecer **CORS** en registros (orígenes concretos, no `*`) | 🟠 Media | Código |
+| H-7 | ✅ **HECHO** — CORS de registros restringido a lista blanca (`CROSS_APP_INV_URL` + `ALLOWED_ORIGINS`) | — | Código |
 | H-8 | Endurecer **CSP** de ChefManager (evitar `unsafe-eval` si es viable) | 🟢 Baja | Código |
 | H-9 | Redactar el **Registro de Actividades de Tratamiento** (Art. 30) | 🟢 Baja | Documento interno |
 | H-10 | Definir **plan de notificación de brechas** (72 h) y retención de datos | 🟢 Baja | Proceso |
