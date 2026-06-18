@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
+import { puedeGestionarUsuario, puedeAsignarRol } from "@/lib/user-permissions";
 
 const ROLES = [
   { value: "superuser", label: "Super Admin", color: "bg-purple-100 text-purple-700" },
@@ -21,8 +22,9 @@ const ROLES = [
   { value: "viewer", label: "Viewer", color: "bg-slate-100 text-slate-700" },
 ];
 
-export default function UsuariosTab() {
+export default function UsuariosTab({ actorRol }: { actorRol: string }) {
   const { toast } = useToast();
+  const rolesDisponibles = ROLES.filter((r) => puedeAsignarRol(actorRol, r.value));
   const [usuarios, setUsuarios] = useState<any[]>([]);
   const [unidades, setUnidades] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -179,10 +181,12 @@ export default function UsuariosTab() {
                       {item.pinCode && <span className="flex items-center"><Key className="w-3 h-3 mr-1" />PIN configurado</span>}
                     </div>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <Button size="sm" variant="outline" onClick={() => openEdit(item)}><Edit2 className="w-4 h-4" /></Button>
-                    <Button size="sm" variant="outline" className="text-red-600" onClick={() => setDeleteItem(item)}><Trash2 className="w-4 h-4" /></Button>
-                  </div>
+                  {puedeGestionarUsuario(actorRol, item.rol) && (
+                    <div className="flex items-center space-x-2">
+                      <Button size="sm" variant="outline" onClick={() => openEdit(item)}><Edit2 className="w-4 h-4" /></Button>
+                      <Button size="sm" variant="outline" className="text-red-600" onClick={() => setDeleteItem(item)}><Trash2 className="w-4 h-4" /></Button>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -202,7 +206,7 @@ export default function UsuariosTab() {
                 <Select value={formData.rol} onValueChange={(v) => setFormData({ ...formData, rol: v })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    {ROLES.map((r) => <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>)}
+                    {rolesDisponibles.map((r) => <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>

@@ -5,6 +5,7 @@ import prisma from "@/lib/db";
 import bcrypt from "bcryptjs";
 import { randomUUID } from "crypto";
 import { getActiveTenantId } from "@/lib/get-active-tenant";
+import { puedeAccederGestionUsuarios, puedeGestionarUsuario } from "@/lib/user-permissions";
 
 export const dynamic = "force-dynamic";
 
@@ -18,7 +19,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     if (!session?.user) return NextResponse.json({ error: "No autenticado" }, { status: 401 });
 
     const user = session.user as any;
-    if (user.rol !== "superuser") return NextResponse.json({ error: "Sin permisos" }, { status: 403 });
+    if (!puedeAccederGestionUsuarios(user.rol)) return NextResponse.json({ error: "Sin permisos" }, { status: 403 });
 
     const { id } = await params;
     const userId = parseInt(id);
@@ -27,6 +28,11 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     const tenantId = getActiveTenantId(user);
     const existing = await prisma.usuario.findFirst({ where: { id: userId, tenantId } });
     if (!existing) return NextResponse.json({ error: "No encontrado" }, { status: 404 });
+
+    // Un admin solo puede anonimizar usuarios de rol inferior (no admins/superusers).
+    if (!puedeGestionarUsuario(user.rol, existing.rol)) {
+      return NextResponse.json({ error: "No puedes gestionar a este usuario" }, { status: 403 });
+    }
 
     // Contraseña aleatoria inutilizable (no se conserva en ningún sitio).
     const anonPassword = await bcrypt.hash(randomUUID(), 10);

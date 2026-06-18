@@ -6,6 +6,7 @@ import bcrypt from "bcryptjs";
 import { UsuarioCreateSchema } from "@/lib/schemas";
 
 import { getActiveTenantId } from "@/lib/get-active-tenant";
+import { puedeAccederGestionUsuarios, puedeAsignarRol } from "@/lib/user-permissions";
 
 export const dynamic = "force-dynamic";
 
@@ -15,11 +16,12 @@ export async function GET() {
     if (!session?.user) return NextResponse.json({ error: "No autenticado" }, { status: 401 });
 
     const user = session.user as any;
-    if (user.rol !== "superuser") return NextResponse.json({ error: "Sin permisos" }, { status: 403 });
+    if (!puedeAccederGestionUsuarios(user.rol)) return NextResponse.json({ error: "Sin permisos" }, { status: 403 });
 
     const tenantId = getActiveTenantId(user);
     const usuarios = await prisma.usuario.findMany({
-      where: { tenantId },
+      // El admin no ve la cuenta del superusuario (dueño de la plataforma).
+      where: { tenantId, ...(user.rol === "admin" ? { rol: { not: "superuser" } } : {}) },
       orderBy: { nombre: "asc" },
       select: {
         id: true,
@@ -46,7 +48,7 @@ export async function POST(request: Request) {
     if (!session?.user) return NextResponse.json({ error: "No autenticado" }, { status: 401 });
 
     const user = session.user as any;
-    if (user.rol !== "superuser") return NextResponse.json({ error: "Sin permisos" }, { status: 403 });
+    if (!puedeAccederGestionUsuarios(user.rol)) return NextResponse.json({ error: "Sin permisos" }, { status: 403 });
 
     const body = await request.json();
     const parsed = UsuarioCreateSchema.safeParse(body);
@@ -54,6 +56,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: parsed.error.errors[0].message }, { status: 400 });
     }
     const { email, nombre, rol, unidadId, password, pinCode } = parsed.data;
+
+    // Un admin solo puede crear usuarios de rol inferior (no admin ni superuser).
+    if (!puedeAsignarRol(user.rol, rol || "viewer")) {
+      return NextResponse.json({ error: "No puedes crear usuarios con ese rol" }, { status: 403 });
+    }
 
     const existing = await prisma.usuario.findUnique({ where: { email } });
     if (existing) {

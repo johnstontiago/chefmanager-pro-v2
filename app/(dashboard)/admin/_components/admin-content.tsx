@@ -50,12 +50,10 @@ export default function AdminContent({ userRole }: AdminContentProps) {
             <Tags className="w-4 h-4" />
             <span>Categorías</span>
           </TabsTrigger>
-          {isSuperuser && (
-            <TabsTrigger value="usuarios" className="flex items-center space-x-2">
-              <Users className="w-4 h-4" />
-              <span>Usuarios</span>
-            </TabsTrigger>
-          )}
+          <TabsTrigger value="usuarios" className="flex items-center space-x-2">
+            <Users className="w-4 h-4" />
+            <span>Usuarios</span>
+          </TabsTrigger>
           {isSuperuser && (
             <TabsTrigger value="unidades" className="flex items-center space-x-2">
               <Building2 className="w-4 h-4" />
@@ -84,11 +82,9 @@ export default function AdminContent({ userRole }: AdminContentProps) {
           <CategoriasTab />
         </TabsContent>
 
-        {isSuperuser && (
-          <TabsContent value="usuarios" className="mt-6">
-            <UsuariosTab />
-          </TabsContent>
-        )}
+        <TabsContent value="usuarios" className="mt-6">
+          <UsuariosTab actorRol={userRole} />
+        </TabsContent>
 
         {isSuperuser && (
           <TabsContent value="unidades" className="mt-6">
