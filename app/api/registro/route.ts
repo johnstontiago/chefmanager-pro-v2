@@ -3,6 +3,7 @@ import { z } from "zod";
 import bcrypt from "bcryptjs";
 import prisma from "@/lib/db";
 import { activateLicense } from "@/lib/lemonsqueezy";
+import { hashPin } from "@/lib/pin";
 
 export const dynamic = "force-dynamic";
 
@@ -41,6 +42,7 @@ export async function POST(request: Request) {
 
     // 3) Crear negocio + primer local + usuario admin en una transacción.
     const hash = await bcrypt.hash(password, 10);
+    const pinHash = await hashPin(pin);
     const fechaVencimiento = lic.expiresAt ? new Date(lic.expiresAt) : null;
 
     await prisma.$transaction(async (tx) => {
@@ -68,7 +70,7 @@ export async function POST(request: Request) {
           nombre: adminNombre.trim(),
           rol: "admin",
           activo: true,
-          pinCode: pin,
+          pinCode: pinHash,
           unidadId: unidad.id,
           tenantId: tenant.id,
         },

@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth-options";
 import prisma from "@/lib/db";
 import bcrypt from "bcryptjs";
 import { OnboardingSchema } from "@/lib/schemas";
+import { hashPin } from "@/lib/pin";
 
 export const dynamic = "force-dynamic";
 
@@ -71,7 +72,7 @@ export async function POST(request: Request) {
           nombre: adminNombre,
           password: hashedPassword,
           rol: "admin",
-          pinCode: adminPin || null,
+          pinCode: adminPin ? await hashPin(adminPin) : null,
           activo: true,
           tenantId: tenant.id,
           unidadId: unidad.id,

@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
 import { prisma } from "@/lib/db";
 import { checkRateLimit, getClientIP } from "@/lib/rate-limit";
+import { verifyPin } from "@/lib/pin";
 
 export const dynamic = "force-dynamic";
 
@@ -47,7 +48,8 @@ export async function POST(request: Request) {
       );
     }
 
-    if (usuario.pinCode !== pin) {
+    const pinValido = await verifyPin(pin, usuario.pinCode);
+    if (!pinValido) {
       return NextResponse.json(
         { error: "PIN incorrecto" },
         { status: 401 }

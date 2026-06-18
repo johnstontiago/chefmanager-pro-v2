@@ -7,6 +7,7 @@ import { UsuarioCreateSchema } from "@/lib/schemas";
 
 import { getActiveTenantId } from "@/lib/get-active-tenant";
 import { puedeAccederGestionUsuarios, puedeAsignarRol } from "@/lib/user-permissions";
+import { hashPin } from "@/lib/pin";
 
 export const dynamic = "force-dynamic";
 
@@ -36,7 +37,9 @@ export async function GET() {
       },
     });
 
-    return NextResponse.json({ usuarios });
+    // No exponer el PIN (ni su hash) al cliente; solo si existe.
+    const usuariosSafe = usuarios.map(({ pinCode, ...u }) => ({ ...u, hasPin: !!pinCode }));
+    return NextResponse.json({ usuarios: usuariosSafe });
   } catch (error) {
     return NextResponse.json({ error: "Error interno" }, { status: 500 });
   }
@@ -76,7 +79,7 @@ export async function POST(request: Request) {
         password: hashedPassword,
         rol: rol || "viewer",
         unidadId: unidadId || null,
-        pinCode: pinCode || null,
+        pinCode: pinCode ? await hashPin(pinCode) : null,
         activo: true,
         tenantId: getActiveTenantId(user),
       },

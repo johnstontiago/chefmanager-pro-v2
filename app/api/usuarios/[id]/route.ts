@@ -7,6 +7,7 @@ import { UsuarioUpdateSchema } from "@/lib/schemas";
 
 import { getActiveTenantId } from "@/lib/get-active-tenant";
 import { puedeAccederGestionUsuarios, puedeGestionarUsuario, puedeAsignarRol } from "@/lib/user-permissions";
+import { hashPin } from "@/lib/pin";
 
 export const dynamic = "force-dynamic";
 
@@ -44,7 +45,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     if (rol !== undefined) data.rol = rol;
     if (unidadId !== undefined) data.unidadId = unidadId ?? null;
     if (password) data.password = await bcrypt.hash(password, 10);
-    if (pinCode !== undefined) data.pinCode = pinCode;
+    if (pinCode !== undefined) data.pinCode = pinCode ? await hashPin(pinCode) : null;
     if (activo !== undefined) data.activo = activo;
 
     const usuario = await prisma.usuario.update({ where: { id: parseInt(id) }, data });

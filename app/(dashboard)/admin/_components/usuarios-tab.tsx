@@ -178,7 +178,7 @@ export default function UsuariosTab({ actorRol }: { actorRol: string }) {
                     <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-500 mt-1">
                       <span>{item.email}</span>
                       {item.unidad && <span className="flex items-center"><Building2 className="w-3 h-3 mr-1" />{item.unidad.nombre}</span>}
-                      {item.pinCode && <span className="flex items-center"><Key className="w-3 h-3 mr-1" />PIN configurado</span>}
+                      {item.hasPin && <span className="flex items-center"><Key className="w-3 h-3 mr-1" />PIN configurado</span>}
                     </div>
                   </div>
                   {puedeGestionarUsuario(actorRol, item.rol) && (

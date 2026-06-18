@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth-options";
 import prisma from "@/lib/db";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
+import { hashPin } from "@/lib/pin";
 
 export const dynamic = "force-dynamic";
 
@@ -52,7 +53,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
         password: hashedPassword,
         rol,
         unidadId: unidadId || null,
-        pinCode: pinCode || null,
+        pinCode: pinCode ? await hashPin(pinCode) : null,
         activo: true,
         tenantId,
       },
