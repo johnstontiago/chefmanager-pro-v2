@@ -13,6 +13,7 @@ const RegistroSchema = z.object({
   adminNombre: z.string().min(1, "Tu nombre es obligatorio").max(200),
   email: z.string().email("Email no válido"),
   password: z.string().min(8, "La contraseña debe tener al menos 8 caracteres"),
+  pin: z.string().regex(/^\d{4}$/, "El PIN debe tener exactamente 4 dígitos"),
 });
 
 // Auto-registro de un nuevo negocio mediante license key de Lemon Squeezy.
@@ -24,7 +25,7 @@ export async function POST(request: Request) {
     if (!parsed.success) {
       return NextResponse.json({ error: parsed.error.errors[0].message }, { status: 400 });
     }
-    const { licenseKey, negocioNombre, localNombre, adminNombre, email, password } = parsed.data;
+    const { licenseKey, negocioNombre, localNombre, adminNombre, email, password, pin } = parsed.data;
 
     // 1) Email único antes de consumir la activación de la licencia.
     const existing = await prisma.usuario.findUnique({ where: { email: email.trim() } });
@@ -67,6 +68,7 @@ export async function POST(request: Request) {
           nombre: adminNombre.trim(),
           rol: "admin",
           activo: true,
+          pinCode: pin,
           unidadId: unidad.id,
           tenantId: tenant.id,
         },

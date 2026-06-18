@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
-import { KeyRound, Building2, MapPin, UserCircle, Mail, Lock, Loader2, ChefHat, AlertTriangle } from "lucide-react";
+import { KeyRound, Building2, MapPin, UserCircle, Mail, Lock, Hash, Loader2, ChefHat, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,6 +18,7 @@ export default function RegistroPage() {
     adminNombre: "",
     email: "",
     password: "",
+    pin: "",
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -100,6 +101,19 @@ export default function RegistroPage() {
 
           <Field icon={Lock} label="Contraseña">
             <Input required type="password" placeholder="Mínimo 8 caracteres" value={form.password} onChange={(e) => set("password", e.target.value)} autoComplete="new-password" />
+          </Field>
+
+          <Field icon={Hash} label="PIN de acceso (4 dígitos)">
+            <Input
+              required
+              inputMode="numeric"
+              maxLength={4}
+              placeholder="Ej. 1234"
+              value={form.pin}
+              onChange={(e) => set("pin", e.target.value.replace(/\D/g, "").slice(0, 4))}
+              autoComplete="off"
+            />
+            <p className="text-xs text-slate-400 mt-1">Te lo pedirá cada vez que entres, como segunda verificación.</p>
           </Field>
 
           {error && (
