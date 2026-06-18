@@ -20,6 +20,10 @@ model Tenant {
   plan             String    @default("basico")
   fechaVencimiento DateTime? @map("fecha_vencimiento")
   notasInternas    String?   @map("notas_internas")
+  // Suscripción vía Lemon Squeezy (license key)
+  licenseKey        String?  @map("license_key")
+  licenseInstanceId String?  @map("license_instance_id")
+  licenseStatus     String?  @map("license_status")
   createdAt        DateTime  @default(now()) @map("created_at")
   updatedAt        DateTime? @default(now()) @updatedAt @map("updated_at")
 
