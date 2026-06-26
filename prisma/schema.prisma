@@ -8,6 +8,13 @@ datasource db {
     url      = env("DATABASE_URL")
 }
 
+// ─── ENUM NUEVO ───────────────────────────────────────────────────────────────
+
+enum TipoPeso {
+  FIJO
+  VARIABLE
+}
+
 // ─── TENANT ──────────────────────────────────────────────────────────────────
 
 model Tenant {
@@ -36,11 +43,24 @@ model Tenant {
   inventario  Inventario[]
   movimientos Movimiento[]
 
-  fichaCategorias FichaCategoria[]
+  fichaCategories FichaCategoria[]
   insumos         Insumo[]
   preparaciones   Preparacion[]
   fichasTecnicas  FichaTecnica[]
   festivos        Festivo[]
+
+  // ── Módulo Stock ─────────────────────────────────────────────────────────
+  lotesInventario          LoteInventario[]
+  consumosLote             ConsumoLote[]
+  variantesProveedor       VarianteProveedor[]
+  elaboraciones            Elaboracion[]
+  ingredientesElaboracion  IngredienteElaboracion[]
+  lotesElaboracion         LoteElaboracion[]
+  insumosLoteElaboracion   InsumoLoteElaboracion[]
+  consumosLoteElaboracion  ConsumoLoteElaboracion[]
+  ingredientesPlatoStock   IngredientePlatoStock[]
+  integracionTPV           IntegracionTPV?
+  logsTPV                  LogLlamadaTPV[]
 
   @@map("tenants")
 }
@@ -106,15 +126,16 @@ model Producto {
   unidadMedida   String       @map("unidad_medida")
   precioUnitario Decimal      @map("precio_unitario") @db.Decimal(10, 2)
   stockMinimo    Decimal      @map("stock_minimo") @db.Decimal(10, 2)
-  // Contenido neto por unidad de compra (ej: lata de 3600 g, paquete de
-  // 50 g, caja de 12 un). Lo usan las fichas técnicas para costear por
-  // unidad mínima. Si es null, se infiere del nombre de unidadMedida.
   contenidoNeto    Decimal? @map("contenido_neto") @db.Decimal(12, 3)
   contenidoUnidad  String?  @map("contenido_unidad")
   qrcode         String?      @map("qrcode")
   activo         Boolean      @default(true)
   createdAt      DateTime     @default(now()) @map("created_at")
   tenantId       Int          @map("tenant_id")
+  // ── Campos nuevos módulo Stock ─────────────────────────────────────────
+  tipoPeso       TipoPeso     @default(FIJO) @map("tipo_peso")
+  unidadBase     String?      @map("unidad_base")
+
   tenant         Tenant       @relation(fields: [tenantId], references: [id])
   categoria      Categoria    @relation(fields: [categoriaId], references: [id])
   proveedor      Proveedor?   @relation(fields: [proveedorId], references: [id])
@@ -122,6 +143,12 @@ model Producto {
   inventario     Inventario[]
   movimientos    Movimiento[]
   insumos        Insumo[]
+
+  // ── Relaciones módulo Stock ────────────────────────────────────────────
+  lotes                    LoteInventario[]
+  variantesProveedor       VarianteProveedor[]
+  ingredienteElaboraciones IngredienteElaboracion[]
+  ingredientesPlatoStock   IngredientePlatoStock[]
 
   @@unique([tenantId, qrcode])
   @@map("productos")
@@ -158,7 +185,6 @@ model Pedido {
   proveedorId    Int?         @map("proveedor_id")
   fechaPedido    DateTime     @default(now()) @map("fecha_pedido")
   estado         String       @default("borrador")
-  // estados: borrador | pendiente | enviado | recibido | recibido_parcial | cancelado
   total          Decimal      @default(0) @db.Decimal(10, 2)
   notas          String?
   parentPedidoId Int?         @map("parent_pedido_id")
@@ -187,7 +213,6 @@ model PedidoItem {
   fechaRecepcion   DateTime?    @map("fecha_recepcion")
   recibidoPorId    Int?         @map("recibido_por_id")
   estadoLinea      String       @default("pendiente") @map("estado_linea")
-  // estadoLinea: pendiente | recibida | parcial
   pedido           Pedido       @relation(fields: [pedidoId], references: [id], onDelete: Cascade)
   producto         Producto     @relation(fields: [productoId], references: [id])
   recibidoPor      Usuario?     @relation(fields: [recibidoPorId], references: [id])
@@ -238,7 +263,6 @@ model Movimiento {
   @@map("movimientos")
 }
 
-// Configuración de la etiqueta de impresión CPCL (singleton por ahora, pendiente multi-tenant)
 model ConfigEtiqueta {
   id        Int      @id @default(1)
   titulo    String   @default("CHEFMANAGER PRO")
@@ -255,11 +279,6 @@ model ConfigEtiqueta {
 }
 
 // ─── MÓDULO FICHAS TÉCNICAS ──────────────────────────────────────────────────
-// Tablas aditivas: no modifican datos ni columnas de las tablas existentes.
-// Un Insumo es el adaptador entre recetas y fuentes de costo:
-//   - productoId    → ingrediente del catálogo de inventario (precio en vivo)
-//   - preparacionId → elaboración base usada como ingrediente
-//   - ambos null    → insumo manual (no existe en inventario)
 
 model FichaCategoria {
   id        Int            @id @default(autoincrement())
@@ -342,11 +361,12 @@ model FichaTecnica {
   updatedAt        DateTime @updatedAt @map("updated_at")
   tenantId         Int      @map("tenant_id")
 
-  tenant         Tenant             @relation(fields: [tenantId], references: [id])
-  categoria      FichaCategoria?    @relation(fields: [categoriaId], references: [id])
-  creadoPor      Usuario?           @relation("FichasCreadas", fields: [creadoPorId], references: [id])
-  actualizadoPor Usuario?           @relation("FichasActualizadas", fields: [actualizadoPorId], references: [id])
-  ingredientes   FichaIngrediente[]
+  tenant                Tenant                  @relation(fields: [tenantId], references: [id])
+  categoria             FichaCategoria?         @relation(fields: [categoriaId], references: [id])
+  creadoPor             Usuario?                @relation("FichasCreadas", fields: [creadoPorId], references: [id])
+  actualizadoPor        Usuario?                @relation("FichasActualizadas", fields: [actualizadoPorId], references: [id])
+  ingredientes          FichaIngrediente[]
+  ingredientesPlatoStock IngredientePlatoStock[]
 
   @@map("fichas_tecnicas")
 }
@@ -365,8 +385,6 @@ model FichaIngrediente {
 }
 
 // ─── MÓDULO PREDICCIONES ─────────────────────────────────────────────────────
-// Festivos y eventos de alta demanda por tenant. El motor de sugerencias de
-// pedidos aplica `factor` al consumo previsto si la semana incluye un festivo.
 
 model Festivo {
   id        Int      @id @default(autoincrement())
@@ -379,4 +397,227 @@ model Festivo {
 
   @@unique([tenantId, fecha, nombre])
   @@map("festivos")
+}
+
+// ─── MÓDULO STOCK ─────────────────────────────────────────────────────────────
+// Reglas críticas:
+// - Solo migraciones aditivas (ADD COLUMN, ADD TABLE)
+// - Stock insuficiente nunca lanza excepción — devuelve flag
+// - Toda entidad nueva lleva tenantId
+
+// ── Migración 1a ─────────────────────────────────────────────────────────────
+
+model LoteInventario {
+  id              Int       @id @default(autoincrement())
+  tenantId        Int       @map("tenant_id")
+  productoId      Int       @map("producto_id")
+  fechaEntrada    DateTime  @default(now()) @map("fecha_entrada")
+  fechaCaducidad  DateTime? @map("fecha_caducidad")
+  cantidadInicial Float     @map("cantidad_inicial")
+  cantidadActual  Float     @map("cantidad_actual")
+  pesoRealKg      Float?    @map("peso_real_kg")
+  numeroLote      String?   @map("numero_lote")
+  agotado         Boolean   @default(false)
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  tenant             Tenant                  @relation(fields: [tenantId], references: [id])
+  producto           Producto                @relation(fields: [productoId], references: [id])
+  consumos           ConsumoLote[]
+  insumosElaboracion InsumoLoteElaboracion[]
+
+  @@index([tenantId, productoId, agotado, fechaEntrada])
+  @@map("lotes_inventario")
+}
+
+model ConsumoLote {
+  id           Int      @id @default(autoincrement())
+  tenantId     Int      @map("tenant_id")
+  loteId       Int      @map("lote_id")
+  cantidad     Float
+  motivo       String
+  referenciaId String?  @map("referencia_id")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  tenant Tenant         @relation(fields: [tenantId], references: [id])
+  lote   LoteInventario @relation(fields: [loteId], references: [id])
+
+  @@index([tenantId, loteId])
+  @@index([tenantId, motivo])
+  @@map("consumos_lote")
+}
+
+// ── Migración 1b ─────────────────────────────────────────────────────────────
+
+model VarianteProveedor {
+  id               Int      @id @default(autoincrement())
+  tenantId         Int      @map("tenant_id")
+  productoId       Int      @map("producto_id")
+  nombre           String
+  factorConversion Float    @map("factor_conversion")
+  activa           Boolean  @default(true)
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  tenant   Tenant   @relation(fields: [tenantId], references: [id])
+  producto Producto @relation(fields: [productoId], references: [id])
+
+  @@unique([productoId, tenantId, nombre])
+  @@index([tenantId, productoId])
+  @@map("variantes_proveedor")
+}
+
+// ── Migración 1c ─────────────────────────────────────────────────────────────
+
+model Elaboracion {
+  id          Int      @id @default(autoincrement())
+  tenantId    Int      @map("tenant_id")
+  nombre      String
+  descripcion String?
+  unidadBase  String   @map("unidad_base")
+  stockMinimo Float?   @map("stock_minimo")
+  activa      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  tenant            Tenant                   @relation(fields: [tenantId], references: [id])
+  ingredientes      IngredienteElaboracion[]
+  lotes             LoteElaboracion[]
+  ingredientesPlato IngredientePlatoStock[]
+
+  @@unique([tenantId, nombre])
+  @@index([tenantId])
+  @@map("elaboraciones")
+}
+
+model IngredienteElaboracion {
+  id            Int      @id @default(autoincrement())
+  tenantId      Int      @map("tenant_id")
+  elaboracionId Int      @map("elaboracion_id")
+  productoId    Int      @map("producto_id")
+  cantidad      Float
+  unidad        String
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  tenant      Tenant      @relation(fields: [tenantId], references: [id])
+  elaboracion Elaboracion @relation(fields: [elaboracionId], references: [id], onDelete: Cascade)
+  producto    Producto    @relation(fields: [productoId], references: [id])
+
+  @@index([tenantId, elaboracionId])
+  @@map("ingredientes_elaboracion")
+}
+
+model LoteElaboracion {
+  id              Int       @id @default(autoincrement())
+  tenantId        Int       @map("tenant_id")
+  elaboracionId   Int       @map("elaboracion_id")
+  fechaProduccion DateTime  @default(now()) @map("fecha_produccion")
+  fechaCaducidad  DateTime? @map("fecha_caducidad")
+  cantidadInicial Float     @map("cantidad_inicial")
+  cantidadActual  Float     @map("cantidad_actual")
+  agotado         Boolean   @default(false)
+  notas           String?
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  tenant      Tenant                   @relation(fields: [tenantId], references: [id])
+  elaboracion Elaboracion              @relation(fields: [elaboracionId], references: [id])
+  insumos     InsumoLoteElaboracion[]
+  consumos    ConsumoLoteElaboracion[]
+
+  @@index([tenantId, elaboracionId, agotado, fechaProduccion])
+  @@map("lotes_elaboracion")
+}
+
+model InsumoLoteElaboracion {
+  id                Int      @id @default(autoincrement())
+  tenantId          Int      @map("tenant_id")
+  loteElaboracionId Int      @map("lote_elaboracion_id")
+  loteInventarioId  Int      @map("lote_inventario_id")
+  cantidadUsada     Float    @map("cantidad_usada")
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  tenant          Tenant          @relation(fields: [tenantId], references: [id])
+  loteElaboracion LoteElaboracion @relation(fields: [loteElaboracionId], references: [id])
+  loteInventario  LoteInventario  @relation(fields: [loteInventarioId], references: [id])
+
+  @@index([tenantId, loteElaboracionId])
+  @@index([tenantId, loteInventarioId])
+  @@map("insumos_lote_elaboracion")
+}
+
+model ConsumoLoteElaboracion {
+  id                Int      @id @default(autoincrement())
+  tenantId          Int      @map("tenant_id")
+  loteElaboracionId Int      @map("lote_elaboracion_id")
+  cantidad          Float
+  motivo            String
+  referenciaId      String?  @map("referencia_id")
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  tenant          Tenant          @relation(fields: [tenantId], references: [id])
+  loteElaboracion LoteElaboracion @relation(fields: [loteElaboracionId], references: [id])
+
+  @@index([tenantId, loteElaboracionId])
+  @@map("consumos_lote_elaboracion")
+}
+
+// Ingredientes de FichaTecnica con vínculos directos a Producto/Elaboracion
+// para el motor de consumo de stock TPV. Coexiste con FichaIngrediente/Insumo.
+model IngredientePlatoStock {
+  id            Int      @id @default(autoincrement())
+  tenantId      Int      @map("tenant_id")
+  fichaId       Int      @map("ficha_id")
+  productoId    Int?     @map("producto_id")
+  elaboracionId Int?     @map("elaboracion_id")
+  cantidad      Float
+  unidad        String
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  tenant      Tenant        @relation(fields: [tenantId], references: [id])
+  ficha       FichaTecnica  @relation(fields: [fichaId], references: [id], onDelete: Cascade)
+  producto    Producto?     @relation(fields: [productoId], references: [id])
+  elaboracion Elaboracion?  @relation(fields: [elaboracionId], references: [id])
+
+  @@index([tenantId, fichaId])
+  @@map("ingredientes_plato_stock")
+}
+
+// ── Migración 1d ─────────────────────────────────────────────────────────────
+
+model IntegracionTPV {
+  id        Int      @id @default(autoincrement())
+  tenantId  Int      @unique @map("tenant_id")
+  apiKey    String   @unique @default(uuid()) @map("api_key")
+  activa    Boolean  @default(true)
+  nombre    String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  tenant Tenant          @relation(fields: [tenantId], references: [id])
+  logs   LogLlamadaTPV[]
+
+  @@index([tenantId])
+  @@map("integraciones_tpv")
+}
+
+model LogLlamadaTPV {
+  id            Int      @id @default(autoincrement())
+  tenantId      Int      @map("tenant_id")
+  integracionId Int      @map("integracion_id")
+  fichaId       Int?     @map("ficha_id")
+  cantidadPlatos Float?  @map("cantidad_platos")
+  statusCode    Int      @map("status_code")
+  ok            Boolean
+  payload       Json
+  respuesta     Json
+  ipOrigen      String?  @map("ip_origen")
+  duracionMs    Int?     @map("duracion_ms")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  tenant      Tenant         @relation(fields: [tenantId], references: [id])
+  integracion IntegracionTPV @relation(fields: [integracionId], references: [id])
+
+  @@index([tenantId, createdAt])
+  @@index([tenantId, ok])
+  @@map("logs_llamada_tpv")
 }
