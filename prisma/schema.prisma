@@ -542,6 +542,10 @@ model InsumoLoteElaboracion {
   loteElaboracionId Int      @map("lote_elaboracion_id")
   loteInventarioId  Int      @map("lote_inventario_id")
   cantidadUsada     Float    @map("cantidad_usada")
+  // Snapshot de trazabilidad: lote/código del lote consumido al producir
+  numeroLote        String?  @map("numero_lote")
+  codigoUnico       String?  @map("codigo_unico")
+  productoNombre    String?  @map("producto_nombre")
   createdAt         DateTime @default(now()) @map("created_at")
 
   tenant          Tenant          @relation(fields: [tenantId], references: [id])

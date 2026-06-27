@@ -59,7 +59,13 @@ export async function producirElaboracion(
 
   return prisma.$transaction(async (tx) => {
     const ingredientesFallidos: string[] = []
-    const insumosParaRegistrar: { loteInventarioId: number; cantidadUsada: number }[] = []
+    const insumosParaRegistrar: {
+      loteInventarioId: number
+      cantidadUsada: number
+      numeroLote: string | null
+      codigoUnico: string | null
+      productoNombre: string
+    }[] = []
 
     for (const ingrediente of elaboracion.ingredientes) {
       const unidadDestino = ingrediente.producto.unidadBase ?? ingrediente.producto.contenidoUnidad ?? ingrediente.producto.unidadMedida
@@ -88,6 +94,9 @@ export async function producirElaboracion(
         insumosParaRegistrar.push({
           loteInventarioId: loteAfectado.loteId,
           cantidadUsada: loteAfectado.cantidadDescontada,
+          numeroLote: loteAfectado.numeroLote,
+          codigoUnico: loteAfectado.codigoUnico,
+          productoNombre: ingrediente.producto.nombre,
         })
       }
     }
@@ -111,6 +120,9 @@ export async function producirElaboracion(
             tenantId,
             loteInventarioId: i.loteInventarioId,
             cantidadUsada: i.cantidadUsada,
+            numeroLote: i.numeroLote,
+            codigoUnico: i.codigoUnico,
+            productoNombre: i.productoNombre,
           })),
         },
       },

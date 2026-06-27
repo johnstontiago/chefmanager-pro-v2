@@ -17,6 +17,8 @@ interface ConsumoInput {
 export interface LoteAfectado {
   loteId: number
   cantidadDescontada: number
+  numeroLote: string | null
+  codigoUnico: string | null
 }
 
 export interface ResultadoConsumo {
@@ -56,7 +58,12 @@ async function ejecutarConsumo(
       data: { tenantId, loteId: lote.id, cantidad: aDescontar, motivo, referenciaId },
     })
 
-    lotesAfectados.push({ loteId: lote.id, cantidadDescontada: aDescontar })
+    lotesAfectados.push({
+      loteId: lote.id,
+      cantidadDescontada: aDescontar,
+      numeroLote: lote.numeroLote ?? null,
+      codigoUnico: lote.codigoUnico ?? null,
+    })
     pendiente -= aDescontar
   }
 

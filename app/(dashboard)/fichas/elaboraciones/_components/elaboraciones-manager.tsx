@@ -59,6 +59,7 @@ export default function ElaboracionesManager({ elaboraciones, productos, rol }: 
   const [stockMinimo, setStockMinimo] = useState("");
   const [procedimiento, setProcedimiento] = useState("");
   const [lineas, setLineas] = useState<LineaIng[]>([{ uid: 1, productoId: null, cantidad: "", unidad: "g" }]);
+  const [produccionLote, setProduccionLote] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [eliminando, setEliminando] = useState<number | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -66,11 +67,36 @@ export default function ElaboracionesManager({ elaboraciones, productos, rol }: 
   const resetForm = () => {
     setEditId(null); setNombre(""); setUnidadBase("g"); setStockMinimo("");
     setProcedimiento(""); setLineas([{ uid: 1, productoId: null, cantidad: "", unidad: "g" }]);
+    setProduccionLote(""); setError(null);
+  };
+
+  // Conversor: divide cada cantidad entre la producción del lote para obtener
+  // la proporción por unidad. Conserva decimales para no anular ingredientes pequeños.
+  const convertirProporciones = () => {
+    const output = parseFloat(produccionLote);
+    if (isNaN(output) || output <= 0) {
+      setError("Indica la producción total del lote para convertir");
+      return;
+    }
     setError(null);
+    setLineas((prev) =>
+      prev.map((l) => {
+        const cant = parseFloat(l.cantidad);
+        if (isNaN(cant) || cant <= 0) return l;
+        const ratio = cant / output;
+        // 2 decimales; si quedaría 0 con un ingrediente real, sube precisión
+        let texto = ratio.toFixed(2);
+        if (parseFloat(texto) === 0) {
+          for (let d = 3; d <= 6 && parseFloat(texto) === 0; d++) texto = ratio.toFixed(d);
+        }
+        return { ...l, cantidad: String(parseFloat(texto)) };
+      })
+    );
   };
 
   const openCrear = () => { resetForm(); setOpen(true); };
   const openEditar = (e: Elaboracion) => {
+    setProduccionLote("");
     setEditId(e.id); setNombre(e.nombre); setUnidadBase(e.unidadBase);
     setStockMinimo(e.stockMinimo != null ? String(e.stockMinimo) : "");
     setProcedimiento(e.procedimiento || "");
@@ -160,6 +186,30 @@ export default function ElaboracionesManager({ elaboraciones, productos, rol }: 
                     <Label>Ingredientes *</Label>
                     <span className="text-xs text-slate-400">por unidad de {unidadBase} producida</span>
                   </div>
+
+                  {/* Conversor: receta real → proporciones por unidad */}
+                  <div className="rounded-lg border border-blue-200 bg-blue-50/50 p-3 space-y-2">
+                    <p className="text-xs text-blue-800 font-medium">
+                      Conversor de proporciones
+                    </p>
+                    <p className="text-[11px] text-blue-700/80 leading-snug">
+                      Pon las cantidades reales de un lote en los ingredientes, indica cuánto produjo
+                      ese lote y pulsa convertir. Cada cantidad se divide entre la producción.
+                    </p>
+                    <div className="flex items-end gap-2">
+                      <div className="flex-1">
+                        <Label className="text-xs">Producción del lote ({unidadBase})</Label>
+                        <Input type="number" min="0.001" step="any" value={produccionLote}
+                          onChange={(e) => setProduccionLote(e.target.value)}
+                          placeholder="Ej: 3500" className="mt-1 bg-white h-9" />
+                      </div>
+                      <Button type="button" variant="outline" size="sm" onClick={convertirProporciones}
+                        className="h-9 border-blue-300 text-blue-700">
+                        Convertir a proporciones
+                      </Button>
+                    </div>
+                  </div>
+
                   {lineas.map((l) => (
                     <div key={l.uid} className="grid grid-cols-[1fr_auto_auto_auto] gap-2 items-center">
                       <Select
