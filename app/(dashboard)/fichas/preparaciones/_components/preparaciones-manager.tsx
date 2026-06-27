@@ -39,9 +39,13 @@ export default function PreparacionesManager({ elaboraciones, producciones, rol 
   const { toast } = useToast();
   const canEdit = canEditFichas(rol);
   const {
-    status: printerStatus, deviceName, isSupported: btSupported,
+    status: printerStatus, deviceName, isSupported: btSupported, lastError,
     connect: connectPrinter, printLabel,
   } = useBluetoothPrinter();
+
+  const handleConnect = async () => {
+    await connectPrinter();
+  };
 
   const [open, setOpen] = useState(false);
   const [elaboracionId, setElaboracionId] = useState<number | null>(null);
@@ -131,15 +135,27 @@ export default function PreparacionesManager({ elaboraciones, producciones, rol 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-2">
-        {btSupported && (
-          <Button variant="outline" size="sm" onClick={connectPrinter}
-            disabled={printerStatus === "connecting" || printerStatus === "printing"}
-            className={printerStatus === "connected" ? "border-green-500 text-green-600" : ""}>
-            {printerStatus === "connecting" || printerStatus === "printing"
-              ? <Loader2 className="w-4 h-4 animate-spin mr-1" />
-              : printerStatus === "connected" ? <Bluetooth className="w-4 h-4 mr-1" /> : <Printer className="w-4 h-4 mr-1" />}
-            {printerStatus === "connected" ? (deviceName ?? "Conectada") : "Impresora"}
-          </Button>
+        {btSupported ? (
+          <div className="flex flex-col gap-1">
+            <Button variant="outline" size="sm" onClick={handleConnect}
+              disabled={printerStatus === "connecting" || printerStatus === "printing"}
+              className={printerStatus === "connected" ? "border-green-500 text-green-600" : ""}>
+              {printerStatus === "connecting" || printerStatus === "printing"
+                ? <Loader2 className="w-4 h-4 animate-spin mr-1" />
+                : printerStatus === "connected" ? <Bluetooth className="w-4 h-4 mr-1" /> : <Printer className="w-4 h-4 mr-1" />}
+              {printerStatus === "connected" ? (deviceName ?? "Conectada") : "Conectar impresora"}
+            </Button>
+            {printerStatus === "error" && lastError && (
+              <span className="text-xs text-red-600 max-w-xs flex items-center gap-1">
+                <AlertTriangle className="w-3 h-3 flex-shrink-0" />{lastError}
+              </span>
+            )}
+          </div>
+        ) : (
+          <span className="text-xs text-amber-600 flex items-center gap-1 max-w-xs">
+            <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
+            Este navegador no soporta impresión Bluetooth. Usa Chrome en Windows, Mac o Android.
+          </span>
         )}
         {canEdit && (
           <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) reset(); }}>

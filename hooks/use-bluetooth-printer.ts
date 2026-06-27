@@ -15,6 +15,7 @@ export function useBluetoothPrinter() {
   const printerRef             = useRef<CPCLPrinter>(new CPCLPrinter());
   const [status, setStatus]    = useState<PrinterStatus>("disconnected");
   const [deviceName, setDeviceName] = useState<string | null>(null);
+  const [lastError, setLastError] = useState<string | null>(null);
   const [labelConfig, setLabelConfig] = useState<LabelConfig>(DEFAULT_LABEL_CONFIG);
 
   const isSupported = typeof navigator !== "undefined" && "bluetooth" in navigator;
@@ -28,13 +29,30 @@ export function useBluetoothPrinter() {
   }, []);
 
   const connect = useCallback(async () => {
-    if (!isSupported) return;
+    setLastError(null);
+    if (!isSupported) {
+      const msg =
+        "Este navegador no soporta Web Bluetooth. Usa Chrome en Windows, Mac o Android (en iPhone/iPad no funciona).";
+      setLastError(msg);
+      setStatus("error");
+      return;
+    }
     setStatus("connecting");
     try {
       const name = await printerRef.current.connect();
       setDeviceName(name);
       setStatus("connected");
-    } catch {
+    } catch (err) {
+      // El usuario cancelando el diálogo no es un error real
+      const msg = err instanceof Error ? err.message : String(err);
+      if (err instanceof Error && err.name === "NotFoundError") {
+        // Diálogo cerrado sin elegir dispositivo
+        setStatus("disconnected");
+        setLastError(null);
+        return;
+      }
+      console.error("[Bluetooth] connect error:", err);
+      setLastError(msg);
       setStatus("error");
     }
   }, [isSupported]);
@@ -60,5 +78,5 @@ export function useBluetoothPrinter() {
     setDeviceName(null);
   }, []);
 
-  return { status, deviceName, isSupported, connect, printLabel, disconnect };
+  return { status, deviceName, isSupported, lastError, connect, printLabel, disconnect };
 }
