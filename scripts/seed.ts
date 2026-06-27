@@ -7,6 +7,21 @@ const prisma = new PrismaClient();
 async function main() {
   console.log("Iniciando seed de la base de datos...");
 
+  // Crear Tenant base (requerido por todas las entidades)
+  await prisma.tenant.upsert({
+    where: { id: 1 },
+    update: {},
+    create: {
+      id: 1,
+      nombre: "Restaurante Demo",
+      email: "demo@chefmanager.com",
+      activo: true,
+      plan: "basico",
+      regionUE: true,
+    },
+  });
+  console.log("Tenant base creado (id=1)");
+
   // Crear Unidades
   const unidad1 = await prisma.unidad.upsert({
     where: { id: 1 },
