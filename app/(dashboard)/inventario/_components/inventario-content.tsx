@@ -57,6 +57,14 @@ export default function InventarioContent({ userRole }: InventarioContentProps) 
   const [filtroProveedor, setFiltroProveedor] = useState("all");
   const [filtroEstado, setFiltroEstado] = useState(filterParam);
   const [expandedProducts, setExpandedProducts] = useState<Set<number>>(new Set());
+  const [expandedElabs, setExpandedElabs] = useState<Set<number>>(new Set());
+
+  const toggleExpandElab = (id: number) =>
+    setExpandedElabs((prev) => {
+      const s = new Set(prev);
+      s.has(id) ? s.delete(id) : s.add(id);
+      return s;
+    });
 
   useEffect(() => {
     fetchData();
@@ -471,33 +479,91 @@ export default function InventarioContent({ userRole }: InventarioContentProps) 
               <p className="text-sm">No hay preparaciones producidas</p>
             </div>
           ) : (
-            <div className="space-y-2">
+            <div className="space-y-3">
               {elaboraciones.map((e) => {
+                const isExpanded = expandedElabs.has(e.id);
                 const estado = e.stockActual <= 0
                   ? { label: "Agotado", cls: "bg-red-100 text-red-700" }
                   : e.isLowStock
                   ? { label: "⚠ Bajo", cls: "bg-amber-100 text-amber-700" }
                   : { label: "OK", cls: "bg-green-100 text-green-700" };
                 return (
-                  <div key={e.id}
-                    className={`flex items-center justify-between p-3 rounded-lg border ${e.isLowStock ? "border-amber-200 bg-amber-50" : "border-slate-200 bg-slate-50"}`}>
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium text-slate-800">{e.nombre}</span>
-                        <span className={`text-xs px-2 py-0.5 rounded font-medium ${estado.cls}`}>{estado.label}</span>
-                      </div>
-                      <p className="text-xs text-slate-500 mt-0.5">
-                        {e.stockMinimo != null && `Mín: ${formatDecimal(e.stockMinimo)} ${e.unidadBase}`}
-                        {e.proximaCaducidad && ` · Caduca: ${formatDate(e.proximaCaducidad)}`}
-                      </p>
+                  <Collapsible key={e.id} open={isExpanded} onOpenChange={() => toggleExpandElab(e.id)}>
+                    <div className={`rounded-lg border ${e.isLowStock ? "border-amber-200 bg-amber-50" : "border-slate-200 bg-slate-50"}`}>
+                      <CollapsibleTrigger asChild>
+                        <div className="flex items-center justify-between p-3 sm:p-4 cursor-pointer hover:bg-slate-100 transition-colors gap-2">
+                          <div className="flex items-center gap-3 flex-1 min-w-0">
+                            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white rounded-lg flex items-center justify-center shadow-sm flex-shrink-0">
+                              {isExpanded
+                                ? <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5 text-slate-400" />
+                                : <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-slate-400" />}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex flex-wrap items-center gap-1 mb-1">
+                                <h4 className="font-semibold text-slate-800 text-sm sm:text-base">{e.nombre}</h4>
+                                <span className={`text-xs px-2 py-0.5 rounded font-medium ${estado.cls}`}>{estado.label}</span>
+                              </div>
+                              <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs sm:text-sm text-slate-500">
+                                <span>{e.lotes?.length || 0} lote(s)</span>
+                                {e.stockMinimo != null && <span>Mín: {formatDecimal(e.stockMinimo)} {e.unidadBase}</span>}
+                                {e.proximaCaducidad && <span>Caduca: {formatDate(e.proximaCaducidad)}</span>}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="text-right flex-shrink-0 ml-1">
+                            <div className="flex items-baseline gap-1">
+                              <span className={`text-lg sm:text-2xl font-bold ${e.isLowStock ? "text-amber-600" : "text-slate-800"}`}>
+                                {formatDecimal(e.stockActual)}
+                              </span>
+                              <span className="text-xs sm:text-sm text-slate-500">{e.unidadBase}</span>
+                            </div>
+                            {e.stockMinimo != null && (
+                              <p className="text-xs text-slate-400 mt-0.5">Mín: {formatDecimal(e.stockMinimo)}</p>
+                            )}
+                          </div>
+                        </div>
+                      </CollapsibleTrigger>
+
+                      <CollapsibleContent>
+                        <div className="border-t px-4 pb-4 pt-3">
+                          <h5 className="text-sm font-semibold text-slate-700 mb-3">Producciones en stock ({e.lotes?.length || 0})</h5>
+                          {!e.lotes || e.lotes.length === 0 ? (
+                            <p className="text-sm text-slate-500">Sin stock disponible</p>
+                          ) : (
+                            <div className="grid gap-2">
+                              {e.lotes.map((l: any) => (
+                                <div key={l.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 bg-white rounded-lg border gap-2">
+                                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                                    {l.numeroLote && (
+                                      <span className="flex items-center text-sm">
+                                        <Tag className="w-4 h-4 mr-1 text-slate-400" />{l.numeroLote}
+                                      </span>
+                                    )}
+                                    {l.numeroEnvases != null && (
+                                      <span className="text-xs text-slate-500">{l.numeroEnvases} envase(s)</span>
+                                    )}
+                                    {l.fechaProduccion && (
+                                      <span className="text-xs text-slate-400">Prod: {formatDate(l.fechaProduccion)}</span>
+                                    )}
+                                  </div>
+                                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 sm:justify-end">
+                                    {l.fechaCaducidad && (
+                                      <span className="flex items-center text-sm">
+                                        <Calendar className="w-4 h-4 mr-1 text-slate-400" />{formatDate(l.fechaCaducidad)}
+                                      </span>
+                                    )}
+                                    <span className="font-semibold text-slate-800">
+                                      {formatDecimal(l.cantidadActual)} {e.unidadBase}
+                                    </span>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </CollapsibleContent>
                     </div>
-                    <div className="text-right flex-shrink-0">
-                      <span className={`text-lg font-bold ${e.isLowStock ? "text-amber-600" : "text-slate-800"}`}>
-                        {formatDecimal(e.stockActual)}
-                      </span>
-                      <span className="text-xs text-slate-500 ml-1">{e.unidadBase}</span>
-                    </div>
-                  </div>
+                  </Collapsible>
                 );
               })}
             </div>

@@ -82,28 +82,28 @@ export default function PreparacionesManager({ elaboraciones, producciones, rol 
     setCaducidad(""); setNotas(""); setMensaje(null);
   };
 
-  // Imprime una copia de etiqueta por envase
+  // Imprime una etiqueta por envase. OJO: el endpoint TSPL usa `cantidad` como
+  // número de COPIAS (PRINT 1,cantidad), así que aquí `cantidad` = nº de envases.
+  // No hay que repetir en bucle (eso multiplicaría las copias).
   const imprimirEtiquetas = async (p: {
-    nombre: string; lote: string; codigoUnico: string; cadEmbalaje: string;
-    cantidadPorEnvase: number; copias: number;
+    nombre: string; lote: string; codigoUnico: string; cadEmbalaje: string; copias: number;
   }) => {
     if (printerStatus !== "connected") {
       toast({ title: "Conecta la impresora primero", variant: "destructive" });
       return;
     }
+    const copias = Math.max(1, Math.round(p.copias));
     try {
-      for (let i = 0; i < p.copias; i++) {
-        await printLabel({
-          nombre: p.nombre,
-          fabricante: "",
-          lote: p.lote,
-          cadEmbalaje: p.cadEmbalaje,
-          codigoUnico: p.codigoUnico,
-          cantidad: p.cantidadPorEnvase,
-          variant: "consumo",
-        });
-      }
-      toast({ title: `${p.copias} etiqueta(s) impresa(s)` });
+      await printLabel({
+        nombre: p.nombre,
+        fabricante: "",
+        lote: p.lote,
+        cadEmbalaje: p.cadEmbalaje,
+        codigoUnico: p.codigoUnico,
+        cantidad: copias,
+        variant: "consumo",
+      });
+      toast({ title: `${copias} etiqueta(s) impresa(s)` });
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Error de impresión";
       toast({ title: "Error al imprimir", description: msg, variant: "destructive" });
@@ -135,7 +135,6 @@ export default function PreparacionesManager({ elaboraciones, producciones, rol 
             lote: numeroLote || `L${res.loteElaboracionId}`,
             codigoUnico: res.codigoUnico,
             cadEmbalaje: caducidad,
-            cantidadPorEnvase: cantNum / envases,
             copias: envases,
           });
         }
@@ -299,7 +298,6 @@ export default function PreparacionesManager({ elaboraciones, producciones, rol 
                       lote: p.numeroLote || `L${p.id}`,
                       codigoUnico: p.codigoUnico!,
                       cadEmbalaje: p.fechaCaducidad ? p.fechaCaducidad.slice(0, 10) : "",
-                      cantidadPorEnvase: p.cantidadInicial / (p.numeroEnvases || 1),
                       copias: p.numeroEnvases || 1,
                     })}>
                     <Printer className="h-4 w-4 mr-1" />Etiquetas
