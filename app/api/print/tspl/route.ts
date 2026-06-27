@@ -69,8 +69,10 @@ export async function POST(req: Request) {
   const yLote     = y0 + (esConsumo ? s : 2 * s);
   const yCad      = yLote + s;
   const yApertura = yCad + s;
-  const yFechaCad = yApertura + s;
-  const yMermas   = yFechaCad + s;
+  // Línea en blanco debajo de "Fecha Apertura" y debajo de "Fecha Cad."
+  // (hueco para escribir a mano en la etiqueta física).
+  const yFechaCad = yApertura + 2 * s;
+  const yMermas   = yFechaCad + 2 * s;
   const yCodUnico = yMermas + s;
   const yCodValor = yCodUnico + 28;
   const boxX1 = xm + 110;
@@ -85,7 +87,7 @@ export async function POST(req: Request) {
   const qrCell = Math.max(5, Math.min(8, cfg.tamanoQR));
 
   const lines = [
-    `SIZE 50 mm,60 mm`,
+    `SIZE 50 mm,70 mm`,
     `GAP 2 mm,0`,
     `SPEED 4`,
     `DENSITY 8`,
