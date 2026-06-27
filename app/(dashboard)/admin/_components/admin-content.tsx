@@ -10,6 +10,7 @@ import {
   FileText,
   Building2,
   Printer,
+  Boxes,
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ProductosTab from "./productos-tab";
@@ -19,6 +20,7 @@ import UsuariosTab from "./usuarios-tab";
 import ReportesTab from "./reportes-tab";
 import UnidadesTab from "./unidades-tab";
 import EtiquetaTab from "./etiqueta-tab";
+import ModuloStockTab from "./modulo-stock-tab";
 
 interface AdminContentProps {
   userRole: string;
@@ -60,6 +62,12 @@ export default function AdminContent({ userRole }: AdminContentProps) {
               <span>Unidades</span>
             </TabsTrigger>
           )}
+          {isSuperuser && (
+            <TabsTrigger value="modulo-stock" className="flex items-center space-x-2">
+              <Boxes className="w-4 h-4" />
+              <span>Módulo Stock</span>
+            </TabsTrigger>
+          )}
           <TabsTrigger value="reportes" className="flex items-center space-x-2">
             <FileText className="w-4 h-4" />
             <span>Reportes</span>
@@ -89,6 +97,12 @@ export default function AdminContent({ userRole }: AdminContentProps) {
         {isSuperuser && (
           <TabsContent value="unidades" className="mt-6">
             <UnidadesTab />
+          </TabsContent>
+        )}
+
+        {isSuperuser && (
+          <TabsContent value="modulo-stock" className="mt-6">
+            <ModuloStockTab />
           </TabsContent>
         )}
 
