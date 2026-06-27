@@ -14,6 +14,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -81,6 +88,30 @@ export default function RecepcionContent({ userRole }: RecepcionContentProps) {
   const [archiving, setArchiving] = useState(false);
   const [showCerrarConfirm, setShowCerrarConfirm] = useState(false);
 
+  // Catálogo de productos (para "producto sustituto")
+  const [productos, setProductos] = useState<any[]>([]);
+
+  // Estado de "la mercancía llegó diferente" (variante de recepción)
+  const [varianteOpen, setVarianteOpen] = useState(false);
+  const [tipoVariante, setTipoVariante] = useState<"formato" | "sustituto">("formato");
+  const [formatoModo, setFormatoModo] = useState<"factor" | "piezas">("factor");
+  const [factorConv, setFactorConv] = useState("");
+  const [varianteNombre, setVarianteNombre] = useState("");
+  const [piezasRecep, setPiezasRecep] = useState<{ id: number; pesoKg: string }[]>([
+    { id: 1, pesoKg: "" },
+  ]);
+  const [sustitutoId, setSustitutoId] = useState<number | null>(null);
+
+  const resetVariante = () => {
+    setVarianteOpen(false);
+    setTipoVariante("formato");
+    setFormatoModo("factor");
+    setFactorConv("");
+    setVarianteNombre("");
+    setPiezasRecep([{ id: 1, pesoKg: "" }]);
+    setSustitutoId(null);
+  };
+
   useEffect(() => {
     fetchData();
   }, []);
@@ -88,9 +119,10 @@ export default function RecepcionContent({ userRole }: RecepcionContentProps) {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [pedRes, movRes] = await Promise.all([
+      const [pedRes, movRes, prodRes] = await Promise.all([
         fetch("/api/pedidos"),
         fetch("/api/movimientos?tipo=entrada&limit=50"),
+        fetch("/api/productos"),
       ]);
       if (pedRes.ok) {
         const data = await pedRes.json();
@@ -103,6 +135,10 @@ export default function RecepcionContent({ userRole }: RecepcionContentProps) {
       if (movRes.ok) {
         const data = await movRes.json();
         setHistorialRecepciones(data?.movimientos || []);
+      }
+      if (prodRes.ok) {
+        const data = await prodRes.json();
+        setProductos(data?.productos || []);
       }
     } catch {
       // silencioso
@@ -158,6 +194,7 @@ export default function RecepcionContent({ userRole }: RecepcionContentProps) {
 
   const abrirDrawerItem = (item: any) => {
     const state = itemStates[item.id];
+    resetVariante();
     setDrawerItem(item);
     setDrawerForm({
       cantidadRecibida: state?.cantidadRecibida ?? toNumber(item.cantidad),
@@ -203,62 +240,75 @@ export default function RecepcionContent({ userRole }: RecepcionContentProps) {
     if (!drawerItem || !drawerForm || !selectedPedido) return;
 
     const cantPedida = toNumber(drawerItem.cantidad);
+
+    // Resolver producto destino: sustituto o el del pedido
+    const esSustituto = varianteOpen && tipoVariante === "sustituto";
+    const productoDestinoId = esSustituto && sustitutoId ? sustitutoId : drawerItem.productoId;
+    if (esSustituto && !sustitutoId) {
+      toast({ title: "Selecciona el producto sustituto", variant: "destructive" });
+      return;
+    }
+
+    // Modo piezas (peso variable) solo si variante formato + piezas
+    const esPiezas =
+      varianteOpen && tipoVariante === "formato" && formatoModo === "piezas";
+    const factor =
+      varianteOpen && tipoVariante === "formato" && formatoModo === "factor"
+        ? parseFloat(factorConv) || 1
+        : 1;
+
+    // El estado de la línea se calcula igual que en el servidor (informativo en UI)
     const estadoLinea: EstadoLinea =
-      drawerForm.cantidadRecibida >= cantPedida ? "recibida" : "parcial";
+      esSustituto || esPiezas || drawerForm.cantidadRecibida >= cantPedida
+        ? "recibida"
+        : "parcial";
 
     try {
       setSavingItem(true);
 
-      const [invRes, movRes] = await Promise.all([
-        apiFetch("/api/inventario", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            productoId: drawerItem.productoId,
-            cantidad: drawerForm.cantidadRecibida,
-            lote: drawerForm.lote || null,
-            fechaCaducidad: drawerForm.fechaCaducidad || null,
-            ubicacion: drawerForm.ubicacion || null,
-            codigoUnico: drawerForm.codigoUnico,
-          }),
-        }),
-        apiFetch("/api/movimientos", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            productoId: drawerItem.productoId,
-            tipo: "entrada",
-            cantidad: drawerForm.cantidadRecibida,
-            lote: drawerForm.lote || null,
-            notas: `Recepción pedido #${selectedPedido.id}`,
-            pedidoItemId: drawerItem.id,
-          }),
-        }),
-      ]);
+      const payload: any = {
+        pedidoItemId: drawerItem.id,
+        productoId: productoDestinoId,
+        cantidadPedida: cantPedida,
+        lote: drawerForm.lote || null,
+        fechaCaducidad: drawerForm.fechaCaducidad || null,
+        ubicacion: drawerForm.ubicacion || null,
+        nuevoPrecio: drawerForm.nuevoPrecio ? parseFloat(drawerForm.nuevoPrecio) : null,
+        esSustituto,
+        notaSustituto: esSustituto
+          ? `Pedido: ${drawerItem.producto?.nombre}`
+          : undefined,
+      };
 
-      if (!invRes.ok && invRes.status !== 202) throw new Error("Error al registrar");
-      if (!movRes.ok && movRes.status !== 202) throw new Error("Error al registrar");
+      if (esPiezas) {
+        payload.modo = "piezas";
+        payload.piezas = piezasRecep
+          .map((p) => parseFloat(p.pesoKg))
+          .filter((n) => n > 0);
+      } else {
+        payload.modo = "normal";
+        payload.cantidad = drawerForm.cantidadRecibida;
+        payload.factorConversion = factor;
+        if (varianteNombre.trim()) payload.varianteNombre = varianteNombre.trim();
+      }
 
-      // Persistir estado del ítem en DB
-      await Promise.all([
-        apiFetch(`/api/pedidos/${selectedPedido.id}/items/${drawerItem.id}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            cantidadRecibida: drawerForm.cantidadRecibida,
-            estadoLinea,
-            lote: drawerForm.lote || null,
-            fechaCaducidad: drawerForm.fechaCaducidad || null,
-            nuevoPrecio: drawerForm.nuevoPrecio || null,
-          }),
-        }),
-        // Marcar el pedido como en recepción para que permanezca en la lista
-        apiFetch(`/api/pedidos/${selectedPedido.id}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ estado: "en_recepcion" }),
-        }),
-      ]);
+      const res = await apiFetch("/api/recepcion/registrar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok && res.status !== 202) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Error al registrar");
+      }
+
+      // Marcar el pedido como en recepción para que permanezca en la lista
+      await apiFetch(`/api/pedidos/${selectedPedido.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ estado: "en_recepcion" }),
+      });
 
       const newItemStates: Record<number, ItemState> = {
         ...itemStates,
@@ -639,21 +689,228 @@ export default function RecepcionContent({ userRole }: RecepcionContentProps) {
 
           {drawerForm && (
             <div className="flex-1 min-h-0 px-4 pb-6 space-y-4 overflow-y-auto">
-              <div>
-                <Label htmlFor="cant-recibida">Cantidad recibida *</Label>
-                <Input
-                  id="cant-recibida"
-                  type="number"
-                  inputMode="decimal"
-                  step="0.01"
-                  min="0"
-                  value={drawerForm.cantidadRecibida}
-                  onChange={(e) =>
-                    setDrawerForm((f) => f ? { ...f, cantidadRecibida: parseFloat(e.target.value) || 0 } : f)
-                  }
-                  className="mt-1"
-                />
+              {/* ¿La mercancía llegó como se pidió? */}
+              <div className="rounded-lg border p-3 space-y-3 bg-slate-50">
+                <p className="text-sm font-medium text-slate-700">
+                  ¿La mercancía llegó como se pidió?
+                </p>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={resetVariante}
+                    className={`py-2 px-3 rounded-md text-sm font-medium border transition-colors ${
+                      !varianteOpen
+                        ? "bg-green-600 text-white border-green-600"
+                        : "bg-white text-slate-600 border-slate-200 hover:bg-slate-100"
+                    }`}
+                  >
+                    Sí, recepción normal
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setVarianteOpen(true)}
+                    className={`py-2 px-3 rounded-md text-sm font-medium border transition-colors ${
+                      varianteOpen
+                        ? "bg-amber-500 text-white border-amber-500"
+                        : "bg-white text-slate-600 border-slate-200 hover:bg-slate-100"
+                    }`}
+                  >
+                    Llegó diferente
+                  </button>
+                </div>
+
+                {varianteOpen && (
+                  <div className="space-y-3 pt-1">
+                    {/* Tipo de variante */}
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setTipoVariante("formato")}
+                        className={`py-1.5 px-2 rounded text-xs font-medium border ${
+                          tipoVariante === "formato"
+                            ? "bg-blue-100 text-blue-700 border-blue-300"
+                            : "bg-white text-slate-500 border-slate-200"
+                        }`}
+                      >
+                        Formato distinto
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setTipoVariante("sustituto")}
+                        className={`py-1.5 px-2 rounded text-xs font-medium border ${
+                          tipoVariante === "sustituto"
+                            ? "bg-blue-100 text-blue-700 border-blue-300"
+                            : "bg-white text-slate-500 border-slate-200"
+                        }`}
+                      >
+                        Otro producto (sustituto)
+                      </button>
+                    </div>
+
+                    {/* Formato distinto */}
+                    {tipoVariante === "formato" && (
+                      <div className="space-y-3">
+                        <div className="grid grid-cols-2 gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setFormatoModo("factor")}
+                            className={`py-1.5 px-2 rounded text-xs border ${
+                              formatoModo === "factor"
+                                ? "bg-white text-slate-800 border-blue-300 ring-1 ring-blue-200"
+                                : "bg-white text-slate-500 border-slate-200"
+                            }`}
+                          >
+                            Cantidad × factor
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setFormatoModo("piezas")}
+                            className={`py-1.5 px-2 rounded text-xs border ${
+                              formatoModo === "piezas"
+                                ? "bg-white text-slate-800 border-blue-300 ring-1 ring-blue-200"
+                                : "bg-white text-slate-500 border-slate-200"
+                            }`}
+                          >
+                            Piezas (peso variable)
+                          </button>
+                        </div>
+
+                        {formatoModo === "factor" && (
+                          <div className="grid grid-cols-2 gap-2">
+                            <div>
+                              <Label className="text-xs">
+                                Factor ({drawerItem?.producto?.unidadMedida}/unidad)
+                              </Label>
+                              <Input
+                                type="number"
+                                step="any"
+                                min="0.001"
+                                placeholder="Ej: 2"
+                                value={factorConv}
+                                onChange={(e) => setFactorConv(e.target.value)}
+                                className="mt-1 bg-white"
+                              />
+                            </div>
+                            <div>
+                              <Label className="text-xs">Guardar variante (opcional)</Label>
+                              <Input
+                                placeholder="Ej: Caja 2kg"
+                                value={varianteNombre}
+                                onChange={(e) => setVarianteNombre(e.target.value)}
+                                className="mt-1 bg-white"
+                              />
+                            </div>
+                          </div>
+                        )}
+
+                        {formatoModo === "piezas" && (
+                          <div className="space-y-2">
+                            <Label className="text-xs">Piezas recibidas (kg c/u)</Label>
+                            <div className="rounded border bg-white divide-y">
+                              {piezasRecep.map((p, i) => (
+                                <div key={p.id} className="flex items-center gap-2 px-2 py-1.5">
+                                  <span className="text-xs text-slate-400 w-12">#{i + 1}</span>
+                                  <Input
+                                    type="number"
+                                    step="0.001"
+                                    min="0.001"
+                                    placeholder="kg"
+                                    value={p.pesoKg}
+                                    onChange={(e) =>
+                                      setPiezasRecep((prev) =>
+                                        prev.map((x) =>
+                                          x.id === p.id ? { ...x, pesoKg: e.target.value } : x
+                                        )
+                                      )
+                                    }
+                                    className="h-8 w-28"
+                                  />
+                                  {piezasRecep.length > 1 && (
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        setPiezasRecep((prev) => prev.filter((x) => x.id !== p.id))
+                                      }
+                                      className="ml-auto text-xs text-red-500 hover:underline"
+                                    >
+                                      Quitar
+                                    </button>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setPiezasRecep((prev) => [...prev, { id: Date.now(), pesoKg: "" }])
+                              }
+                              className="text-xs text-blue-600 hover:underline"
+                            >
+                              + Añadir pieza
+                            </button>
+                            <p className="text-xs text-slate-500">
+                              Total:{" "}
+                              {piezasRecep
+                                .reduce((s, x) => s + (parseFloat(x.pesoKg) || 0), 0)
+                                .toFixed(3)}{" "}
+                              kg
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Producto sustituto */}
+                    {tipoVariante === "sustituto" && (
+                      <div>
+                        <Label className="text-xs">Producto realmente recibido</Label>
+                        <Select
+                          value={sustitutoId?.toString() ?? ""}
+                          onValueChange={(v) => setSustitutoId(parseInt(v, 10))}
+                        >
+                          <SelectTrigger className="mt-1 bg-white">
+                            <SelectValue placeholder="Selecciona el producto" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {productos.map((p) => (
+                              <SelectItem key={p.id} value={p.id.toString()}>
+                                {p.nombre}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <p className="text-xs text-slate-500 mt-1">
+                          El stock se sumará a este producto, no al pedido original.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
+
+              {/* Cantidad recibida (oculta en modo piezas) */}
+              {!(varianteOpen && tipoVariante === "formato" && formatoModo === "piezas") && (
+                <div>
+                  <Label htmlFor="cant-recibida">
+                    Cantidad recibida *
+                    {varianteOpen && tipoVariante === "formato" && formatoModo === "factor" && (
+                      <span className="text-xs text-slate-400 ml-1">(nº de unidades del formato)</span>
+                    )}
+                  </Label>
+                  <Input
+                    id="cant-recibida"
+                    type="number"
+                    inputMode="decimal"
+                    step="0.01"
+                    min="0"
+                    value={drawerForm.cantidadRecibida}
+                    onChange={(e) =>
+                      setDrawerForm((f) => f ? { ...f, cantidadRecibida: parseFloat(e.target.value) || 0 } : f)
+                    }
+                    className="mt-1"
+                  />
+                </div>
+              )}
 
               <div>
                 <Label htmlFor="precio-input">
@@ -739,14 +996,19 @@ export default function RecepcionContent({ userRole }: RecepcionContentProps) {
               <Button
                 className="w-full bg-green-600 hover:bg-green-700 h-12 text-base mt-2"
                 onClick={guardarItemRecibido}
-                disabled={!drawerForm.cantidadRecibida || savingItem}
+                disabled={
+                  savingItem ||
+                  (varianteOpen && tipoVariante === "formato" && formatoModo === "piezas"
+                    ? piezasRecep.every((p) => !(parseFloat(p.pesoKg) > 0))
+                    : !drawerForm.cantidadRecibida)
+                }
               >
                 {savingItem ? (
                   <Loader2 className="w-4 h-4 animate-spin mr-2" />
                 ) : (
                   <CheckCircle className="w-4 h-4 mr-2" />
                 )}
-                {savingItem ? "Registrando..." : "Guardar en inventario"}
+                {savingItem ? "Registrando..." : "Guardar en stock"}
               </Button>
             </div>
           )}

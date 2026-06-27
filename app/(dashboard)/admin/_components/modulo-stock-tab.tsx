@@ -26,10 +26,17 @@ const ACCESOS: Acceso[] = [
     icon: ChefHat,
   },
   {
-    href: "/inventario/recepciones/nuevo",
-    titulo: "Recepción de mercancía",
+    href: "/recepcion",
+    titulo: "Recepción de pedidos",
     descripcion:
-      "Registra entradas al inventario por lotes. Soporta peso fijo y peso variable (piezas).",
+      "Recibe mercancía de los pedidos ítem por ítem y crea lotes de stock. Soporta variantes: formato distinto, peso variable o producto sustituto.",
+    icon: PackagePlus,
+  },
+  {
+    href: "/inventario/recepciones/nuevo",
+    titulo: "Entrada manual de stock",
+    descripcion:
+      "Alta de lotes sin pedido asociado (ajustes, stock inicial). Soporta peso fijo y peso variable.",
     icon: PackagePlus,
   },
   {
