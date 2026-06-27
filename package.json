@@ -7,6 +7,8 @@
     "build": "prisma generate && next build",
     "start": "echo \"[start] PORT=$PORT NODE_ENV=$NODE_ENV\" && next start -p ${PORT:-8080}",
     "db:setup": "prisma db push --accept-data-loss",
+    "db:seed": "npx tsx scripts/seed.ts",
+    "db:seed-stock": "npx tsx scripts/seed-stock.ts",
     "lint": "next lint",
     "typecheck": "tsc --noEmit"
   },
