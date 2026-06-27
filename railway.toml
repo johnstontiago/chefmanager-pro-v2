@@ -1,6 +1,9 @@
 [build]
 builder = "NIXPACKS"
-buildCommand = "npm ci --include=dev --cache /tmp/npm-cache && npm run build"
+# npm install (no "ci"): "ci" hace rm -rf node_modules y choca con el
+# cache mount que Nixpacks monta en node_modules/.cache → EBUSY.
+# PUPPETEER_SKIP_DOWNLOAD inline: evita descargar Chromium en el build.
+buildCommand = "PUPPETEER_SKIP_DOWNLOAD=true npm install --include=dev --no-audit --no-fund && npm run build"
 
 [deploy]
 startCommand = "npx prisma db push && npm run start"
