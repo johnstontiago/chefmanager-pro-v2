@@ -55,10 +55,12 @@ export default function ConsumoContent({ userRole }: ConsumoContentProps) {
   const { toast } = useToast();
   const [inventario, setInventario] = useState<any[]>([]);
   const [productos, setProductos] = useState<any[]>([]);
+  const [preparaciones, setPreparaciones] = useState<any[]>([]);
   const [movimientos, setMovimientos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [busqueda, setBusqueda] = useState("");
   const [codigoQR, setCodigoQR] = useState("");
+  const [modoStock, setModoStock] = useState<"productos" | "preparaciones">("productos");
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const [tipoMovimiento, setTipoMovimiento] = useState<"consumo" | "merma">("consumo");
   const [cantidad, setCantidad] = useState("");
@@ -73,10 +75,11 @@ export default function ConsumoContent({ userRole }: ConsumoContentProps) {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [invRes, prodRes, movRes] = await Promise.all([
+      const [invRes, prodRes, movRes, prepRes] = await Promise.all([
         fetch("/api/inventario/lotes"),
         fetch("/api/productos"),
         fetch("/api/movimientos?limit=50"),
+        fetch("/api/inventario/elaboraciones"),
       ]);
 
       if (invRes.ok) {
@@ -90,6 +93,10 @@ export default function ConsumoContent({ userRole }: ConsumoContentProps) {
       if (movRes.ok) {
         const data = await movRes.json();
         setMovimientos(data?.movimientos || []);
+      }
+      if (prepRes.ok) {
+        const data = await prepRes.json();
+        setPreparaciones(data?.elaboraciones || []);
       }
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -117,18 +124,42 @@ export default function ConsumoContent({ userRole }: ConsumoContentProps) {
     prod.nombre?.toLowerCase()?.includes(busqueda?.toLowerCase() || "")
   );
 
+  // Preparaciones (elaboraciones) con stock + filtro
+  const preparacionesFiltradas = preparaciones
+    .filter((e) => (e.lotes?.length || 0) > 0)
+    .filter((e) => e.nombre?.toLowerCase()?.includes(busqueda?.toLowerCase() || ""));
+
+  // Lotes de preparación en forma "seleccionable" (mismo shape que un lote de producto)
+  const prepLoteToItem = (e: any, l: any) => ({
+    id: l.id,
+    tipo: "preparacion" as const,
+    elaboracionId: e.id,
+    cantidad: l.cantidadActual,
+    lote: l.numeroLote,
+    codigoUnico: l.codigoUnico,
+    fechaCaducidad: l.fechaCaducidad,
+    producto: { nombre: e.nombre, unidadBase: e.unidadBase },
+  });
+
   const buscarPorCodigo = (codigo: string) => {
-    const item = inventario.find(
-      (inv) => inv.codigoUnico?.toLowerCase() === codigo.toLowerCase().trim()
-    );
-    if (item) {
-      setSelectedItem(item);
-      setCantidad("1");
-      setCodigoQR("");
-      setShowQrScanner(false);
-    } else {
-      toast({ title: "Código no encontrado", variant: "destructive" });
+    const cod = codigo.toLowerCase().trim();
+    // Busca primero en materias primas, luego en preparaciones
+    const inv = inventario.find((i) => i.codigoUnico?.toLowerCase() === cod);
+    if (inv) {
+      setSelectedItem({ ...inv, tipo: "producto" });
+      setCantidad("1"); setCodigoQR(""); setShowQrScanner(false);
+      return;
     }
+    for (const e of preparaciones) {
+      const l = (e.lotes || []).find((x: any) => x.codigoUnico?.toLowerCase() === cod);
+      if (l) {
+        setSelectedItem(prepLoteToItem(e, l));
+        setModoStock("preparaciones");
+        setCantidad("1"); setCodigoQR(""); setShowQrScanner(false);
+        return;
+      }
+    }
+    toast({ title: "Código no encontrado", variant: "destructive" });
   };
 
   const buscarPorQR = () => {
@@ -137,7 +168,7 @@ export default function ConsumoContent({ userRole }: ConsumoContentProps) {
   };
 
   const seleccionarLote = (inv: any) => {
-    setSelectedItem(inv);
+    setSelectedItem(inv.tipo ? inv : { ...inv, tipo: "producto" });
     setCantidad("1");
     setNotas("");
     setTipoMovimiento("consumo");
@@ -165,16 +196,29 @@ export default function ConsumoContent({ userRole }: ConsumoContentProps) {
     try {
       setSaving(true);
 
-      const res = await apiFetch("/api/consumo/registrar", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          loteId: selectedItem.id,
-          cantidad: cantidadNum,
-          motivo: tipoMovimiento === "merma" ? "MERMA" : "CONSUMO",
-          notas: notas || null,
-        }),
-      });
+      const esPreparacion = selectedItem.tipo === "preparacion";
+      const res = await apiFetch(
+        esPreparacion ? "/api/consumo/preparacion" : "/api/consumo/registrar",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(
+            esPreparacion
+              ? {
+                  loteElaboracionId: selectedItem.id,
+                  cantidad: cantidadNum,
+                  motivo: tipoMovimiento === "merma" ? "MERMA" : "CONSUMO",
+                  notas: notas || null,
+                }
+              : {
+                  loteId: selectedItem.id,
+                  cantidad: cantidadNum,
+                  motivo: tipoMovimiento === "merma" ? "MERMA" : "CONSUMO",
+                  notas: notas || null,
+                }
+          ),
+        }
+      );
 
       if (!res.ok && res.status !== 202) {
         const err = await res.json().catch(() => ({}));
@@ -452,20 +496,98 @@ export default function ConsumoContent({ userRole }: ConsumoContentProps) {
                 <CardHeader className="pb-3">
                   <CardTitle className="flex items-center gap-2">
                     <Package className="w-5 h-5 text-blue-600" />
-                    <span>Seleccionar Producto</span>
+                    <span>Seleccionar {modoStock === "preparaciones" ? "Preparación" : "Producto"}</span>
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
+                  {/* Toggle materias primas / preparaciones */}
+                  <div className="grid grid-cols-2 gap-2 mb-4">
+                    <button
+                      type="button"
+                      onClick={() => { setModoStock("productos"); setSelectedItem(null); }}
+                      className={`py-2 px-3 rounded-md text-sm font-medium border transition-colors ${
+                        modoStock === "productos"
+                          ? "bg-blue-600 text-white border-blue-600"
+                          : "bg-white text-slate-600 border-slate-200 hover:bg-slate-100"
+                      }`}
+                    >
+                      Materias primas
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setModoStock("preparaciones"); setSelectedItem(null); }}
+                      className={`py-2 px-3 rounded-md text-sm font-medium border transition-colors ${
+                        modoStock === "preparaciones"
+                          ? "bg-amber-500 text-white border-amber-500"
+                          : "bg-white text-slate-600 border-slate-200 hover:bg-slate-100"
+                      }`}
+                    >
+                      Preparaciones
+                    </button>
+                  </div>
+
                   <div className="relative mb-4">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     <Input
-                      placeholder="Buscar producto..."
+                      placeholder={modoStock === "preparaciones" ? "Buscar preparación..." : "Buscar producto..."}
                       value={busqueda}
                       onChange={(e) => setBusqueda(e.target.value)}
                       className="pl-10"
                     />
                   </div>
 
+                  {/* Lista de PREPARACIONES */}
+                  {modoStock === "preparaciones" ? (
+                    <div className="space-y-3 max-h-[60vh] overflow-y-auto">
+                      {preparacionesFiltradas.length === 0 ? (
+                        <div className="text-center py-8 text-slate-500">
+                          <Package className="w-12 h-12 mx-auto mb-3 opacity-30" />
+                          <p>No hay preparaciones con stock</p>
+                        </div>
+                      ) : (
+                        preparacionesFiltradas.map((e) => (
+                          <div key={e.id} className="border rounded-lg p-3 hover:bg-slate-50">
+                            <h4 className="font-semibold text-slate-800">{e.nombre}</h4>
+                            <div className="mt-2 space-y-2">
+                              {(e.lotes || []).map((l: any) => {
+                                const item = prepLoteToItem(e, l);
+                                return (
+                                  <div
+                                    key={l.id}
+                                    className={`flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 rounded-lg cursor-pointer transition-colors gap-1 ${
+                                      selectedItem?.tipo === "preparacion" && selectedItem?.id === l.id
+                                        ? "bg-amber-100 border-amber-300 border"
+                                        : "bg-slate-100 hover:bg-slate-200"
+                                    }`}
+                                    onClick={() => seleccionarLote(item)}
+                                  >
+                                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                                      {l.numeroLote && (
+                                        <span className="flex items-center text-sm">
+                                          <Tag className="w-4 h-4 mr-1 text-slate-400" />{l.numeroLote}
+                                        </span>
+                                      )}
+                                      {l.numeroEnvases != null && (
+                                        <span className="text-xs text-slate-500">{l.numeroEnvases} envase(s)</span>
+                                      )}
+                                      {l.fechaCaducidad && (
+                                        <span className="flex items-center text-sm">
+                                          <Calendar className="w-4 h-4 mr-1 text-slate-400" />{formatDate(l.fechaCaducidad)}
+                                        </span>
+                                      )}
+                                    </div>
+                                    <span className="font-semibold text-sm sm:text-base">
+                                      {formatDecimal(l.cantidadActual)} {e.unidadBase}
+                                    </span>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  ) : (
                   <div className="space-y-3 max-h-[60vh] overflow-y-auto">
                     {productosFiltrados.length === 0 ? (
                       <div className="text-center py-8 text-slate-500">
@@ -528,6 +650,7 @@ export default function ConsumoContent({ userRole }: ConsumoContentProps) {
                       })
                     )}
                   </div>
+                  )}
                 </CardContent>
               </Card>
             </div>
