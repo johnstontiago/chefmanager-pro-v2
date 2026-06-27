@@ -59,9 +59,20 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Faltan productoId o pedidoItemId" }, { status: 400 });
     }
 
-    const producto = await prisma.producto.findUnique({ where: { id: productoId } });
+    // Tenant scoping: el producto debe pertenecer al tenant del usuario
+    const producto = await prisma.producto.findFirst({
+      where: { id: productoId, tenantId },
+    });
     if (!producto || !producto.activo) {
       return NextResponse.json({ error: "Producto no encontrado" }, { status: 404 });
+    }
+
+    // Tenant scoping: la línea de pedido debe pertenecer al tenant del usuario
+    const pedidoItem = await prisma.pedidoItem.findFirst({
+      where: { id: pedidoItemId, pedido: { tenantId } },
+    });
+    if (!pedidoItem) {
+      return NextResponse.json({ error: "Línea de pedido no encontrada" }, { status: 404 });
     }
 
     const unidadDestino =
@@ -149,9 +160,8 @@ export async function POST(req: NextRequest) {
         },
       });
 
-      // Actualizar estado de la línea del pedido
-      const pedidoItem = await tx.pedidoItem.findUnique({ where: { id: pedidoItemId } });
-      if (pedidoItem) {
+      // Actualizar estado de la línea del pedido (ya validada por tenant arriba)
+      {
         // recibida si cubre lo pedido; en sustituto se marca recibida (línea resuelta)
         const recibidaEnUnidadPedido = esSustituto
           ? cantidadPedida

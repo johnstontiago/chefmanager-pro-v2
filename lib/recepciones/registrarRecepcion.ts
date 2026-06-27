@@ -2,13 +2,15 @@
 
 import prisma from '@/lib/db'
 import { convertir } from '@/lib/stock/convertir'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth-options'
+import { getActiveTenantId } from '@/lib/get-active-tenant'
 
 interface PiezaVariable {
   pesoKg: number
 }
 
 interface RecepcionInput {
-  tenantId: number
   productoId: number
   fechaCaducidad?: Date
   numeroLote?: string
@@ -30,7 +32,6 @@ export async function registrarRecepcion(
   input: RecepcionInput
 ): Promise<ResultadoRecepcion> {
   const {
-    tenantId,
     productoId,
     fechaCaducidad,
     numeroLote,
@@ -39,6 +40,11 @@ export async function registrarRecepcion(
     nuevaVariante,
     piezas,
   } = input
+
+  // tenantId SIEMPRE desde la sesión, nunca del cliente
+  const session = await getServerSession(authOptions)
+  if (!session?.user) return { ok: false, lotesCreados: [], error: 'No autenticado' }
+  const tenantId = getActiveTenantId(session.user as any)
 
   const producto = await prisma.producto.findFirst({
     where: { id: productoId, tenantId },

@@ -124,7 +124,6 @@ export default function RecepcionForm({ productos, tenantId }: Props) {
     startTransition(async () => {
       try {
         const base = {
-          tenantId,
           productoId,
           fechaCaducidad: fechaCaducidad ? new Date(fechaCaducidad) : undefined,
           numeroLote: numeroLote || undefined,

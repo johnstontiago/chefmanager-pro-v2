@@ -89,7 +89,6 @@ function ModalProduccion({ elaboracion, tenantId }: { elaboracion: Elaboracion; 
 
     startTransition(async () => {
       const res = await producirElaboracion({
-        tenantId,
         elaboracionId: elaboracion.id,
         cantidadProducida: cant,
         fechaCaducidad: caducidad ? new Date(caducidad) : undefined,
@@ -232,7 +231,6 @@ function ModalNuevaElaboracion({ productos, tenantId }: { productos: Producto[];
 
     startTransition(async () => {
       const res = await crearElaboracion({
-        tenantId,
         nombre,
         descripcion: descripcion || undefined,
         unidadBase,

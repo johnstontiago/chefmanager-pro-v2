@@ -1,9 +1,13 @@
+'use server'
+
 import prisma from '@/lib/db'
 import { consumirFIFO } from '@/lib/stock/consumirFIFO'
 import { convertir } from '@/lib/stock/convertir'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth-options'
+import { getActiveTenantId } from '@/lib/get-active-tenant'
 
 interface ProduccionInput {
-  tenantId: number
   elaboracionId: number
   cantidadProducida: number
   fechaCaducidad?: Date
@@ -21,7 +25,14 @@ interface ResultadoProduccion {
 export async function producirElaboracion(
   input: ProduccionInput
 ): Promise<ResultadoProduccion> {
-  const { tenantId, elaboracionId, cantidadProducida, fechaCaducidad, notas } = input
+  const { elaboracionId, cantidadProducida, fechaCaducidad, notas } = input
+
+  // tenantId SIEMPRE desde la sesión, nunca del cliente
+  const session = await getServerSession(authOptions)
+  if (!session?.user) {
+    return { ok: false, stockInsuficiente: false, ingredientesFallidos: [], error: 'No autenticado' }
+  }
+  const tenantId = getActiveTenantId(session.user as any)
 
   const elaboracion = await prisma.elaboracion.findFirst({
     where: { id: elaboracionId, tenantId },
