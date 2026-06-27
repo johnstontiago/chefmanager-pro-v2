@@ -417,6 +417,8 @@ model LoteInventario {
   cantidadActual  Float     @map("cantidad_actual")
   pesoRealKg      Float?    @map("peso_real_kg")
   numeroLote      String?   @map("numero_lote")
+  codigoUnico     String?   @map("codigo_unico")
+  ubicacion       String?
   agotado         Boolean   @default(false)
   createdAt       DateTime  @default(now()) @map("created_at")
   updatedAt       DateTime  @updatedAt @map("updated_at")
@@ -427,6 +429,7 @@ model LoteInventario {
   insumosElaboracion InsumoLoteElaboracion[]
 
   @@index([tenantId, productoId, agotado, fechaEntrada])
+  @@index([tenantId, codigoUnico])
   @@map("lotes_inventario")
 }
 

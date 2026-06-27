@@ -48,8 +48,8 @@ export async function GET() {
         cantidad: l.cantidadActual,
         lote: l.numeroLote,
         pesoRealKg: l.pesoRealKg,
-        ubicacion: null,
-        codigoUnico: null,
+        ubicacion: l.ubicacion,
+        codigoUnico: l.codigoUnico,
         fechaCaducidad: l.fechaCaducidad,
         producto: {
           ...p,

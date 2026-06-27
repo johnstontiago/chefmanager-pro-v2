@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
 import prisma from "@/lib/db";
 import { toNumber } from "@/lib/utils";
+import { convertir } from "@/lib/stock/convertir";
 
 import { getActiveTenantId, getActiveUnidadId } from "@/lib/get-active-tenant";
 
@@ -30,16 +31,25 @@ export async function GET() {
     const productos = await prisma.producto.findMany({
       where: { activo: true, tenantId },
     });
+    const productoById = new Map(productos.map((p) => [p.id, p]));
 
-    const inventarioUnidad = await prisma.inventario.findMany({
-      where: { unidadId, tenantId, estado: "disponible" },
-      include: { producto: true },
+    // Stock real desde LoteInventario (registro único, nivel tenant)
+    const lotes = await prisma.loteInventario.findMany({
+      where: { tenantId, agotado: false, cantidadActual: { gt: 0 } },
     });
 
     const stockPorProducto = new Map<number, number>();
-    for (const inv of inventarioUnidad) {
-      const current = stockPorProducto.get(inv.productoId) || 0;
-      stockPorProducto.set(inv.productoId, current + toNumber(inv.cantidad));
+    let valorInventario = 0;
+    for (const lote of lotes) {
+      const current = stockPorProducto.get(lote.productoId) || 0;
+      stockPorProducto.set(lote.productoId, current + lote.cantidadActual);
+
+      const prod = productoById.get(lote.productoId);
+      if (prod) {
+        const unidadBase = prod.unidadBase ?? prod.contenidoUnidad ?? prod.unidadMedida;
+        const enUnidadCompra = convertir(lote.cantidadActual, unidadBase, prod.unidadMedida);
+        valorInventario += enUnidadCompra * toNumber(prod.precioUnitario);
+      }
     }
 
     let stockBajo = 0;
@@ -50,11 +60,10 @@ export async function GET() {
       }
     }
 
-    const proximosACaducar = await prisma.inventario.count({
+    const proximosACaducar = await prisma.loteInventario.count({
       where: {
-        unidadId,
         tenantId,
-        estado: "disponible",
+        agotado: false,
         fechaCaducidad: {
           gte: today,
           lte: in7Days,
@@ -69,11 +78,6 @@ export async function GET() {
         estado: { in: ["borrador", "enviado"] },
       },
     });
-
-    let valorInventario = 0;
-    for (const inv of inventarioUnidad) {
-      valorInventario += toNumber(inv.cantidad) * toNumber(inv.producto.precioUnitario);
-    }
 
     const ultimosMovimientos = await prisma.movimiento.findMany({
       where: { unidadId, tenantId },

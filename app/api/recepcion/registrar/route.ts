@@ -29,6 +29,7 @@ interface Body {
   lote?: string | null;
   fechaCaducidad?: string | null;
   ubicacion?: string | null;
+  codigoUnico?: string | null;
   esSustituto?: boolean;
   notaSustituto?: string;
   nuevoPrecio?: number | null;
@@ -51,7 +52,7 @@ export async function POST(req: NextRequest) {
     const {
       pedidoItemId, productoId, cantidadPedida, modo,
       cantidad, factorConversion = 1, varianteNombre,
-      piezas, lote, fechaCaducidad, ubicacion, esSustituto, notaSustituto,
+      piezas, lote, fechaCaducidad, ubicacion, codigoUnico, esSustituto, notaSustituto,
       nuevoPrecio,
     } = body;
 
@@ -88,9 +89,16 @@ export async function POST(req: NextRequest) {
         if (lista.length === 0) {
           throw new Error("Se requiere al menos una pieza con peso > 0");
         }
+        let i = 0;
         for (const pesoKg of lista) {
           const gramos = pesoKg * 1000;
           cantidadBaseTotal += gramos;
+          // Un código único por pieza (sufijo si hay varias)
+          const codigoPieza = codigoUnico
+            ? lista.length > 1
+              ? `${codigoUnico}-${i + 1}`
+              : codigoUnico
+            : null;
           const l = await tx.loteInventario.create({
             data: {
               tenantId, productoId,
@@ -99,9 +107,12 @@ export async function POST(req: NextRequest) {
               pesoRealKg: pesoKg,
               fechaCaducidad: caducidad,
               numeroLote: lote || null,
+              codigoUnico: codigoPieza,
+              ubicacion: ubicacion || null,
             },
           });
           lotesCreados.push(l.id);
+          i++;
         }
       } else {
         // modo normal (con factor opcional para formato distinto)
@@ -131,6 +142,8 @@ export async function POST(req: NextRequest) {
             cantidadActual: cantidadBaseTotal,
             fechaCaducidad: caducidad,
             numeroLote: lote || null,
+            codigoUnico: codigoUnico || null,
+            ubicacion: ubicacion || null,
           },
         });
         lotesCreados.push(l.id);

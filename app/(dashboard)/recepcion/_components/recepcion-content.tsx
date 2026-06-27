@@ -273,6 +273,7 @@ export default function RecepcionContent({ userRole }: RecepcionContentProps) {
         lote: drawerForm.lote || null,
         fechaCaducidad: drawerForm.fechaCaducidad || null,
         ubicacion: drawerForm.ubicacion || null,
+        codigoUnico: drawerForm.codigoUnico || null,
         nuevoPrecio: drawerForm.nuevoPrecio ? parseFloat(drawerForm.nuevoPrecio) : null,
         esSustituto,
         notaSustituto: esSustituto

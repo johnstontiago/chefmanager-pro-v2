@@ -47,6 +47,10 @@ interface ConsumoContentProps {
   userRole: string;
 }
 
+// Unidad de visualización del stock: base (g/ml) si está definida, si no la de compra
+const unidadDe = (producto: any) =>
+  producto?.unidadBase ?? producto?.contenidoUnidad ?? producto?.unidadMedida ?? "";
+
 export default function ConsumoContent({ userRole }: ConsumoContentProps) {
   const { toast } = useToast();
   const [inventario, setInventario] = useState<any[]>([]);
@@ -70,7 +74,7 @@ export default function ConsumoContent({ userRole }: ConsumoContentProps) {
     try {
       setLoading(true);
       const [invRes, prodRes, movRes] = await Promise.all([
-        fetch("/api/inventario"),
+        fetch("/api/inventario/lotes"),
         fetch("/api/productos"),
         fetch("/api/movimientos?limit=50"),
       ]);
@@ -161,24 +165,29 @@ export default function ConsumoContent({ userRole }: ConsumoContentProps) {
     try {
       setSaving(true);
 
-      const res = await apiFetch("/api/movimientos", {
+      const res = await apiFetch("/api/consumo/registrar", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          productoId: selectedItem.productoId,
-          tipo: tipoMovimiento,
+          loteId: selectedItem.id,
           cantidad: cantidadNum,
-          lote: selectedItem.lote,
+          motivo: tipoMovimiento === "merma" ? "MERMA" : "CONSUMO",
           notas: notas || null,
-          inventarioId: selectedItem.id,
         }),
       });
 
-      if (!res.ok && res.status !== 202) throw new Error("Error al registrar");
+      if (!res.ok && res.status !== 202) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Error al registrar");
+      }
 
+      const unidadDisplay =
+        selectedItem.producto?.unidadBase ??
+        selectedItem.producto?.contenidoUnidad ??
+        selectedItem.producto?.unidadMedida;
       toast({
         title: tipoMovimiento === "consumo" ? "Consumo registrado" : "Merma registrada",
-        description: `${formatDecimal(cantidadNum)} ${selectedItem.producto?.unidadMedida} de ${selectedItem.producto?.nombre}`,
+        description: `${formatDecimal(cantidadNum)} ${unidadDisplay} de ${selectedItem.producto?.nombre}`,
       });
 
       setSelectedItem(null);
@@ -356,7 +365,7 @@ export default function ConsumoContent({ userRole }: ConsumoContentProps) {
                           {selectedItem.lote && <p>Lote: {selectedItem.lote}</p>}
                           {selectedItem.ubicacion && <p>Ubicación: {selectedItem.ubicacion}</p>}
                           <p className="font-semibold text-lg text-slate-800">
-                            Stock: {formatDecimal(selectedItem.cantidad)} {selectedItem.producto?.unidadMedida}
+                            Stock: {formatDecimal(selectedItem.cantidad)} {unidadDe(selectedItem.producto)}
                           </p>
                         </div>
                       </div>
@@ -398,7 +407,7 @@ export default function ConsumoContent({ userRole }: ConsumoContentProps) {
                           placeholder="Ej: 0.5, 1.25, 3"
                         />
                         <p className="text-xs text-slate-500 mt-1">
-                          Máx: {formatDecimal(selectedItem.cantidad)} {selectedItem.producto?.unidadMedida}
+                          Máx: {formatDecimal(selectedItem.cantidad)} {unidadDe(selectedItem.producto)}
                         </p>
                       </div>
 
@@ -509,7 +518,7 @@ export default function ConsumoContent({ userRole }: ConsumoContentProps) {
                                     {getExpiryBadge(inv)}
                                   </div>
                                   <span className="font-semibold text-sm sm:text-base">
-                                    {formatDecimal(inv.cantidad)} {prod.unidadMedida}
+                                    {formatDecimal(inv.cantidad)} {unidadDe(prod)}
                                   </span>
                                 </div>
                               ))}
