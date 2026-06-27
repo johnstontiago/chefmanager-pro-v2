@@ -19,10 +19,17 @@ interface Acceso {
 
 const ACCESOS: Acceso[] = [
   {
-    href: "/elaboraciones",
+    href: "/fichas/elaboraciones",
     titulo: "Elaboraciones",
     descripcion:
-      "Crea producciones propias (pulled pork, salsas, masas). Cada lote cuenta en stock como un producto.",
+      "Recetas base con ingredientes, cantidades y paso a paso (dentro de Fichas Técnicas).",
+    icon: ChefHat,
+  },
+  {
+    href: "/fichas/preparaciones",
+    titulo: "Preparaciones (producir)",
+    descripcion:
+      "Produce una elaboración: descuenta ingredientes, entra al stock como lote e imprime etiquetas.",
     icon: ChefHat,
   },
   {

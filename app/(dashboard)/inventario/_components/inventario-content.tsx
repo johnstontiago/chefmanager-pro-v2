@@ -50,6 +50,7 @@ export default function InventarioContent({ userRole }: InventarioContentProps) 
   const [categorias, setCategorias] = useState<any[]>([]);
   const [proveedores, setProveedores] = useState<any[]>([]);
   const [valorTotalServer, setValorTotalServer] = useState(0);
+  const [elaboraciones, setElaboraciones] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [busqueda, setBusqueda] = useState("");
   const [filtroCategoria, setFiltroCategoria] = useState("all");
@@ -64,12 +65,18 @@ export default function InventarioContent({ userRole }: InventarioContentProps) 
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [prodRes, invRes, catRes, provRes] = await Promise.all([
+      const [prodRes, invRes, catRes, provRes, elabRes] = await Promise.all([
         fetch("/api/productos"),
         fetch("/api/inventario/lotes"),
         fetch("/api/categorias"),
         fetch("/api/proveedores"),
+        fetch("/api/inventario/elaboraciones"),
       ]);
+
+      if (elabRes.ok) {
+        const data = await elabRes.json();
+        setElaboraciones(data?.elaboraciones || []);
+      }
 
       if (prodRes.ok) {
         const data = await prodRes.json();
@@ -437,6 +444,60 @@ export default function InventarioContent({ userRole }: InventarioContentProps) 
                       </CollapsibleContent>
                     </div>
                   </Collapsible>
+                );
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Preparaciones en stock (elaboraciones producidas) */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <Package className="w-5 h-5 text-amber-600" />
+              <span>Preparaciones en stock</span>
+            </div>
+            <span className="text-sm font-normal text-slate-500">
+              {elaboraciones.length} elaboracion{elaboraciones.length !== 1 ? "es" : ""}
+            </span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {elaboraciones.length === 0 ? (
+            <div className="text-center py-8 text-slate-500">
+              <Package className="w-10 h-10 mx-auto mb-2 opacity-30" />
+              <p className="text-sm">No hay preparaciones producidas</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {elaboraciones.map((e) => {
+                const estado = e.stockActual <= 0
+                  ? { label: "Agotado", cls: "bg-red-100 text-red-700" }
+                  : e.isLowStock
+                  ? { label: "⚠ Bajo", cls: "bg-amber-100 text-amber-700" }
+                  : { label: "OK", cls: "bg-green-100 text-green-700" };
+                return (
+                  <div key={e.id}
+                    className={`flex items-center justify-between p-3 rounded-lg border ${e.isLowStock ? "border-amber-200 bg-amber-50" : "border-slate-200 bg-slate-50"}`}>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-slate-800">{e.nombre}</span>
+                        <span className={`text-xs px-2 py-0.5 rounded font-medium ${estado.cls}`}>{estado.label}</span>
+                      </div>
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        {e.stockMinimo != null && `Mín: ${formatDecimal(e.stockMinimo)} ${e.unidadBase}`}
+                        {e.proximaCaducidad && ` · Caduca: ${formatDate(e.proximaCaducidad)}`}
+                      </p>
+                    </div>
+                    <div className="text-right flex-shrink-0">
+                      <span className={`text-lg font-bold ${e.isLowStock ? "text-amber-600" : "text-slate-800"}`}>
+                        {formatDecimal(e.stockActual)}
+                      </span>
+                      <span className="text-xs text-slate-500 ml-1">{e.unidadBase}</span>
+                    </div>
+                  </div>
                 );
               })}
             </div>

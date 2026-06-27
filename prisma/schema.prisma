@@ -473,14 +473,15 @@ model VarianteProveedor {
 
 model Elaboracion {
   id          Int      @id @default(autoincrement())
-  tenantId    Int      @map("tenant_id")
-  nombre      String
-  descripcion String?
-  unidadBase  String   @map("unidad_base")
-  stockMinimo Float?   @map("stock_minimo")
-  activa      Boolean  @default(true)
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  tenantId      Int      @map("tenant_id")
+  nombre        String
+  descripcion   String?
+  procedimiento String?  // paso a paso de la elaboración
+  unidadBase    String   @map("unidad_base")
+  stockMinimo   Float?   @map("stock_minimo")
+  activa        Boolean  @default(true)
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
 
   tenant            Tenant                   @relation(fields: [tenantId], references: [id])
   ingredientes      IngredienteElaboracion[]
@@ -517,6 +518,9 @@ model LoteElaboracion {
   fechaCaducidad  DateTime? @map("fecha_caducidad")
   cantidadInicial Float     @map("cantidad_inicial")
   cantidadActual  Float     @map("cantidad_actual")
+  numeroLote      String?   @map("numero_lote")
+  numeroEnvases   Int?      @map("numero_envases")
+  codigoUnico     String?   @map("codigo_unico")
   agotado         Boolean   @default(false)
   notas           String?
   createdAt       DateTime  @default(now()) @map("created_at")
@@ -528,6 +532,7 @@ model LoteElaboracion {
   consumos    ConsumoLoteElaboracion[]
 
   @@index([tenantId, elaboracionId, agotado, fechaProduccion])
+  @@index([tenantId, codigoUnico])
   @@map("lotes_elaboracion")
 }
 

@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChefHat, Soup, Package, Tag } from "lucide-react";
+import { ChefHat, Soup, Package, Tag, Utensils } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const tabs = [
   { href: "/fichas", label: "Fichas", icon: ChefHat },
+  { href: "/fichas/elaboraciones", label: "Elaboraciones", icon: Utensils },
   { href: "/fichas/preparaciones", label: "Preparaciones", icon: Soup },
   { href: "/fichas/insumos", label: "Insumos", icon: Package },
   { href: "/fichas/categorias", label: "Categorías", icon: Tag },

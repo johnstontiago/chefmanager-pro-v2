@@ -12,11 +12,16 @@ interface ProduccionInput {
   cantidadProducida: number
   fechaCaducidad?: Date
   notas?: string
+  numeroLote?: string
+  numeroEnvases?: number
+  codigoUnico?: string
 }
 
 interface ResultadoProduccion {
   ok: boolean
   loteElaboracionId?: number
+  numeroLote?: string
+  codigoUnico?: string
   stockInsuficiente: boolean
   ingredientesFallidos: string[]
   error?: string
@@ -25,7 +30,7 @@ interface ResultadoProduccion {
 export async function producirElaboracion(
   input: ProduccionInput
 ): Promise<ResultadoProduccion> {
-  const { elaboracionId, cantidadProducida, fechaCaducidad, notas } = input
+  const { elaboracionId, cantidadProducida, fechaCaducidad, notas, numeroLote, numeroEnvases, codigoUnico } = input
 
   // tenantId SIEMPRE desde la sesión, nunca del cliente
   const session = await getServerSession(authOptions)
@@ -87,6 +92,9 @@ export async function producirElaboracion(
       }
     }
 
+    // Código único para la etiqueta (si no llega uno, se genera)
+    const codigo = codigoUnico || `PREP-${Date.now().toString(36).toUpperCase()}`
+
     const loteElaboracion = await tx.loteElaboracion.create({
       data: {
         tenantId,
@@ -95,6 +103,9 @@ export async function producirElaboracion(
         cantidadActual: cantidadProducida,
         fechaCaducidad,
         notas,
+        numeroLote: numeroLote || null,
+        numeroEnvases: numeroEnvases || null,
+        codigoUnico: codigo,
         insumos: {
           create: insumosParaRegistrar.map((i) => ({
             tenantId,
@@ -108,6 +119,8 @@ export async function producirElaboracion(
     return {
       ok: ingredientesFallidos.length === 0,
       loteElaboracionId: loteElaboracion.id,
+      numeroLote: numeroLote || undefined,
+      codigoUnico: codigo,
       stockInsuficiente: ingredientesFallidos.length > 0,
       ingredientesFallidos,
     }
