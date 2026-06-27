@@ -49,6 +49,7 @@ export default function InventarioContent({ userRole }: InventarioContentProps) 
   const [inventario, setInventario] = useState<any[]>([]);
   const [categorias, setCategorias] = useState<any[]>([]);
   const [proveedores, setProveedores] = useState<any[]>([]);
+  const [valorTotalServer, setValorTotalServer] = useState(0);
   const [loading, setLoading] = useState(true);
   const [busqueda, setBusqueda] = useState("");
   const [filtroCategoria, setFiltroCategoria] = useState("all");
@@ -65,7 +66,7 @@ export default function InventarioContent({ userRole }: InventarioContentProps) 
       setLoading(true);
       const [prodRes, invRes, catRes, provRes] = await Promise.all([
         fetch("/api/productos"),
-        fetch("/api/inventario"),
+        fetch("/api/inventario/lotes"),
         fetch("/api/categorias"),
         fetch("/api/proveedores"),
       ]);
@@ -77,6 +78,7 @@ export default function InventarioContent({ userRole }: InventarioContentProps) 
       if (invRes.ok) {
         const data = await invRes.json();
         setInventario(data?.inventario || []);
+        setValorTotalServer(toNumber(data?.valorTotal || 0));
       }
       if (catRes.ok) {
         const data = await catRes.json();
@@ -115,12 +117,16 @@ export default function InventarioContent({ userRole }: InventarioContentProps) 
       return status === "expired" || status === "warning";
     });
 
+    // Unidad de visualización del stock: base (g/ml) si está definida, si no la de compra
+    const unidadDisplay = prod.unidadBase ?? prod.contenidoUnidad ?? prod.unidadMedida;
+
     return {
       ...prod,
       lotes,
       stockTotal,
       isLowStock,
       proximoACaducar,
+      unidadDisplay,
     };
   });
 
@@ -146,10 +152,8 @@ export default function InventarioContent({ userRole }: InventarioContentProps) 
   const totalProductos = productos.filter((p) => p.activo).length;
   const productosStockBajo = productosConStock.filter((p) => p.isLowStock).length;
   const productosProximosACaducar = productosConStock.filter((p) => p.proximoACaducar).length;
-  const valorTotalInventario = inventario.reduce(
-    (acc, inv) => acc + toNumber(inv.cantidad) * toNumber(inv.producto?.precioUnitario || 0),
-    0
-  );
+  // El valor total viene calculado del servidor con conversión de unidades correcta
+  const valorTotalInventario = valorTotalServer;
 
   const toggleExpand = (productId: number) => {
     setExpandedProducts((prev) => {
@@ -370,7 +374,7 @@ export default function InventarioContent({ userRole }: InventarioContentProps) 
                               <span className={`text-lg sm:text-2xl font-bold ${prod.isLowStock ? "text-red-600" : "text-slate-800"}`}>
                                 {formatDecimal(prod.stockTotal)}
                               </span>
-                              <span className="text-xs sm:text-sm text-slate-500">{prod.unidadMedida}</span>
+                              <span className="text-xs sm:text-sm text-slate-500">{prod.unidadDisplay}</span>
                             </div>
                             <div className="w-16 sm:w-24 h-2 bg-slate-200 rounded-full mt-1 sm:mt-2">
                               <div
@@ -421,7 +425,8 @@ export default function InventarioContent({ userRole }: InventarioContentProps) 
                                     )}
                                     {getExpiryBadge(inv)}
                                     <span className="font-semibold text-slate-800">
-                                      {formatDecimal(inv.cantidad)} {prod.unidadMedida}
+                                      {formatDecimal(inv.cantidad)} {prod.unidadDisplay}
+                                      {inv.pesoRealKg ? ` (${formatDecimal(inv.pesoRealKg)} kg)` : ""}
                                     </span>
                                   </div>
                                 </div>

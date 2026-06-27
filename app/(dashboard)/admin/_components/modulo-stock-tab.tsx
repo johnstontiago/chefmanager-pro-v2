@@ -40,10 +40,10 @@ const ACCESOS: Acceso[] = [
     icon: PackagePlus,
   },
   {
-    href: "/inventario/informe",
-    titulo: "Informe de inventario",
+    href: "/inventario",
+    titulo: "Inventario",
     descripcion:
-      "Estado unificado de materias primas y elaboraciones, con panel de alertas de stock bajo.",
+      "Stock real por lotes: cantidades, caducidades, stock bajo y valor total. Es el registro único de inventario.",
     icon: ClipboardCheck,
   },
   {
