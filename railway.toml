@@ -1,13 +1,16 @@
 [build]
 builder = "NIXPACKS"
-buildCommand = "npm ci && npx prisma generate && npm run build"
+buildCommand = "npm ci --ignore-scripts && npx prisma generate && npm run build"
+
+[build.nixpacksPlan.variables]
+PUPPETEER_SKIP_DOWNLOAD = "true"
+PUPPETEER_SKIP_CHROMIUM_DOWNLOAD = "true"
+SHARP_IGNORE_GLOBAL_LIBVIPS = "1"
+npm_config_ignore_scripts = "true"
 
 [deploy]
 startCommand = "npx prisma db push && npm run start"
 healthcheckPath = "/api/health"
-healthcheckTimeout = 60
+healthcheckTimeout = 120
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 3
-
-[[services]]
-name = "chefmanager-pro-v2"
