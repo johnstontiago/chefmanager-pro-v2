@@ -10,7 +10,8 @@ const DEFAULT = {
   espaciado: 45,
   fuente:    4,
   xQR:       249,
-  yQR:       327,
+  // Subido 3 líneas (3×espaciado) para que el QR no se corte por la base.
+  yQR:       192,
   tamanoQR:  3,
 };
 
@@ -30,6 +31,14 @@ async function getConfig() {
         xQR:       DEFAULT.xQR,
         yQR:       DEFAULT.yQR,
       },
+    });
+  }
+  // Auto-ajuste: si el QR sigue en el valor antiguo (327, se cortaba por la base),
+  // súbelo al nuevo por defecto. No pisa valores personalizados distintos.
+  if (row.yQR === 327) {
+    return prisma.configEtiqueta.update({
+      where: { id: 1 },
+      data:  { yQR: DEFAULT.yQR },
     });
   }
   return row;

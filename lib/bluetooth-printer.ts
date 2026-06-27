@@ -35,7 +35,7 @@ export const DEFAULT_LABEL_CONFIG: LabelConfig = {
   espaciado: 45,
   fuente:    4,
   xQR:       249,
-  yQR:       260,
+  yQR:       192,
   tamanoQR:  5,
 };
 
