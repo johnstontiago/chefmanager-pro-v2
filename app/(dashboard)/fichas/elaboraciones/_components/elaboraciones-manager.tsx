@@ -211,14 +211,15 @@ export default function ElaboracionesManager({ elaboraciones, productos, rol }: 
                   </div>
 
                   {lineas.map((l) => (
-                    <div key={l.uid} className="grid grid-cols-[1fr_auto_auto_auto] gap-2 items-center">
+                    <div key={l.uid}
+                      className="flex flex-col sm:flex-row sm:items-center gap-2 border-b sm:border-0 pb-2 sm:pb-0">
                       <Select
                         value={l.productoId?.toString() ?? ""}
                         onValueChange={(v) => {
                           const p = productos.find((p) => p.id === parseInt(v, 10));
                           updateLinea(l.uid, { productoId: parseInt(v, 10), unidad: p ? unidadLabel(p) : "g" });
                         }}>
-                        <SelectTrigger className="text-sm"><SelectValue placeholder="Producto..." /></SelectTrigger>
+                        <SelectTrigger className="text-sm w-full sm:flex-1"><SelectValue placeholder="Producto..." /></SelectTrigger>
                         <SelectContent>
                           {productos.map((p) => (
                             <SelectItem key={p.id} value={p.id.toString()}>
@@ -227,15 +228,17 @@ export default function ElaboracionesManager({ elaboraciones, productos, rol }: 
                           ))}
                         </SelectContent>
                       </Select>
-                      <Input type="number" min="0.001" step="any" value={l.cantidad}
-                        onChange={(e) => updateLinea(l.uid, { cantidad: e.target.value })}
-                        placeholder="Cant." className="w-24 text-sm" />
-                      <Input value={l.unidad} onChange={(e) => updateLinea(l.uid, { unidad: e.target.value })}
-                        className="w-16 text-sm text-center" />
-                      {lineas.length > 1 ? (
-                        <button type="button" onClick={() => removeLinea(l.uid)}
-                          className="text-slate-400 hover:text-red-500 text-lg leading-none">×</button>
-                      ) : <div className="w-5" />}
+                      <div className="flex items-center gap-2">
+                        <Input type="number" min="0.001" step="any" value={l.cantidad}
+                          onChange={(e) => updateLinea(l.uid, { cantidad: e.target.value })}
+                          placeholder="Cant." className="flex-1 sm:w-24 text-sm" />
+                        <Input value={l.unidad} onChange={(e) => updateLinea(l.uid, { unidad: e.target.value })}
+                          className="w-16 text-sm text-center" />
+                        {lineas.length > 1 ? (
+                          <button type="button" onClick={() => removeLinea(l.uid)}
+                            className="text-slate-400 hover:text-red-500 text-xl leading-none px-1 flex-shrink-0">×</button>
+                        ) : <div className="w-6 flex-shrink-0" />}
+                      </div>
                     </div>
                   ))}
                   <Button type="button" variant="ghost" size="sm" onClick={addLinea} className="text-xs">

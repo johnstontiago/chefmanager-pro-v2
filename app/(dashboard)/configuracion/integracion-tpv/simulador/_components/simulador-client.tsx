@@ -146,8 +146,8 @@ export default function SimuladorClient({ apiKey, fichas }: Props) {
       <div className="border rounded-lg p-5 space-y-5">
         <h2 className="text-sm font-semibold">Nueva comanda</h2>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div className="col-span-2 space-y-1.5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="sm:col-span-2 space-y-1.5">
             <Label>Ficha técnica (plato)</Label>
             <Select
               value={fichaId?.toString() ?? ''}
@@ -260,10 +260,10 @@ x-api-key: ${apiKey.slice(0, 8)}••••••••
           <div className="border rounded-lg divide-y">
             {historial.map((entrada) => (
               <div key={entrada.id} className="px-4 py-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
+                <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+                  <div className="flex items-center gap-2 sm:gap-3 min-w-0">
                     <span
-                      className={`text-xs font-mono px-1.5 py-0.5 rounded font-medium ${
+                      className={`text-xs font-mono px-1.5 py-0.5 rounded font-medium flex-shrink-0 ${
                         entrada.ok
                           ? 'bg-green-100 text-green-700'
                           : entrada.statusCode === 207
@@ -273,15 +273,15 @@ x-api-key: ${apiKey.slice(0, 8)}••••••••
                     >
                       {entrada.statusCode || 'ERR'}
                     </span>
-                    <span className="text-sm font-medium">{entrada.fichaNombre}</span>
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-sm font-medium truncate">{entrada.fichaNombre}</span>
+                    <span className="text-xs text-muted-foreground flex-shrink-0">
                       ×{entrada.cantidad}
                     </span>
-                    <Badge variant="outline" className="text-xs">
+                    <Badge variant="outline" className="text-xs flex-shrink-0">
                       {entrada.duracionMs}ms
                     </Badge>
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 flex-shrink-0">
                     <span className="text-xs text-muted-foreground">{entrada.timestamp}</span>
                     <button
                       className="text-xs text-primary hover:underline"

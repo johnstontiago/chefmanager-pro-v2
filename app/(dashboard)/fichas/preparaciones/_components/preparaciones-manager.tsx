@@ -149,7 +149,7 @@ export default function PreparacionesManager({ elaboraciones, producciones, rol 
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         {btSupported ? (
           <div className="flex flex-col gap-1">
             <Button variant="outline" size="sm" onClick={handleConnect}

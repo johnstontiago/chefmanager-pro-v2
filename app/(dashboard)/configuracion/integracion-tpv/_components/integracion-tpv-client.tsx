@@ -106,12 +106,12 @@ export default function IntegracionTPVClient({ integracion, tenantId }: Props) {
             type={apiKeyVisible ? 'text' : 'password'}
             value={apiKey}
             readOnly
-            className="font-mono text-xs"
+            className="font-mono text-xs min-w-0 flex-1"
           />
-          <Button variant="outline" size="sm" onClick={() => setApiKeyVisible((v) => !v)}>
+          <Button variant="outline" size="sm" className="flex-shrink-0 px-2" onClick={() => setApiKeyVisible((v) => !v)}>
             {apiKeyVisible ? 'Ocultar' : 'Mostrar'}
           </Button>
-          <Button variant="outline" size="sm" onClick={copiarApiKey}>
+          <Button variant="outline" size="sm" className="flex-shrink-0 px-2" onClick={copiarApiKey}>
             Copiar
           </Button>
         </div>
@@ -128,7 +128,7 @@ export default function IntegracionTPVClient({ integracion, tenantId }: Props) {
       {/* Documentación embebida */}
       <section className="border rounded-lg p-5 space-y-3">
         <h2 className="text-sm font-semibold">Cómo integrarlo</h2>
-        <div className="bg-muted rounded-md p-4 font-mono text-xs space-y-1 text-foreground">
+        <div className="bg-muted rounded-md p-4 font-mono text-xs space-y-1 text-foreground break-all">
           <p className="text-muted-foreground"># Descontar stock al vender un plato</p>
           <p>POST https://app.chefmanager.com/api/ventas/consumo</p>
           <p>Headers: x-api-key: TU_API_KEY</p>
@@ -148,8 +148,8 @@ export default function IntegracionTPVClient({ integracion, tenantId }: Props) {
         {integracion.logs.length === 0 ? (
           <p className="text-sm text-muted-foreground">Sin llamadas registradas aún.</p>
         ) : (
-          <div className="border rounded-lg overflow-hidden">
-            <table className="w-full text-sm">
+          <div className="border rounded-lg overflow-x-auto">
+            <table className="w-full text-sm min-w-[560px]">
               <thead className="bg-muted/50">
                 <tr className="text-left text-xs text-muted-foreground">
                   <th className="px-4 py-3 font-medium">Fecha</th>
