@@ -34,16 +34,24 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const fichaIdNum = parseInt(fichaId, 10)
-    if (isNaN(fichaIdNum) || cantidad <= 0) {
-      return NextResponse.json({ error: 'fichaId debe ser número y cantidad > 0' }, { status: 400 })
+    // Acepta fichaId (número) O nombre (texto) — el TPV puede usar cualquiera.
+    const fichaIdNum = fichaId ? parseInt(fichaId, 10) : null
+    const fichaNombre: string | undefined = body.nombre
+
+    if (!fichaIdNum && !fichaNombre) {
+      return NextResponse.json({ error: 'Indica fichaId (número) o nombre del plato' }, { status: 400 })
+    }
+    if (cantidad <= 0) {
+      return NextResponse.json({ error: 'cantidad debe ser > 0' }, { status: 400 })
     }
 
-    // Unificado: el stock se descuenta desde los ingredientes de la FICHA TÉCNICA.
-    // Cada ingrediente apunta a un insumo, que puede ser un producto (inventario)
-    // o una elaboración (preparación). Los insumos manuales no descuentan stock.
+    // Busca por ID o por nombre (insensible a mayúsculas)
+    const where = fichaIdNum && !isNaN(fichaIdNum)
+      ? { id: fichaIdNum, tenantId }
+      : { tenantId, nombre: { equals: fichaNombre, mode: 'insensitive' as const } }
+
     const ficha = await prisma.fichaTecnica.findFirst({
-      where: { id: fichaIdNum, tenantId },
+      where,
       include: {
         ingredientes: {
           include: {
@@ -122,7 +130,7 @@ export async function POST(req: NextRequest) {
 
     const hayErrores = resultados.some((r) => !r.ok)
     const statusCode = hayErrores ? 207 : 200
-    const respuesta = { ok: !hayErrores, fichaId: fichaIdNum, cantidad, resultados }
+    const respuesta = { ok: !hayErrores, fichaId: ficha.id, fichaNombre: ficha.nombre, cantidad, resultados }
 
     await prisma.logLlamadaTPV.create({
       data: {
