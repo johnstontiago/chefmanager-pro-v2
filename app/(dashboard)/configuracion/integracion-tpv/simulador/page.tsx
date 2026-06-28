@@ -15,7 +15,7 @@ export default async function SimuladorTPVPage() {
 
   const tenantId = getActiveTenantId(session.user as any)
 
-  const [integracion, fichas] = await Promise.all([
+  const [integracion, fichasRaw] = await Promise.all([
     prisma.integracionTPV.findUnique({ where: { tenantId } }),
     prisma.fichaTecnica.findMany({
       where: { tenantId },
@@ -24,18 +24,42 @@ export default async function SimuladorTPVPage() {
         id: true,
         nombre: true,
         porciones: true,
-        ingredientesPlatoStock: {
+        ingredientes: {
           select: {
             id: true,
             cantidad: true,
-            unidad: true,
-            producto: { select: { id: true, nombre: true, unidadBase: true, contenidoUnidad: true, unidadMedida: true } },
-            elaboracion: { select: { id: true, nombre: true, unidadBase: true } },
+            insumo: {
+              select: {
+                unidad: true,
+                producto: { select: { id: true, nombre: true, unidadBase: true, contenidoUnidad: true, unidadMedida: true } },
+                elaboracion: { select: { id: true, nombre: true, unidadBase: true } },
+              },
+            },
           },
         },
       },
     }),
   ])
+
+  // Construye el escandallo de stock por porción desde los ingredientes de la ficha.
+  // Solo cuentan los insumos que afectan al stock (producto o elaboración).
+  const fichas = fichasRaw.map((f) => {
+    const porciones = f.porciones || 1
+    return {
+      id: f.id,
+      nombre: f.nombre,
+      porciones: f.porciones,
+      ingredientesPlatoStock: f.ingredientes
+        .filter((ing) => ing.insumo.producto || ing.insumo.elaboracion)
+        .map((ing) => ({
+          id: ing.id,
+          cantidad: ing.cantidad / porciones,
+          unidad: ing.insumo.unidad,
+          producto: ing.insumo.producto,
+          elaboracion: ing.insumo.elaboracion,
+        })),
+    }
+  })
 
   return (
     <div className="p-6 max-w-3xl mx-auto space-y-6">

@@ -39,13 +39,20 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'fichaId debe ser número y cantidad > 0' }, { status: 400 })
     }
 
+    // Unificado: el stock se descuenta desde los ingredientes de la FICHA TÉCNICA.
+    // Cada ingrediente apunta a un insumo, que puede ser un producto (inventario)
+    // o una elaboración (preparación). Los insumos manuales no descuentan stock.
     const ficha = await prisma.fichaTecnica.findFirst({
       where: { id: fichaIdNum, tenantId },
       include: {
-        ingredientesPlatoStock: {
+        ingredientes: {
           include: {
-            producto: true,
-            elaboracion: true,
+            insumo: {
+              include: {
+                producto: true,
+                elaboracion: { select: { id: true, nombre: true, unidadBase: true } },
+              },
+            },
           },
         },
       },
@@ -55,53 +62,62 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Ficha técnica no encontrada' }, { status: 404 })
     }
 
-    if (ficha.ingredientesPlatoStock.length === 0) {
-      return NextResponse.json(
-        { error: 'La ficha no tiene ingredientes de stock configurados' },
-        { status: 422 }
-      )
-    }
+    // Cantidad de la ficha es para todas sus porciones; repartimos por porción
+    // y multiplicamos por las raciones vendidas.
+    const porciones = ficha.porciones || 1
+    const factor = cantidad / porciones
 
     const resultados = []
 
-    for (const ingrediente of ficha.ingredientesPlatoStock) {
-      if (ingrediente.elaboracionId && ingrediente.elaboracion) {
+    for (const ing of ficha.ingredientes) {
+      const insumo = ing.insumo
+
+      if (insumo.elaboracionId && insumo.elaboracion) {
+        const cantidadNecesaria = ing.cantidad * factor
         const resultado = await consumirFIFOElaboracion({
           tenantId,
-          elaboracionId: ingrediente.elaboracionId,
-          cantidadNecesaria: ingrediente.cantidad * cantidad,
+          elaboracionId: insumo.elaboracionId,
+          cantidadNecesaria,
           motivo: 'VENTA',
           referenciaId: `ficha:${fichaIdNum}`,
         })
         resultados.push({
           tipo: 'elaboracion',
-          id: ingrediente.elaboracionId,
-          nombre: ingrediente.elaboracion.nombre,
+          id: insumo.elaboracionId,
+          nombre: insumo.elaboracion.nombre,
           ...resultado,
         })
-      } else if (ingrediente.productoId && ingrediente.producto) {
-        const producto = ingrediente.producto
+      } else if (insumo.productoId && insumo.producto) {
+        const producto = insumo.producto
         const unidadDestino =
           producto.unidadBase ?? producto.contenidoUnidad ?? producto.unidadMedida
         const cantidadBase =
           producto.tipoPeso === 'VARIABLE'
-            ? ingrediente.cantidad * cantidad
-            : convertir(ingrediente.cantidad * cantidad, ingrediente.unidad, unidadDestino)
+            ? ing.cantidad * factor
+            : convertir(ing.cantidad * factor, insumo.unidad, unidadDestino)
 
         const resultado = await consumirFIFO({
           tenantId,
-          productoId: ingrediente.productoId,
+          productoId: insumo.productoId,
           cantidadNecesaria: cantidadBase,
           motivo: 'VENTA',
           referenciaId: `ficha:${fichaIdNum}`,
         })
         resultados.push({
           tipo: 'producto',
-          id: ingrediente.productoId,
+          id: insumo.productoId,
           nombre: producto.nombre,
           ...resultado,
         })
       }
+      // insumo manual (sin producto ni elaboración) → no descuenta stock
+    }
+
+    if (resultados.length === 0) {
+      return NextResponse.json(
+        { error: 'La ficha no tiene ingredientes que afecten al stock (productos o preparaciones)' },
+        { status: 422 }
+      )
     }
 
     const hayErrores = resultados.some((r) => !r.ok)

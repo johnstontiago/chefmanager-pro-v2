@@ -126,18 +126,19 @@ export default function SimuladorClient({ apiKey, fichas }: Props) {
   return (
     <div className="space-y-6">
 
-      {/* Aviso fichas sin escandallo */}
+      {/* Aviso fichas sin ingredientes que afecten al stock */}
       {fichasSinEscandallo.length > 0 && (
         <div className="bg-muted/50 border rounded-lg p-4 text-sm space-y-1">
           <p className="font-medium text-muted-foreground">
             {fichasSinEscandallo.length} ficha{fichasSinEscandallo.length > 1 ? 's' : ''} sin
-            escandallo de stock configurado — no se pueden simular:
+            ingredientes que afecten al stock — no se pueden simular:
           </p>
           <p className="text-muted-foreground text-xs">
             {fichasSinEscandallo.map((f) => f.nombre).join(', ')}
           </p>
           <p className="text-xs text-muted-foreground mt-1">
-            Configura <strong>IngredientePlatoStock</strong> para esas fichas antes de usar el simulador.
+            Añade ingredientes que sean <strong>productos</strong> o <strong>preparaciones</strong> a
+            esas fichas (en Fichas Técnicas) para que el TPV pueda descontar su stock.
           </p>
         </div>
       )}
@@ -168,7 +169,7 @@ export default function SimuladorClient({ apiKey, fichas }: Props) {
                 )}
                 {fichasConEscandallo.length === 0 && (
                   <div className="px-3 py-2 text-xs text-muted-foreground">
-                    No hay fichas con escandallo configurado
+                    No hay fichas con ingredientes de stock
                   </div>
                 )}
               </SelectContent>

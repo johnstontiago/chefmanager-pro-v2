@@ -138,7 +138,7 @@ export default function IntegracionTPVClient({ integracion, tenantId }: Props) {
           <p>207 — Parcial: stock insuficiente en algún ingrediente</p>
           <p>401 — API key inválida o inactiva</p>
           <p>404 — Ficha técnica no encontrada</p>
-          <p>422 — Ficha sin ingredientes de stock configurados</p>
+          <p>422 — Ficha sin ingredientes que afecten al stock</p>
         </div>
       </section>
 
