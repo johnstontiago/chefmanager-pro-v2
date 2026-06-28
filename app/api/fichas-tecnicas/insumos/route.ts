@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
 import { getFichasContext, canEditFichas } from "@/lib/fichas/permissions";
-import { getLiveCostMaps, decorateInsumo, syncProductosAsInsumos } from "@/lib/fichas/costing";
+import { getLiveCostMaps, decorateInsumo, syncProductosAsInsumos, syncElaboracionesAsInsumos } from "@/lib/fichas/costing";
 
 export const dynamic = "force-dynamic";
 
@@ -12,8 +12,9 @@ export async function GET() {
   }
 
   try {
-    // Materializa productos del inventario como insumos disponibles
+    // Materializa productos y elaboraciones del tenant como insumos disponibles
     await syncProductosAsInsumos(ctx.tenantId);
+    await syncElaboracionesAsInsumos(ctx.tenantId);
 
     const [insumos, maps] = await Promise.all([
       prisma.insumo.findMany({
@@ -22,6 +23,7 @@ export async function GET() {
         include: {
           preparacion: { select: { id: true, nombre: true } },
           producto: { select: { id: true, nombre: true, activo: true } },
+          elaboracion: { select: { id: true, nombre: true } },
         },
       }),
       getLiveCostMaps(ctx.tenantId),

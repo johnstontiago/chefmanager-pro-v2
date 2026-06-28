@@ -300,17 +300,20 @@ model Insumo {
   esPreparacion  Boolean  @default(false) @map("es_preparacion")
   preparacionId  Int?     @map("preparacion_id")
   productoId     Int?     @map("producto_id")
+  elaboracionId  Int?     @map("elaboracion_id")
   createdAt      DateTime @default(now()) @map("created_at")
   tenantId       Int      @map("tenant_id")
 
   tenant      Tenant       @relation(fields: [tenantId], references: [id])
   preparacion Preparacion? @relation("InsumoGenerado", fields: [preparacionId], references: [id])
   producto    Producto?    @relation(fields: [productoId], references: [id])
+  elaboracion Elaboracion? @relation(fields: [elaboracionId], references: [id])
 
   fichaIngredientes       FichaIngrediente[]
   preparacionIngredientes PreparacionIngrediente[]
 
   @@unique([tenantId, productoId])
+  @@index([tenantId, elaboracionId])
   @@map("insumos")
 }
 
@@ -487,6 +490,7 @@ model Elaboracion {
   ingredientes      IngredienteElaboracion[]
   lotes             LoteElaboracion[]
   ingredientesPlato IngredientePlatoStock[]
+  insumosGenerados  Insumo[]
 
   @@unique([tenantId, nombre])
   @@index([tenantId])

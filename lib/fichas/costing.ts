@@ -1,5 +1,6 @@
 import prisma from "@/lib/db";
 import { toNumber } from "@/lib/utils";
+import { convertir } from "@/lib/stock/convertir";
 
 // Costeo en vivo del módulo de fichas técnicas.
 //
@@ -25,6 +26,7 @@ interface InsumoBase {
   esPreparacion: boolean;
   preparacionId: number | null;
   productoId: number | null;
+  elaboracionId: number | null;
   producto: (ProductoCosteable & { precioUnitario: unknown }) | null;
 }
 
@@ -108,7 +110,7 @@ function baseValue(insumo: InsumoBase): number {
  * preparaciones anidadas es recursiva con memoización y corte de ciclos.
  */
 export async function getLiveCostMaps(tenantId: number): Promise<LiveCostMaps> {
-  const [insumos, preparaciones] = await Promise.all([
+  const [insumos, preparaciones, elaboraciones, productos] = await Promise.all([
     prisma.insumo.findMany({
       where: { tenantId },
       select: {
@@ -117,6 +119,7 @@ export async function getLiveCostMaps(tenantId: number): Promise<LiveCostMaps> {
         esPreparacion: true,
         preparacionId: true,
         productoId: true,
+        elaboracionId: true,
         producto: {
           select: {
             precioUnitario: true,
@@ -135,10 +138,44 @@ export async function getLiveCostMaps(tenantId: number): Promise<LiveCostMaps> {
         ingredientes: { select: { insumoId: true, cantidad: true } },
       },
     }),
+    prisma.elaboracion.findMany({
+      where: { tenantId },
+      select: {
+        id: true,
+        ingredientes: { select: { productoId: true, cantidad: true, unidad: true } },
+      },
+    }),
+    prisma.producto.findMany({
+      where: { tenantId },
+      select: {
+        id: true,
+        precioUnitario: true,
+        unidadMedida: true,
+        contenidoNeto: true,
+        contenidoUnidad: true,
+      },
+    }),
   ]);
 
   const insumoById = new Map(insumos.map((i) => [i.id, i]));
   const prepById = new Map(preparaciones.map((p) => [p.id, p]));
+  const productoById = new Map(productos.map((p) => [p.id, p]));
+
+  // Coste por unidad producida de cada elaboración = suma de sus ingredientes
+  // (cantidad del producto convertida a su unidad de receta × precio por unidad).
+  const elaboracionCost = new Map<number, number>();
+  for (const e of elaboraciones) {
+    let costo = 0;
+    for (const ing of e.ingredientes) {
+      const prod = productoById.get(ing.productoId);
+      if (!prod) continue;
+      const { unidad: unidadReceta, factor } = contenidoDeProducto(prod);
+      const precioPorUnidad = toNumber(prod.precioUnitario as any) / factor;
+      const cantidadReceta = convertir(ing.cantidad, ing.unidad, unidadReceta);
+      costo += cantidadReceta * precioPorUnidad;
+    }
+    elaboracionCost.set(e.id, costo);
+  }
 
   const insumoValue = new Map<number, number>();
   const prepCosts = new Map<number, { costoTotal: number; costoPorPorcion: number }>();
@@ -152,6 +189,8 @@ export async function getLiveCostMaps(tenantId: number): Promise<LiveCostMaps> {
     let valor: number;
     if (insumo.esPreparacion && insumo.preparacionId != null) {
       valor = resolvePrep(insumo.preparacionId, visiting).costoPorPorcion;
+    } else if (insumo.elaboracionId != null) {
+      valor = elaboracionCost.get(insumo.elaboracionId) ?? 0;
     } else {
       valor = baseValue(insumo);
     }
@@ -351,5 +390,49 @@ export async function syncProductosAsInsumos(tenantId: number): Promise<void> {
       where: { id: insumo.id },
       data: { nombre: p.nombre, unidad: contenidoDeProducto(p).unidad },
     });
+  }
+}
+
+/**
+ * Sincroniza las elaboraciones activas del tenant como insumos, para que
+ * puedan usarse como ingrediente en fichas técnicas y preparaciones.
+ * Su coste se calcula en vivo desde sus ingredientes (ver getLiveCostMaps).
+ */
+export async function syncElaboracionesAsInsumos(tenantId: number): Promise<void> {
+  const [elaboraciones, existentes] = await Promise.all([
+    prisma.elaboracion.findMany({
+      where: { tenantId, activa: true },
+      select: { id: true, nombre: true, unidadBase: true },
+    }),
+    prisma.insumo.findMany({
+      where: { tenantId, elaboracionId: { not: null } },
+      select: { id: true, elaboracionId: true, nombre: true, unidad: true },
+    }),
+  ]);
+
+  const porElaboracion = new Map(existentes.map((i) => [i.elaboracionId as number, i]));
+
+  const nuevos = elaboraciones
+    .filter((e) => !porElaboracion.has(e.id))
+    .map((e) => ({
+      nombre: e.nombre,
+      unidad: e.unidadBase,
+      elaboracionId: e.id,
+      tenantId,
+    }));
+
+  if (nuevos.length > 0) {
+    await prisma.insumo.createMany({ data: nuevos });
+  }
+
+  // Refresca nombre/unidad si cambiaron
+  for (const e of elaboraciones) {
+    const insumo = porElaboracion.get(e.id);
+    if (insumo && (insumo.nombre !== e.nombre || insumo.unidad !== e.unidadBase)) {
+      await prisma.insumo.update({
+        where: { id: insumo.id },
+        data: { nombre: e.nombre, unidad: e.unidadBase },
+      });
+    }
   }
 }

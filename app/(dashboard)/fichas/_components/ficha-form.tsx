@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plus, Trash2, Loader2, Package } from "lucide-react";
+import { Plus, Trash2, Loader2, Package, Utensils } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,6 +23,7 @@ interface Insumo {
   valorPorUnidad: number;
   esPreparacion: boolean;
   productoId?: number | null;
+  elaboracionId?: number | null;
 }
 
 interface Categoria {
@@ -261,6 +262,9 @@ export function FichaForm({ initialData, onSubmit, loading }: FichaFormProps) {
                           <span className="flex items-center gap-1.5">
                             {i.productoId != null && (
                               <Package className="h-3 w-3 text-emerald-600" />
+                            )}
+                            {i.elaboracionId != null && (
+                              <Utensils className="h-3 w-3 text-amber-600" />
                             )}
                             {i.nombre} ({i.unidad})
                           </span>
