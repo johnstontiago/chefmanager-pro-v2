@@ -217,18 +217,18 @@ export default function ProductosTab() {
               <Package className="w-5 h-5 text-blue-600" />
               <span>Productos ({(productos || []).length})</span>
             </CardTitle>
-            <div className="flex space-x-2">
-              <div className="relative">
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="relative flex-1 min-w-[140px]">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
                 <Input
                   placeholder="Buscar..."
                   value={busqueda}
                   onChange={(e) => setBusqueda(e.target.value)}
-                  className="pl-10 w-48"
+                  className="pl-10 w-full sm:w-48"
                 />
               </div>
               <ImportarProductosDialog onImported={fetchData} />
-              <Button onClick={openNewDialog}>
+              <Button onClick={openNewDialog} className="flex-shrink-0">
                 <Plus className="w-4 h-4 mr-2" />
                 Nuevo
               </Button>
