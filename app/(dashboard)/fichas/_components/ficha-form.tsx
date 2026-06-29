@@ -45,9 +45,15 @@ interface FichaFormProps {
     descripcion?: string | null;
     porciones?: number;
     tiempoMin?: number;
+    tiempoMiseEnPlace?: number | null;
+    pvp?: number | null;
     urlImagen?: string | null;
     alergenos?: string[];
     procedimiento?: string | null;
+    tecnicas?: string | null;
+    puntosCriticos?: string | null;
+    presentacion?: string | null;
+    conservacion?: string | null;
     ingredientes?: Array<{
       insumoId: number;
       cantidad: number;
@@ -66,9 +72,15 @@ export function FichaForm({ initialData, onSubmit, loading }: FichaFormProps) {
   const [descripcion, setDescripcion] = useState(initialData?.descripcion || "");
   const [porciones, setPorciones] = useState(String(initialData?.porciones || 1));
   const [tiempoMin, setTiempoMin] = useState(String(initialData?.tiempoMin || 0));
+  const [tiempoMiseEnPlace, setTiempoMiseEnPlace] = useState(String(initialData?.tiempoMiseEnPlace || ""));
+  const [pvp, setPvp] = useState(String(initialData?.pvp || ""));
   const [urlImagen, setUrlImagen] = useState(initialData?.urlImagen || "");
   const [alergenos, setAlergenos] = useState<string[]>(initialData?.alergenos || []);
   const [procedimiento, setProcedimiento] = useState(initialData?.procedimiento || "");
+  const [tecnicas, setTecnicas] = useState(initialData?.tecnicas || "");
+  const [puntosCriticos, setPuntosCriticos] = useState(initialData?.puntosCriticos || "");
+  const [presentacion, setPresentacion] = useState(initialData?.presentacion || "");
+  const [conservacion, setConservacion] = useState(initialData?.conservacion || "");
   const [ingredientes, setIngredientes] = useState<Ingrediente[]>(
     (initialData?.ingredientes || []).map((ing) => ({
       insumoId: String(ing.insumoId),
@@ -135,9 +147,15 @@ export function FichaForm({ initialData, onSubmit, loading }: FichaFormProps) {
       descripcion,
       porciones: parseFloat(porciones) || 1,
       tiempoMin: parseInt(tiempoMin) || 0,
+      tiempoMiseEnPlace: tiempoMiseEnPlace ? parseInt(tiempoMiseEnPlace) : null,
+      pvp: pvp ? parseFloat(pvp) : null,
       urlImagen: urlImagen || null,
       alergenos,
       procedimiento,
+      tecnicas: tecnicas || null,
+      puntosCriticos: puntosCriticos || null,
+      presentacion: presentacion || null,
+      conservacion: conservacion || null,
       ingredientes: ingredientes
         .filter((ing) => ing.insumoId)
         .map((ing) => ({
@@ -203,13 +221,38 @@ export function FichaForm({ initialData, onSubmit, loading }: FichaFormProps) {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="tiempoMin">Tiempo (minutos)</Label>
+          <Label htmlFor="tiempoMin">Tiempo total (min)</Label>
           <Input
             id="tiempoMin"
             type="number"
             min="0"
             value={tiempoMin}
             onChange={(e) => setTiempoMin(e.target.value)}
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="tiempoMiseEnPlace">Mise en place (min)</Label>
+          <Input
+            id="tiempoMiseEnPlace"
+            type="number"
+            min="0"
+            value={tiempoMiseEnPlace}
+            onChange={(e) => setTiempoMiseEnPlace(e.target.value)}
+            placeholder="Opcional"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="pvp">PVP (€)</Label>
+          <Input
+            id="pvp"
+            type="number"
+            min="0"
+            step="0.01"
+            value={pvp}
+            onChange={(e) => setPvp(e.target.value)}
+            placeholder="Precio de venta"
           />
         </div>
 
@@ -324,13 +367,57 @@ export function FichaForm({ initialData, onSubmit, loading }: FichaFormProps) {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="procedimiento">Procedimiento</Label>
+        <Label htmlFor="procedimiento">Elaboración paso a paso</Label>
         <Textarea
           id="procedimiento"
           value={procedimiento}
           onChange={(e) => setProcedimiento(e.target.value)}
-          placeholder="1. Lavar y pelar las verduras...&#10;2. Triturar todos los ingredientes...&#10;3. Sazonar y refrigerar..."
+          placeholder={"Paso 1 — Pre-elaboraciones\n- Caldo base...\n\nPaso 2 — Pase\n1. Dorar...\n2. Añadir..."}
           rows={6}
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="tecnicas">Técnicas culinarias</Label>
+        <Textarea
+          id="tecnicas"
+          value={tecnicas}
+          onChange={(e) => setTecnicas(e.target.value)}
+          placeholder={"- Sellado de carnes: el fondo aporta profundidad...\n- Socarrat: subir fuego al final..."}
+          rows={3}
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="puntosCriticos">Puntos críticos</Label>
+        <Textarea
+          id="puntosCriticos"
+          value={puntosCriticos}
+          onChange={(e) => setPuntosCriticos(e.target.value)}
+          placeholder={"⚠️ Pollo bien sellado antes del arroz\n⚠️ Marisco a media cocción"}
+          rows={3}
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="presentacion">Presentación y emplatado</Label>
+        <Textarea
+          id="presentacion"
+          value={presentacion}
+          onChange={(e) => setPresentacion(e.target.value)}
+          placeholder="Servir directamente en paellera. Socarrat visible al fondo..."
+          rows={2}
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="conservacion">Conservación</Label>
+        <Textarea
+          id="conservacion"
+          value={conservacion}
+          onChange={(e) => setConservacion(e.target.value)}
+          placeholder="Caldo: 3 días en frío. Carnes troceadas: 24h. Marisco: del día."
+          rows={2}
         />
       </div>
 

@@ -29,9 +29,15 @@ interface FichaDetalleProps {
     descripcion?: string | null;
     porciones: number;
     tiempoMin: number;
+    tiempoMiseEnPlace?: number | null;
+    pvp?: number | null;
     urlImagen?: string | null;
     alergenos: string[];
     procedimiento?: string | null;
+    tecnicas?: string | null;
+    puntosCriticos?: string | null;
+    presentacion?: string | null;
+    conservacion?: string | null;
     costoTotal: number;
     costoPorPorcion: number;
     categoria?: { id: number; nombre: string } | null;
@@ -114,10 +120,11 @@ export function FichaDetalle({ ficha }: FichaDetalleProps) {
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
-          { label: "Porciones", value: ficha.porciones, icon: Users },
-          { label: "Tiempo", value: `${ficha.tiempoMin} min`, icon: Clock },
-          { label: "Costo Total", value: formatCurrency(ficha.costoTotal), icon: Euro },
-          { label: "Costo/Porción", value: formatCurrency(ficha.costoPorPorcion), icon: Euro },
+          { label: "Porciones", value: String(ficha.porciones) },
+          { label: "Tiempo total", value: `${ficha.tiempoMin} min` },
+          ...(ficha.tiempoMiseEnPlace ? [{ label: "Mise en place", value: `${ficha.tiempoMiseEnPlace} min` }] : []),
+          { label: "Costo/Porción", value: formatCurrency(ficha.costoPorPorcion) },
+          ...(ficha.pvp ? [{ label: "PVP", value: formatCurrency(ficha.pvp) }] : []),
         ].map((item) => (
           <div
             key={item.label}
@@ -220,6 +227,50 @@ export function FichaDetalle({ ficha }: FichaDetalleProps) {
               </li>
             ))}
           </ol>
+        </div>
+      )}
+
+      {ficha.tecnicas && (
+        <div>
+          <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wide mb-2 flex items-center gap-1.5">
+            <span>🔥</span> Técnicas culinarias
+          </h3>
+          <div className="bg-orange-50 border border-orange-100 rounded-lg p-3 text-sm text-slate-700 whitespace-pre-line">
+            {ficha.tecnicas}
+          </div>
+        </div>
+      )}
+
+      {ficha.puntosCriticos && (
+        <div>
+          <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wide mb-2 flex items-center gap-1.5">
+            <span>⚠️</span> Puntos críticos
+          </h3>
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-sm text-slate-700 whitespace-pre-line">
+            {ficha.puntosCriticos}
+          </div>
+        </div>
+      )}
+
+      {ficha.presentacion && (
+        <div>
+          <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wide mb-2 flex items-center gap-1.5">
+            <span>🍽️</span> Presentación y emplatado
+          </h3>
+          <div className="bg-slate-50 border border-slate-200 rounded-lg p-3 text-sm text-slate-700 whitespace-pre-line">
+            {ficha.presentacion}
+          </div>
+        </div>
+      )}
+
+      {ficha.conservacion && (
+        <div>
+          <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wide mb-2 flex items-center gap-1.5">
+            <span>❄️</span> Conservación
+          </h3>
+          <div className="bg-blue-50 border border-blue-100 rounded-lg p-3 text-sm text-slate-700 whitespace-pre-line">
+            {ficha.conservacion}
+          </div>
         </div>
       )}
 

@@ -358,6 +358,12 @@ model FichaTecnica {
   procedimiento    String?
   costoTotal       Float    @default(0) @map("costo_total")
   costoPorPorcion  Float    @default(0) @map("costo_por_porcion")
+  pvp              Float?   // precio de venta al público
+  tiempoMiseEnPlace Int?    @map("tiempo_mise_en_place") // minutos
+  tecnicas         String?  // técnicas culinarias destacadas
+  puntosCriticos   String?  @map("puntos_criticos")
+  presentacion     String?  // presentación y emplatado
+  conservacion     String?  // tiempos y condiciones de conservación
   creadoPorId      Int?     @map("creado_por_id")
   actualizadoPorId Int?     @map("actualizado_por_id")
   createdAt        DateTime @default(now()) @map("created_at")
