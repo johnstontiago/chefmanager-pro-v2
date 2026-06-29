@@ -46,8 +46,30 @@ export async function DELETE(_req: Request, { params }: { params: { id: string }
     const id = parseInt(params.id);
     if (isNaN(id)) return NextResponse.json({ error: "ID inválido" }, { status: 400 });
 
-    // Elimina en cascada: usuarios, unidades, productos, pedidos, etc.
+    // Elimina en cascada respetando el orden de claves foráneas.
+    // Las tablas del módulo de stock se borran antes que productos/tenant.
     await prisma.$transaction([
+      // ── Módulo Stock: hojas más profundas primero ─────────────────────────
+      prisma.consumoLoteElaboracion.deleteMany({ where: { tenantId: id } }),
+      prisma.insumoLoteElaboracion.deleteMany({ where: { tenantId: id } }),
+      prisma.consumoLote.deleteMany({ where: { tenantId: id } }),
+      prisma.ingredientePlatoStock.deleteMany({ where: { tenantId: id } }),
+      prisma.loteElaboracion.deleteMany({ where: { tenantId: id } }),
+      prisma.ingredienteElaboracion.deleteMany({ where: { tenantId: id } }),
+      prisma.loteInventario.deleteMany({ where: { tenantId: id } }),
+      prisma.varianteProveedor.deleteMany({ where: { tenantId: id } }),
+      prisma.logLlamadaTPV.deleteMany({ where: { tenantId: id } }),
+      prisma.integracionTPV.deleteMany({ where: { tenantId: id } }),
+      prisma.elaboracion.deleteMany({ where: { tenantId: id } }),
+      // ── Módulo Fichas Técnicas ────────────────────────────────────────────
+      prisma.fichaIngrediente.deleteMany({ where: { ficha: { tenantId: id } } }),
+      prisma.preparacionIngrediente.deleteMany({ where: { preparacion: { tenantId: id } } }),
+      prisma.insumo.deleteMany({ where: { tenantId: id } }),
+      prisma.fichaTecnica.deleteMany({ where: { tenantId: id } }),
+      prisma.fichaCategoria.deleteMany({ where: { tenantId: id } }),
+      prisma.preparacion.deleteMany({ where: { tenantId: id } }),
+      prisma.festivo.deleteMany({ where: { tenantId: id } }),
+      // ── Módulo principal ──────────────────────────────────────────────────
       prisma.movimiento.deleteMany({ where: { tenantId: id } }),
       prisma.inventario.deleteMany({ where: { tenantId: id } }),
       prisma.pedidoItem.deleteMany({ where: { pedido: { tenantId: id } } }),
