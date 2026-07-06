@@ -24,7 +24,11 @@ import { canEditFichas } from "@/lib/fichas/roles";
 
 type Elaboracion = {
   id: number; nombre: string; unidadBase: string;
-  ingredientes: { id: number; cantidad: number; unidad: string; producto: { id: number; nombre: string } }[];
+  ingredientes: {
+    id: number; cantidad: number; unidad: string;
+    producto: { id: number; nombre: string } | null;
+    insumo: { id: number; nombre: string } | null;
+  }[];
 };
 type Produccion = {
   id: number; elaboracionNombre: string; unidadBase: string;
@@ -237,7 +241,7 @@ export default function PreparacionesManager({ elaboraciones, producciones, rol 
                         </p>
                         {elaboracion.ingredientes.map((ing) => (
                           <p key={ing.id} className="text-slate-500">
-                            • {ing.producto.nombre}: <strong>{(ing.cantidad * cantNum).toFixed(3)} {ing.unidad}</strong>
+                            • {ing.insumo?.nombre ?? ing.producto?.nombre ?? "?"}: <strong>{(ing.cantidad * cantNum).toFixed(3)} {ing.unidad}</strong>
                           </p>
                         ))}
                       </div>

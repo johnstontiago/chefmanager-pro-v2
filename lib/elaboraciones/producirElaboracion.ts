@@ -2,6 +2,7 @@
 
 import prisma from '@/lib/db'
 import { consumirFIFO } from '@/lib/stock/consumirFIFO'
+import { consumirFIFOElaboracion } from '@/lib/stock/consumirFIFOElaboracion'
 import { convertir } from '@/lib/stock/convertir'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth-options'
@@ -43,7 +44,10 @@ export async function producirElaboracion(
     where: { id: elaboracionId, tenantId },
     include: {
       ingredientes: {
-        include: { producto: true },
+        include: {
+          producto: true,
+          insumo: { include: { producto: true, elaboracion: true } },
+        },
       },
     },
   })
@@ -68,37 +72,60 @@ export async function producirElaboracion(
     }[] = []
 
     for (const ingrediente of elaboracion.ingredientes) {
-      const unidadDestino = ingrediente.producto.unidadBase ?? ingrediente.producto.contenidoUnidad ?? ingrediente.producto.unidadMedida
-      const cantidadNecesaria = convertir(
-        ingrediente.cantidad * cantidadProducida,
-        ingrediente.unidad,
-        unidadDestino
-      )
+      // Filas nuevas resuelven el ingrediente vía insumo (producto, elaboración
+      // anidada, preparación o insumo manual como el agua); las filas antiguas
+      // sin insumoId aún apuntan directo a un producto.
+      const producto = ingrediente.insumo?.producto ?? ingrediente.producto
+      const elabAnidada = ingrediente.insumo?.elaboracion ?? null
 
-      const resultado = await consumirFIFO(
-        {
-          tenantId,
-          productoId: ingrediente.productoId,
-          cantidadNecesaria,
-          motivo: 'PRODUCCION',
-          referenciaId: `elaboracion:${elaboracionId}`,
-        },
-        tx
-      )
+      if (producto) {
+        const unidadDestino = producto.unidadBase ?? producto.contenidoUnidad ?? producto.unidadMedida
+        const cantidadNecesaria = convertir(ingrediente.cantidad * cantidadProducida, ingrediente.unidad, unidadDestino)
 
-      if (!resultado.ok) {
-        ingredientesFallidos.push(ingrediente.producto.nombre)
+        const resultado = await consumirFIFO(
+          {
+            tenantId,
+            productoId: producto.id,
+            cantidadNecesaria,
+            motivo: 'PRODUCCION',
+            referenciaId: `elaboracion:${elaboracionId}`,
+          },
+          tx
+        )
+
+        if (!resultado.ok) {
+          ingredientesFallidos.push(producto.nombre)
+        }
+
+        for (const loteAfectado of resultado.lotesAfectados) {
+          insumosParaRegistrar.push({
+            loteInventarioId: loteAfectado.loteId,
+            cantidadUsada: loteAfectado.cantidadDescontada,
+            numeroLote: loteAfectado.numeroLote,
+            codigoUnico: loteAfectado.codigoUnico,
+            productoNombre: producto.nombre,
+          })
+        }
+      } else if (elabAnidada) {
+        const cantidadNecesaria = convertir(ingrediente.cantidad * cantidadProducida, ingrediente.unidad, elabAnidada.unidadBase)
+
+        const resultado = await consumirFIFOElaboracion(
+          {
+            tenantId,
+            elaboracionId: elabAnidada.id,
+            cantidadNecesaria,
+            motivo: 'PRODUCCION',
+            referenciaId: `elaboracion:${elaboracionId}`,
+          },
+          tx
+        )
+
+        if (!resultado.ok) {
+          ingredientesFallidos.push(elabAnidada.nombre)
+        }
       }
-
-      for (const loteAfectado of resultado.lotesAfectados) {
-        insumosParaRegistrar.push({
-          loteInventarioId: loteAfectado.loteId,
-          cantidadUsada: loteAfectado.cantidadDescontada,
-          numeroLote: loteAfectado.numeroLote,
-          codigoUnico: loteAfectado.codigoUnico,
-          productoNombre: ingrediente.producto.nombre,
-        })
-      }
+      // Insumo manual o respaldado por una preparación: sin lote físico que
+      // descontar, solo aporta coste (ya reflejado en el precio de la elaboración).
     }
 
     // Código único para la etiqueta (si no llega uno, se genera)

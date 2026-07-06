@@ -311,6 +311,7 @@ model Insumo {
 
   fichaIngredientes       FichaIngrediente[]
   preparacionIngredientes PreparacionIngrediente[]
+  ingredienteElaboraciones IngredienteElaboracion[]
 
   @@unique([tenantId, productoId])
   @@index([tenantId, elaboracionId])
@@ -507,16 +508,19 @@ model IngredienteElaboracion {
   id            Int      @id @default(autoincrement())
   tenantId      Int      @map("tenant_id")
   elaboracionId Int      @map("elaboracion_id")
-  productoId    Int      @map("producto_id")
+  productoId    Int?     @map("producto_id")
+  insumoId      Int?     @map("insumo_id")
   cantidad      Float
   unidad        String
   createdAt     DateTime @default(now()) @map("created_at")
 
   tenant      Tenant      @relation(fields: [tenantId], references: [id])
   elaboracion Elaboracion @relation(fields: [elaboracionId], references: [id], onDelete: Cascade)
-  producto    Producto    @relation(fields: [productoId], references: [id])
+  producto    Producto?   @relation(fields: [productoId], references: [id])
+  insumo      Insumo?     @relation(fields: [insumoId], references: [id])
 
   @@index([tenantId, elaboracionId])
+  @@index([tenantId, insumoId])
   @@map("ingredientes_elaboracion")
 }
 

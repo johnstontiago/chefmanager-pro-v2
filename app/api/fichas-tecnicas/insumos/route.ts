@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
 import { getFichasContext, canEditFichas } from "@/lib/fichas/permissions";
-import { getLiveCostMaps, decorateInsumo, syncProductosAsInsumos, syncElaboracionesAsInsumos } from "@/lib/fichas/costing";
+import { getCatalogoInsumos } from "@/lib/fichas/insumos";
 
 export const dynamic = "force-dynamic";
 
@@ -12,24 +12,7 @@ export async function GET() {
   }
 
   try {
-    // Materializa productos y elaboraciones del tenant como insumos disponibles
-    await syncProductosAsInsumos(ctx.tenantId);
-    await syncElaboracionesAsInsumos(ctx.tenantId);
-
-    const [insumos, maps] = await Promise.all([
-      prisma.insumo.findMany({
-        where: { tenantId: ctx.tenantId },
-        orderBy: { nombre: "asc" },
-        include: {
-          preparacion: { select: { id: true, nombre: true } },
-          producto: { select: { id: true, nombre: true, activo: true } },
-          elaboracion: { select: { id: true, nombre: true } },
-        },
-      }),
-      getLiveCostMaps(ctx.tenantId),
-    ]);
-
-    return NextResponse.json(insumos.map((i) => decorateInsumo(i, maps)));
+    return NextResponse.json(await getCatalogoInsumos(ctx.tenantId));
   } catch (error) {
     console.error("Error fetching insumos:", error);
     return NextResponse.json({ error: "Error del servidor" }, { status: 500 });

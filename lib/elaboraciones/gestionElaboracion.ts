@@ -4,9 +4,10 @@ import prisma from '@/lib/db'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth-options'
 import { getActiveTenantId } from '@/lib/get-active-tenant'
+import { wouldCreateElaboracionCycle } from '@/lib/fichas/costing'
 
 interface IngredienteInput {
-  productoId: number
+  insumoId: number
   cantidad: number
   unidad: string
 }
@@ -40,13 +41,21 @@ export async function editarElaboracion(
   if (!nombre.trim()) return { ok: false, error: 'El nombre es obligatorio' }
   if (ingredientes.length === 0) return { ok: false, error: 'Añade al menos un ingrediente' }
 
-  const productoIds = Array.from(new Set(ingredientes.map((i) => i.productoId)))
-  const validos = await prisma.producto.findMany({
-    where: { tenantId, id: { in: productoIds } },
-    select: { id: true },
+  const insumoIds = Array.from(new Set(ingredientes.map((i) => i.insumoId)))
+  const insumosValidos = await prisma.insumo.findMany({
+    where: { tenantId, id: { in: insumoIds } },
+    select: { id: true, elaboracionId: true },
   })
-  if (validos.length !== productoIds.length) {
+  if (insumosValidos.length !== insumoIds.length) {
     return { ok: false, error: 'Algún ingrediente no pertenece a tu negocio' }
+  }
+  if (insumosValidos.some((i) => i.elaboracionId === id)) {
+    return { ok: false, error: 'Una elaboración no puede ser ingrediente de sí misma' }
+  }
+
+  const creariaCiclo = await wouldCreateElaboracionCycle(tenantId, id, insumoIds)
+  if (creariaCiclo) {
+    return { ok: false, error: 'Esto crearía una elaboración que se contiene a sí misma' }
   }
 
   await prisma.$transaction(async (tx) => {
@@ -62,7 +71,7 @@ export async function editarElaboracion(
         ingredientes: {
           create: ingredientes.map((ing) => ({
             tenantId,
-            productoId: ing.productoId,
+            insumoId: ing.insumoId,
             cantidad: ing.cantidad,
             unidad: ing.unidad,
           })),

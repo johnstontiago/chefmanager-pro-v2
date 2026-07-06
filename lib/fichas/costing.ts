@@ -115,6 +115,7 @@ export async function getLiveCostMaps(tenantId: number): Promise<LiveCostMaps> {
       where: { tenantId },
       select: {
         id: true,
+        unidad: true,
         valorPorUnidad: true,
         esPreparacion: true,
         preparacionId: true,
@@ -142,7 +143,7 @@ export async function getLiveCostMaps(tenantId: number): Promise<LiveCostMaps> {
       where: { tenantId },
       select: {
         id: true,
-        ingredientes: { select: { productoId: true, cantidad: true, unidad: true } },
+        ingredientes: { select: { productoId: true, insumoId: true, cantidad: true, unidad: true } },
       },
     }),
     prisma.producto.findMany({
@@ -160,25 +161,47 @@ export async function getLiveCostMaps(tenantId: number): Promise<LiveCostMaps> {
   const insumoById = new Map(insumos.map((i) => [i.id, i]));
   const prepById = new Map(preparaciones.map((p) => [p.id, p]));
   const productoById = new Map(productos.map((p) => [p.id, p]));
+  const elabById = new Map(elaboraciones.map((e) => [e.id, e]));
 
-  // Coste por unidad producida de cada elaboración = suma de sus ingredientes
-  // (cantidad del producto convertida a su unidad de receta × precio por unidad).
   const elaboracionCost = new Map<number, number>();
-  for (const e of elaboraciones) {
-    let costo = 0;
-    for (const ing of e.ingredientes) {
-      const prod = productoById.get(ing.productoId);
-      if (!prod) continue;
-      const { unidad: unidadReceta, factor } = contenidoDeProducto(prod);
-      const precioPorUnidad = toNumber(prod.precioUnitario as any) / factor;
-      const cantidadReceta = convertir(ing.cantidad, ing.unidad, unidadReceta);
-      costo += cantidadReceta * precioPorUnidad;
-    }
-    elaboracionCost.set(e.id, costo);
-  }
-
   const insumoValue = new Map<number, number>();
   const prepCosts = new Map<number, { costoTotal: number; costoPorPorcion: number }>();
+
+  // Coste por unidad producida de una elaboración = suma de sus ingredientes.
+  // Un ingrediente puede ser un producto (precio de inventario) o un insumo
+  // (que a su vez puede ser otra elaboración, una preparación o un insumo
+  // manual como el agua) — se resuelve recursivamente vía resolveInsumo,
+  // compartiendo el mismo `visiting` para cortar ciclos que atraviesen
+  // elaboración → insumo → elaboración.
+  function resolveElaboracion(elabId: number, visiting: Set<number>): number {
+    const memo = elaboracionCost.get(elabId);
+    if (memo !== undefined) return memo;
+    const elab = elabById.get(elabId);
+    if (!elab || visiting.has(elabId)) return 0;
+
+    visiting.add(elabId);
+    let costo = 0;
+    for (const ing of elab.ingredientes) {
+      if (ing.insumoId != null) {
+        const insumo = insumoById.get(ing.insumoId);
+        const cantidadEnUnidadInsumo = insumo
+          ? convertir(ing.cantidad, ing.unidad, insumo.unidad)
+          : ing.cantidad;
+        costo += cantidadEnUnidadInsumo * resolveInsumo(ing.insumoId, visiting);
+      } else if (ing.productoId != null) {
+        const prod = productoById.get(ing.productoId);
+        if (!prod) continue;
+        const { unidad: unidadReceta, factor } = contenidoDeProducto(prod);
+        const precioPorUnidad = toNumber(prod.precioUnitario as any) / factor;
+        const cantidadReceta = convertir(ing.cantidad, ing.unidad, unidadReceta);
+        costo += cantidadReceta * precioPorUnidad;
+      }
+    }
+    visiting.delete(elabId);
+
+    elaboracionCost.set(elabId, costo);
+    return costo;
+  }
 
   function resolveInsumo(insumoId: number, visiting: Set<number>): number {
     const memo = insumoValue.get(insumoId);
@@ -190,7 +213,7 @@ export async function getLiveCostMaps(tenantId: number): Promise<LiveCostMaps> {
     if (insumo.esPreparacion && insumo.preparacionId != null) {
       valor = resolvePrep(insumo.preparacionId, visiting).costoPorPorcion;
     } else if (insumo.elaboracionId != null) {
-      valor = elaboracionCost.get(insumo.elaboracionId) ?? 0;
+      valor = resolveElaboracion(insumo.elaboracionId, visiting);
     } else {
       valor = baseValue(insumo);
     }
@@ -222,6 +245,7 @@ export async function getLiveCostMaps(tenantId: number): Promise<LiveCostMaps> {
     return result;
   }
 
+  for (const elab of elaboraciones) resolveElaboracion(elab.id, new Set());
   for (const prep of preparaciones) resolvePrep(prep.id, new Set());
   for (const insumo of insumos) resolveInsumo(insumo.id, new Set());
 
@@ -270,16 +294,66 @@ export async function wouldCreateCycle(
     .map((id) => prepDeInsumo.get(id))
     .filter((id): id is number => id !== undefined);
 
+  return alcanzaObjetivo(deps, inicio, prepId);
+}
+
+/** DFS genérico: ¿algún nodo de `inicio` alcanza `objetivo` siguiendo `deps`? */
+function alcanzaObjetivo(deps: Map<number, number[]>, inicio: number[], objetivo: number): boolean {
   const stack = [...inicio];
   const visitados = new Set<number>();
   while (stack.length > 0) {
     const actual = stack.pop()!;
-    if (actual === prepId) return true;
+    if (actual === objetivo) return true;
     if (visitados.has(actual)) continue;
     visitados.add(actual);
     stack.push(...(deps.get(actual) || []));
   }
   return false;
+}
+
+/**
+ * Verifica si guardar `insumoIds` como ingredientes de la elaboración
+ * `elaboracionId` crearía un ciclo (una elaboración que, directa o
+ * transitivamente, se contiene a sí misma vía otra elaboración).
+ */
+export async function wouldCreateElaboracionCycle(
+  tenantId: number,
+  elaboracionId: number,
+  insumoIds: number[]
+): Promise<boolean> {
+  const [insumos, elaboraciones] = await Promise.all([
+    prisma.insumo.findMany({
+      where: { tenantId, elaboracionId: { not: null } },
+      select: { id: true, elaboracionId: true },
+    }),
+    prisma.elaboracion.findMany({
+      where: { tenantId },
+      select: { id: true, ingredientes: { select: { insumoId: true } } },
+    }),
+  ]);
+
+  const elabDeInsumo = new Map<number, number>();
+  for (const insumo of insumos) {
+    if (insumo.elaboracionId != null) elabDeInsumo.set(insumo.id, insumo.elaboracionId);
+  }
+
+  // Grafo: elaboración → elaboraciones que usa como ingrediente (vía insumo)
+  const deps = new Map<number, number[]>();
+  for (const elab of elaboraciones) {
+    deps.set(
+      elab.id,
+      elab.ingredientes
+        .map((ing) => (ing.insumoId != null ? elabDeInsumo.get(ing.insumoId) : undefined))
+        .filter((id): id is number => id !== undefined)
+    );
+  }
+
+  // ¿Alguna elaboración seleccionada alcanza a elaboracionId siguiendo sus deps?
+  const inicio = insumoIds
+    .map((id) => elabDeInsumo.get(id))
+    .filter((id): id is number => id !== undefined);
+
+  return alcanzaObjetivo(deps, inicio, elaboracionId);
 }
 
 /** Reemplaza el valorPorUnidad almacenado por el valor en vivo. */

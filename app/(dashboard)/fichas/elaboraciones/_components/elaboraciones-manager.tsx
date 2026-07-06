@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Trash2, Edit2, Utensils, ListOrdered, Loader2, Package } from "lucide-react";
+import { Plus, Trash2, Edit2, Utensils, ListOrdered, Loader2, Package, Layers, FlaskConical } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -25,15 +25,20 @@ type Producto = {
   id: number; nombre: string; unidadMedida: string;
   unidadBase: string | null; contenidoUnidad: string | null;
 };
+type InsumoOpcion = {
+  id: number; nombre: string; unidad: string;
+  productoId: number | null; elaboracionId: number | null; preparacionId: number | null;
+};
 type Ingrediente = {
-  id: number; cantidad: number; unidad: string; producto: Producto;
+  id: number; cantidad: number; unidad: string;
+  producto: Producto | null; insumo: { id: number; nombre: string; unidad: string } | null;
 };
 type Elaboracion = {
   id: number; nombre: string; descripcion: string | null; procedimiento: string | null;
   unidadBase: string; stockMinimo: number | null; stockActual: number;
   ingredientes: Ingrediente[];
 };
-interface Props { elaboraciones: Elaboracion[]; productos: Producto[]; rol: string; }
+interface Props { elaboraciones: Elaboracion[]; insumos: InsumoOpcion[]; rol: string; }
 
 const UNIDADES_BASE = [
   { value: "g", label: "Gramos (g)" },
@@ -43,11 +48,16 @@ const UNIDADES_BASE = [
   { value: "l", label: "Litros (l)" },
 ];
 
-const unidadLabel = (p: Producto) => p.unidadBase ?? p.contenidoUnidad ?? p.unidadMedida;
+// Icono según el origen del insumo, para distinguirlo en el picker.
+function IconoOrigen({ insumo }: { insumo: InsumoOpcion }) {
+  if (insumo.productoId != null) return <Package className="h-3 w-3 text-emerald-600" />;
+  if (insumo.elaboracionId != null) return <Layers className="h-3 w-3 text-blue-600" />;
+  return <FlaskConical className="h-3 w-3 text-amber-600" />;
+}
 
-interface LineaIng { uid: number; productoId: number | null; cantidad: string; unidad: string; }
+interface LineaIng { uid: number; insumoId: number | null; cantidad: string; unidad: string; }
 
-export default function ElaboracionesManager({ elaboraciones, productos, rol }: Props) {
+export default function ElaboracionesManager({ elaboraciones, insumos, rol }: Props) {
   const router = useRouter();
   const canEdit = canEditFichas(rol);
   const canDelete = canDeleteFichas(rol);
@@ -58,7 +68,7 @@ export default function ElaboracionesManager({ elaboraciones, productos, rol }: 
   const [unidadBase, setUnidadBase] = useState("g");
   const [stockMinimo, setStockMinimo] = useState("");
   const [procedimiento, setProcedimiento] = useState("");
-  const [lineas, setLineas] = useState<LineaIng[]>([{ uid: 1, productoId: null, cantidad: "", unidad: "g" }]);
+  const [lineas, setLineas] = useState<LineaIng[]>([{ uid: 1, insumoId: null, cantidad: "", unidad: "g" }]);
   const [produccionLote, setProduccionLote] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [eliminando, setEliminando] = useState<number | null>(null);
@@ -66,7 +76,7 @@ export default function ElaboracionesManager({ elaboraciones, productos, rol }: 
 
   const resetForm = () => {
     setEditId(null); setNombre(""); setUnidadBase("g"); setStockMinimo("");
-    setProcedimiento(""); setLineas([{ uid: 1, productoId: null, cantidad: "", unidad: "g" }]);
+    setProcedimiento(""); setLineas([{ uid: 1, insumoId: null, cantidad: "", unidad: "g" }]);
     setProduccionLote(""); setError(null);
   };
 
@@ -101,18 +111,18 @@ export default function ElaboracionesManager({ elaboraciones, productos, rol }: 
     setStockMinimo(e.stockMinimo != null ? String(e.stockMinimo) : "");
     setProcedimiento(e.procedimiento || "");
     setLineas(e.ingredientes.map((i) => ({
-      uid: i.id, productoId: i.producto.id, cantidad: String(i.cantidad), unidad: i.unidad,
+      uid: i.id, insumoId: i.insumo?.id ?? i.producto?.id ?? null, cantidad: String(i.cantidad), unidad: i.unidad,
     })));
     setOpen(true);
   };
 
-  const addLinea = () => setLineas((p) => [...p, { uid: Date.now(), productoId: null, cantidad: "", unidad: "g" }]);
+  const addLinea = () => setLineas((p) => [...p, { uid: Date.now(), insumoId: null, cantidad: "", unidad: "g" }]);
   const removeLinea = (uid: number) => setLineas((p) => p.filter((l) => l.uid !== uid));
   const updateLinea = (uid: number, c: Partial<LineaIng>) =>
     setLineas((p) => p.map((l) => (l.uid === uid ? { ...l, ...c } : l)));
 
   const handleGuardar = () => {
-    const validos = lineas.filter((l) => l.productoId !== null && parseFloat(l.cantidad) > 0);
+    const validos = lineas.filter((l) => l.insumoId !== null && parseFloat(l.cantidad) > 0);
     if (!nombre.trim()) { setError("El nombre es obligatorio"); return; }
     if (validos.length === 0) { setError("Añade al menos un ingrediente con cantidad"); return; }
 
@@ -122,7 +132,7 @@ export default function ElaboracionesManager({ elaboraciones, productos, rol }: 
       unidadBase,
       stockMinimo: stockMinimo ? parseFloat(stockMinimo) : undefined,
       ingredientes: validos.map((l) => ({
-        productoId: l.productoId!, cantidad: parseFloat(l.cantidad), unidad: l.unidad,
+        insumoId: l.insumoId!, cantidad: parseFloat(l.cantidad), unidad: l.unidad,
       })),
     };
 
@@ -214,18 +224,20 @@ export default function ElaboracionesManager({ elaboraciones, productos, rol }: 
                     <div key={l.uid}
                       className="flex flex-col sm:flex-row sm:items-center gap-2 border-b sm:border-0 pb-2 sm:pb-0">
                       <Select
-                        value={l.productoId?.toString() ?? ""}
+                        value={l.insumoId?.toString() ?? ""}
                         onValueChange={(v) => {
-                          const p = productos.find((p) => p.id === parseInt(v, 10));
-                          updateLinea(l.uid, { productoId: parseInt(v, 10), unidad: p ? unidadLabel(p) : "g" });
+                          const i = insumos.find((i) => i.id === parseInt(v, 10));
+                          updateLinea(l.uid, { insumoId: parseInt(v, 10), unidad: i ? i.unidad : "g" });
                         }}>
-                        <SelectTrigger className="text-sm w-full sm:flex-1"><SelectValue placeholder="Producto..." /></SelectTrigger>
+                        <SelectTrigger className="text-sm w-full sm:flex-1"><SelectValue placeholder="Ingrediente..." /></SelectTrigger>
                         <SelectContent>
-                          {productos.map((p) => (
-                            <SelectItem key={p.id} value={p.id.toString()}>
-                              <span className="flex items-center gap-1.5"><Package className="h-3 w-3 text-emerald-600" />{p.nombre}</span>
-                            </SelectItem>
-                          ))}
+                          {insumos
+                            .filter((i) => i.elaboracionId !== editId)
+                            .map((i) => (
+                              <SelectItem key={i.id} value={i.id.toString()}>
+                                <span className="flex items-center gap-1.5"><IconoOrigen insumo={i} />{i.nombre}</span>
+                              </SelectItem>
+                            ))}
                         </SelectContent>
                       </Select>
                       <div className="flex items-center gap-2">
@@ -281,7 +293,7 @@ export default function ElaboracionesManager({ elaboraciones, productos, rol }: 
                   <div className="mt-2 flex flex-wrap gap-1">
                     {e.ingredientes.map((i) => (
                       <span key={i.id} className="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">
-                        {i.producto.nombre} × {i.cantidad} {i.unidad}
+                        {i.insumo?.nombre ?? i.producto?.nombre ?? "?"} × {i.cantidad} {i.unidad}
                       </span>
                     ))}
                   </div>

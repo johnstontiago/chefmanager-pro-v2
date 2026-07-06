@@ -3,6 +3,7 @@ import { authOptions } from "@/lib/auth-options";
 import { getActiveTenantId } from "@/lib/get-active-tenant";
 import { redirect } from "next/navigation";
 import prisma from "@/lib/db";
+import { getCatalogoInsumos } from "@/lib/fichas/insumos";
 import { FichasNav } from "../_components/fichas-nav";
 import ElaboracionesManager from "./_components/elaboraciones-manager";
 
@@ -14,7 +15,7 @@ export default async function FichasElaboracionesPage() {
   const tenantId = getActiveTenantId(session.user as any);
   const rol = (session.user as any).rol || "viewer";
 
-  const [elaboraciones, productos] = await Promise.all([
+  const [elaboraciones, insumos] = await Promise.all([
     prisma.elaboracion.findMany({
       where: { tenantId, activa: true },
       orderBy: { nombre: "asc" },
@@ -27,6 +28,7 @@ export default async function FichasElaboracionesPage() {
                 unidadBase: true, contenidoUnidad: true,
               },
             },
+            insumo: { select: { id: true, nombre: true, unidad: true } },
           },
         },
         lotes: {
@@ -35,11 +37,7 @@ export default async function FichasElaboracionesPage() {
         },
       },
     }),
-    prisma.producto.findMany({
-      where: { tenantId, activo: true },
-      orderBy: { nombre: "asc" },
-      select: { id: true, nombre: true, unidadMedida: true, unidadBase: true, contenidoUnidad: true },
-    }),
+    getCatalogoInsumos(tenantId),
   ]);
 
   const data = elaboraciones.map((e) => ({
@@ -56,7 +54,7 @@ export default async function FichasElaboracionesPage() {
         </p>
       </div>
       <FichasNav />
-      <ElaboracionesManager elaboraciones={data} productos={productos} rol={rol} />
+      <ElaboracionesManager elaboraciones={data} insumos={insumos} rol={rol} />
     </div>
   );
 }

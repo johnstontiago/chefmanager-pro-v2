@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 import prisma from "@/lib/db";
 import { activateLicense } from "@/lib/lemonsqueezy";
 import { hashPin } from "@/lib/pin";
+import { seedInsumosPorDefecto } from "@/lib/tenants/seedInsumosPorDefecto";
 
 export const dynamic = "force-dynamic";
 
@@ -45,7 +46,7 @@ export async function POST(request: Request) {
     const pinHash = await hashPin(pin);
     const fechaVencimiento = lic.expiresAt ? new Date(lic.expiresAt) : null;
 
-    await prisma.$transaction(async (tx) => {
+    const tenant = await prisma.$transaction(async (tx) => {
       const tenant = await tx.tenant.create({
         data: {
           nombre: negocioNombre.trim(),
@@ -75,7 +76,11 @@ export async function POST(request: Request) {
           tenantId: tenant.id,
         },
       });
+
+      return tenant;
     });
+
+    await seedInsumosPorDefecto(tenant.id);
 
     return NextResponse.json({ ok: true });
   } catch (error) {

@@ -5,6 +5,7 @@ import prisma from "@/lib/db";
 import bcrypt from "bcryptjs";
 import { OnboardingSchema } from "@/lib/schemas";
 import { hashPin } from "@/lib/pin";
+import { seedInsumosPorDefecto } from "@/lib/tenants/seedInsumosPorDefecto";
 
 export const dynamic = "force-dynamic";
 
@@ -81,6 +82,8 @@ export async function POST(request: Request) {
 
       return { tenant, unidad, adminId: admin.id, adminEmail: admin.email };
     });
+
+    await seedInsumosPorDefecto(resultado.tenant.id);
 
     return NextResponse.json({ resultado }, { status: 201 });
   } catch (error) {

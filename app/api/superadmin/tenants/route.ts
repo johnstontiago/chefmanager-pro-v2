@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
 import prisma from "@/lib/db";
 import { TenantCreateSchema } from "@/lib/schemas";
+import { seedInsumosPorDefecto } from "@/lib/tenants/seedInsumosPorDefecto";
 
 export const dynamic = "force-dynamic";
 
@@ -58,6 +59,8 @@ export async function POST(request: Request) {
         activo: true,
       },
     });
+
+    await seedInsumosPorDefecto(tenant.id);
 
     return NextResponse.json({ tenant }, { status: 201 });
   } catch {

@@ -20,7 +20,10 @@ export default async function FichasPreparacionesPage() {
       orderBy: { nombre: "asc" },
       include: {
         ingredientes: {
-          include: { producto: { select: { id: true, nombre: true } } },
+          include: {
+            producto: { select: { id: true, nombre: true } },
+            insumo: { select: { id: true, nombre: true } },
+          },
         },
       },
     }),

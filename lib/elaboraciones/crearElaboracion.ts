@@ -6,7 +6,7 @@ import { authOptions } from '@/lib/auth-options'
 import { getActiveTenantId } from '@/lib/get-active-tenant'
 
 interface IngredienteInput {
-  productoId: number
+  insumoId: number
   cantidad: number
   unidad: string
 }
@@ -40,13 +40,13 @@ export async function crearElaboracion(
   if (!unidadBase) return { ok: false, error: 'La unidad base es obligatoria' }
   if (ingredientes.length === 0) return { ok: false, error: 'Añade al menos un ingrediente' }
 
-  // Validar que todos los productos pertenecen al tenant
-  const productoIds = Array.from(new Set(ingredientes.map((i) => i.productoId)))
-  const productosValidos = await prisma.producto.findMany({
-    where: { tenantId, id: { in: productoIds } },
+  // Validar que todos los insumos (producto, elaboración, preparación o manual) pertenecen al tenant
+  const insumoIds = Array.from(new Set(ingredientes.map((i) => i.insumoId)))
+  const insumosValidos = await prisma.insumo.findMany({
+    where: { tenantId, id: { in: insumoIds } },
     select: { id: true },
   })
-  if (productosValidos.length !== productoIds.length) {
+  if (insumosValidos.length !== insumoIds.length) {
     return { ok: false, error: 'Algún ingrediente no pertenece a tu negocio' }
   }
 
@@ -66,7 +66,7 @@ export async function crearElaboracion(
       ingredientes: {
         create: ingredientes.map((ing) => ({
           tenantId,
-          productoId: ing.productoId,
+          insumoId: ing.insumoId,
           cantidad: ing.cantidad,
           unidad: ing.unidad,
         })),
