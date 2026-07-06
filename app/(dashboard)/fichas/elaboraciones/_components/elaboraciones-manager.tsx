@@ -232,7 +232,7 @@ export default function ElaboracionesManager({ elaboraciones, insumos, rol }: Pr
                         <SelectTrigger className="text-sm w-full sm:flex-1"><SelectValue placeholder="Ingrediente..." /></SelectTrigger>
                         <SelectContent>
                           {insumos
-                            .filter((i) => i.elaboracionId !== editId)
+                            .filter((i) => editId === null || i.elaboracionId !== editId)
                             .map((i) => (
                               <SelectItem key={i.id} value={i.id.toString()}>
                                 <span className="flex items-center gap-1.5"><IconoOrigen insumo={i} />{i.nombre}</span>
