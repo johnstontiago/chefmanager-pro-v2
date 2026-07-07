@@ -3,6 +3,7 @@ import { authOptions } from "@/lib/auth-options";
 import { getActiveTenantId } from "@/lib/get-active-tenant";
 import { redirect } from "next/navigation";
 import prisma from "@/lib/db";
+import { convertirHaciaElaboracion } from "@/lib/fichas/costing";
 import { FichasNav } from "../_components/fichas-nav";
 import PreparacionesManager from "./_components/preparaciones-manager";
 
@@ -22,7 +23,12 @@ export default async function FichasPreparacionesPage() {
         ingredientes: {
           include: {
             producto: { select: { id: true, nombre: true } },
-            insumo: { select: { id: true, nombre: true } },
+            insumo: {
+              select: {
+                id: true, nombre: true,
+                elaboracion: { select: { unidadBase: true, contenidoNeto: true, contenidoUnidad: true } },
+              },
+            },
           },
         },
       },
@@ -34,6 +40,25 @@ export default async function FichasPreparacionesPage() {
       include: { elaboracion: { select: { nombre: true, unidadBase: true } } },
     }),
   ]);
+
+  // Para ingredientes que son otra elaboración (ej. Biga dentro de Bola Masa),
+  // precalcula el equivalente en la unidad de stock de esa elaboración (ej.
+  // "unidad") para que la vista previa no muestre solo gramos y parezca
+  // inconsistente con cómo se produce esa elaboración.
+  const elaboracionesData = elaboraciones.map((e) => ({
+    ...e,
+    ingredientes: e.ingredientes.map((ing) => {
+      const elabRef = ing.insumo?.elaboracion;
+      if (!elabRef) return { ...ing, cantidadEnUnidadInsumo: null, unidadInsumo: null };
+      const cantidadEnUnidadInsumo = convertirHaciaElaboracion(ing.cantidad, ing.unidad, elabRef);
+      const mostrarEquivalencia = elabRef.unidadBase.trim().toLowerCase() !== ing.unidad.trim().toLowerCase();
+      return {
+        ...ing,
+        cantidadEnUnidadInsumo: mostrarEquivalencia ? cantidadEnUnidadInsumo : null,
+        unidadInsumo: mostrarEquivalencia ? elabRef.unidadBase : null,
+      };
+    }),
+  }));
 
   const produccionesData = producciones.map((p) => ({
     id: p.id,
@@ -59,7 +84,7 @@ export default async function FichasPreparacionesPage() {
       </div>
       <FichasNav />
       <PreparacionesManager
-        elaboraciones={elaboraciones}
+        elaboraciones={elaboracionesData}
         producciones={produccionesData}
         rol={rol}
       />

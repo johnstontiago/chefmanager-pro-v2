@@ -29,6 +29,7 @@ type Elaboracion = {
     id: number; cantidad: number; unidad: string;
     producto: { id: number; nombre: string } | null;
     insumo: { id: number; nombre: string } | null;
+    cantidadEnUnidadInsumo: number | null; unidadInsumo: string | null;
   }[];
 };
 type Produccion = {
@@ -248,6 +249,9 @@ export default function PreparacionesManager({ elaboraciones, producciones, rol 
                         {elaboracion.ingredientes.map((ing) => (
                           <p key={ing.id} className="text-slate-500">
                             • {ing.insumo?.nombre ?? ing.producto?.nombre ?? "?"}: <strong>{(ing.cantidad * cantNum).toFixed(3)} {ing.unidad}</strong>
+                            {ing.cantidadEnUnidadInsumo != null && (
+                              <span className="text-slate-400"> (≈ {(ing.cantidadEnUnidadInsumo * cantNum).toFixed(2)} {ing.unidadInsumo} de stock)</span>
+                            )}
                           </p>
                         ))}
                       </div>
