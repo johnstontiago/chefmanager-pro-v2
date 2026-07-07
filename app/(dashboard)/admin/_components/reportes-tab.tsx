@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { FileText, Download, Loader2, Package, Truck, UtensilsCrossed, Calendar, Clock } from "lucide-react";
+import { FileText, Download, Loader2, Package, Truck, UtensilsCrossed, Calendar, Clock, BarChart3 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -9,7 +9,8 @@ import { useToast } from "@/hooks/use-toast";
 const REPORTS = [
   { id: "inventario", name: "Reporte de Inventario", description: "Stock actual de todos los productos", icon: Package, color: "bg-blue-500" },
   { id: "pedidos", name: "Reporte de Pedidos", description: "Historial de pedidos realizados", icon: Truck, color: "bg-green-500" },
-  { id: "consumos", name: "Reporte de Consumos", description: "Movimientos de consumo y merma", icon: UtensilsCrossed, color: "bg-orange-500" },
+  { id: "consumos", name: "Reporte de Consumos", description: "Movimientos de consumo y merma manual", icon: UtensilsCrossed, color: "bg-orange-500" },
+  { id: "consumo-diario", name: "Consumo diario por insumo", description: "Consumo real por comandas TPV y producción, agrupado por día e insumo (últimos 30 días)", icon: BarChart3, color: "bg-purple-500" },
   { id: "caducidades", name: "Reporte de Caducidades", description: "Productos próximos a caducar", icon: Clock, color: "bg-red-500" },
 ];
 

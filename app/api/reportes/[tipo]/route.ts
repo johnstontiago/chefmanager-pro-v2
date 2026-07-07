@@ -206,6 +206,86 @@ export async function GET(request: Request, { params }: { params: { tipo: string
           <div class="footer">ChefManager Pro - Generado autom\u00e1ticamente</div>
         </body></html>`;
       }
+    } else if (tipo === "consumo-diario") {
+      // Consumo real por comandas (TPV) y producción, agrupado por día +
+      // insumo + motivo. A diferencia de "consumos" (que solo cubre
+      // consumo/merma manual vía Movimiento), esto lee ConsumoLote y
+      // ConsumoLoteElaboracion — donde queda registrada toda venta de ficha
+      // técnica y toda producción de elaboración.
+      const desdeParam = searchParams.get("desde");
+      const hastaParam = searchParams.get("hasta");
+      const hasta = hastaParam ? new Date(hastaParam) : new Date();
+      const desde = desdeParam
+        ? new Date(desdeParam)
+        : new Date(hasta.getTime() - 30 * 24 * 60 * 60 * 1000);
+      hasta.setHours(23, 59, 59, 999);
+
+      const [consumosProducto, consumosElaboracion] = await Promise.all([
+        prisma.consumoLote.findMany({
+          where: { tenantId, createdAt: { gte: desde, lte: hasta } },
+          include: { lote: { include: { producto: { select: { nombre: true, unidadBase: true, contenidoUnidad: true, unidadMedida: true } } } } },
+        }),
+        prisma.consumoLoteElaboracion.findMany({
+          where: { tenantId, createdAt: { gte: desde, lte: hasta } },
+          include: { loteElaboracion: { include: { elaboracion: { select: { nombre: true, unidadBase: true } } } } },
+        }),
+      ]);
+
+      type Fila = { fecha: string; insumo: string; unidad: string; motivo: string; cantidad: number };
+      const porClave = new Map<string, Fila>();
+      const acumular = (fecha: string, insumo: string, unidad: string, motivo: string, cantidad: number) => {
+        const clave = `${fecha}|${insumo}|${motivo}`;
+        const existente = porClave.get(clave);
+        if (existente) existente.cantidad += cantidad;
+        else porClave.set(clave, { fecha, insumo, unidad, motivo, cantidad });
+      };
+
+      for (const c of consumosProducto) {
+        const prod = c.lote.producto;
+        const unidad = prod.unidadBase ?? prod.contenidoUnidad ?? prod.unidadMedida;
+        acumular(c.createdAt.toISOString().slice(0, 10), prod.nombre, unidad, c.motivo, c.cantidad);
+      }
+      for (const c of consumosElaboracion) {
+        const elab = c.loteElaboracion.elaboracion;
+        acumular(c.createdAt.toISOString().slice(0, 10), elab.nombre, elab.unidadBase, c.motivo, c.cantidad);
+      }
+
+      const filas = Array.from(porClave.values()).sort((a, b) =>
+        b.fecha === a.fecha ? a.insumo.localeCompare(b.insumo) : b.fecha.localeCompare(a.fecha)
+      );
+
+      if (format === "csv") {
+        const headers = ["Fecha", "Insumo", "Motivo", "Cantidad", "Unidad"];
+        const rows = filas.map((f) => [f.fecha, f.insumo, f.motivo, formatDecimal(f.cantidad), f.unidad]);
+        content = generateCSV(headers, rows);
+      } else {
+        const rows = filas.map((f) => `
+          <tr>
+            <td>${f.fecha}</td>
+            <td>${f.insumo}</td>
+            <td><span class="badge ${f.motivo}">${f.motivo}</span></td>
+            <td style="text-align:right;">${formatDecimal(f.cantidad)} ${f.unidad}</td>
+          </tr>
+        `).join("");
+
+        content = `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>
+          body { font-family: Arial, sans-serif; padding: 20px; }
+          h1 { color: #7c3aed; border-bottom: 2px solid #7c3aed; padding-bottom: 10px; }
+          table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+          th { background: #7c3aed; color: white; padding: 10px; text-align: left; }
+          td { padding: 8px; border-bottom: 1px solid #e2e8f0; }
+          .badge { padding: 2px 8px; border-radius: 4px; font-size: 12px; background: #ede9fe; color: #5b21b6; }
+          .footer { margin-top: 30px; text-align: center; color: #64748b; font-size: 12px; }
+        </style></head><body>
+          <h1>Consumo diario por insumo</h1>
+          <p>Del ${formatDate(desde)} al ${formatDate(hasta)} | ${filas.length} filas</p>
+          <table>
+            <thead><tr><th>Fecha</th><th>Insumo</th><th>Motivo</th><th style="text-align:right;">Cantidad</th></tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+          <div class="footer">ChefManager Pro - Generado automáticamente</div>
+        </body></html>`;
+      }
     } else if (tipo === "caducidades") {
       const today = new Date();
       const in30Days = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000);
