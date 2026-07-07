@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
 import prisma from "@/lib/db";
 import { toNumber } from "@/lib/utils";
-import { convertir } from "@/lib/stock/convertir";
+import { contenidoDeProducto } from "@/lib/fichas/costing";
 
 import { getActiveTenantId, getActiveUnidadId } from "@/lib/get-active-tenant";
 
@@ -46,9 +46,14 @@ export async function GET() {
 
       const prod = productoById.get(lote.productoId);
       if (prod) {
-        const unidadBase = prod.unidadBase ?? prod.contenidoUnidad ?? prod.unidadMedida;
-        const enUnidadCompra = convertir(lote.cantidadActual, unidadBase, prod.unidadMedida);
-        valorInventario += enUnidadCompra * toNumber(prod.precioUnitario);
+        // precioUnitario es el precio de 1 unidad de compra (ej. una bolsa de
+        // 25 kg); factor indica cuántas unidades base (g/ml) trae esa unidad
+        // de compra. cantidadActual ya está en unidad base, así que el precio
+        // por unidad base es precioUnitario / factor (mismo patrón que
+        // baseValue() en lib/fichas/costing.ts).
+        const { factor } = contenidoDeProducto(prod);
+        const precioPorUnidadBase = toNumber(prod.precioUnitario) / factor;
+        valorInventario += lote.cantidadActual * precioPorUnidadBase;
       }
     }
 
