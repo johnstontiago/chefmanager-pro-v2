@@ -252,10 +252,13 @@ export default function RecepcionContent({ userRole }: RecepcionContentProps) {
     // Modo piezas (peso variable) solo si variante formato + piezas
     const esPiezas =
       varianteOpen && tipoVariante === "formato" && formatoModo === "piezas";
+    // undefined (no 1) cuando no se declara un formato distinto, para que el
+    // servidor use el contenidoNeto del producto como factor por defecto en
+    // vez de interpretar "1" como un factor explícito del usuario.
     const factor =
       varianteOpen && tipoVariante === "formato" && formatoModo === "factor"
-        ? parseFloat(factorConv) || 1
-        : 1;
+        ? parseFloat(factorConv) || undefined
+        : undefined;
 
     // El estado de la línea se calcula igual que en el servidor (informativo en UI)
     const estadoLinea: EstadoLinea =
@@ -289,7 +292,7 @@ export default function RecepcionContent({ userRole }: RecepcionContentProps) {
       } else {
         payload.modo = "normal";
         payload.cantidad = drawerForm.cantidadRecibida;
-        payload.factorConversion = factor;
+        if (factor) payload.factorConversion = factor;
         if (varianteNombre.trim()) payload.varianteNombre = varianteNombre.trim();
       }
 

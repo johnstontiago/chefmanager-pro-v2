@@ -84,10 +84,11 @@ export async function POST(req: NextRequest) {
     // Por defecto, el factor es el "contenido por unidad de compra" ya
     // declarado en el producto (ej. 1 Un de "Caputo 25kg" = 25000 g). Un
     // factor explícito en la petición (formato distinto al habitual) lo
-    // sobreescribe.
+    // sobreescribe — un valor de 1 nunca es un factor real (equivale a "sin
+    // conversión"), así que se trata igual que si no se hubiera enviado.
     const contenidoNeto = toNumber(producto.contenidoNeto as any);
     const factorConversion =
-      factorConversionInput && factorConversionInput > 0
+      factorConversionInput && factorConversionInput > 1
         ? factorConversionInput
         : contenidoNeto > 0
           ? contenidoNeto
