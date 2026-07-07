@@ -2,6 +2,7 @@
 
 import prisma from '@/lib/db'
 import { convertir } from '@/lib/stock/convertir'
+import { toNumber } from '@/lib/utils'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth-options'
 import { getActiveTenantId } from '@/lib/get-active-tenant'
@@ -83,7 +84,12 @@ export async function registrarRecepcion(
         throw new Error('Se requiere cantidad > 0 para productos de peso fijo')
       }
 
-      let factorConversion = 1
+      // Por defecto, el factor es el "contenido por unidad de compra" ya
+      // declarado en el producto (ej. 1 Un de "Caputo 25kg" = 25000 g). Una
+      // variante de proveedor explícita (formato distinto al habitual) lo
+      // sobreescribe.
+      const contenidoNeto = toNumber(producto.contenidoNeto as any)
+      let factorConversion = contenidoNeto > 0 ? contenidoNeto : 1
 
       if (nuevaVariante) {
         const existente = await tx.varianteProveedor.findFirst({

@@ -5,6 +5,7 @@ import prisma from "@/lib/db";
 import { Decimal } from "@prisma/client/runtime/library";
 import { getActiveTenantId, getActiveUnidadId } from "@/lib/get-active-tenant";
 import { convertir } from "@/lib/stock/convertir";
+import { toNumber } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -51,7 +52,7 @@ export async function POST(req: NextRequest) {
     const body = (await req.json()) as Body;
     const {
       pedidoItemId, productoId, cantidadPedida, modo,
-      cantidad, factorConversion = 1, varianteNombre,
+      cantidad, factorConversion: factorConversionInput, varianteNombre,
       piezas, lote, fechaCaducidad, ubicacion, codigoUnico, esSustituto, notaSustituto,
       nuevoPrecio,
     } = body;
@@ -79,6 +80,18 @@ export async function POST(req: NextRequest) {
     const unidadDestino =
       producto.unidadBase ?? producto.contenidoUnidad ?? producto.unidadMedida;
     const caducidad = fechaCaducidad ? new Date(fechaCaducidad) : null;
+
+    // Por defecto, el factor es el "contenido por unidad de compra" ya
+    // declarado en el producto (ej. 1 Un de "Caputo 25kg" = 25000 g). Un
+    // factor explícito en la petición (formato distinto al habitual) lo
+    // sobreescribe.
+    const contenidoNeto = toNumber(producto.contenidoNeto as any);
+    const factorConversion =
+      factorConversionInput && factorConversionInput > 0
+        ? factorConversionInput
+        : contenidoNeto > 0
+          ? contenidoNeto
+          : 1;
 
     const resultado = await prisma.$transaction(async (tx) => {
       const lotesCreados: number[] = [];
