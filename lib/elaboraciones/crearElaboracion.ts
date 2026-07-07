@@ -17,6 +17,8 @@ interface CrearElaboracionInput {
   procedimiento?: string
   unidadBase: string
   stockMinimo?: number
+  contenidoNeto?: number
+  contenidoUnidad?: string
   ingredientes: IngredienteInput[]
 }
 
@@ -29,7 +31,7 @@ export interface ResultadoCrearElaboracion {
 export async function crearElaboracion(
   input: CrearElaboracionInput
 ): Promise<ResultadoCrearElaboracion> {
-  const { nombre, descripcion, procedimiento, unidadBase, stockMinimo, ingredientes } = input
+  const { nombre, descripcion, procedimiento, unidadBase, stockMinimo, contenidoNeto, contenidoUnidad, ingredientes } = input
 
   // tenantId SIEMPRE desde la sesión, nunca del cliente
   const session = await getServerSession(authOptions)
@@ -63,6 +65,8 @@ export async function crearElaboracion(
       procedimiento: procedimiento?.trim() || null,
       unidadBase,
       stockMinimo: stockMinimo ?? null,
+      contenidoNeto: unidadBase === 'unidad' && contenidoNeto && contenidoNeto > 0 ? contenidoNeto : null,
+      contenidoUnidad: unidadBase === 'unidad' && contenidoNeto && contenidoNeto > 0 ? contenidoUnidad || null : null,
       ingredientes: {
         create: ingredientes.map((ing) => ({
           tenantId,

@@ -36,6 +36,7 @@ type Ingrediente = {
 type Elaboracion = {
   id: number; nombre: string; descripcion: string | null; procedimiento: string | null;
   unidadBase: string; stockMinimo: number | null; stockActual: number;
+  contenidoNeto: number | null; contenidoUnidad: string | null;
   ingredientes: Ingrediente[];
 };
 interface Props { elaboraciones: Elaboracion[]; insumos: InsumoOpcion[]; rol: string; }
@@ -67,6 +68,8 @@ export default function ElaboracionesManager({ elaboraciones, insumos, rol }: Pr
   const [nombre, setNombre] = useState("");
   const [unidadBase, setUnidadBase] = useState("g");
   const [stockMinimo, setStockMinimo] = useState("");
+  const [contenidoNeto, setContenidoNeto] = useState("");
+  const [contenidoUnidad, setContenidoUnidad] = useState("g");
   const [procedimiento, setProcedimiento] = useState("");
   const [lineas, setLineas] = useState<LineaIng[]>([{ uid: 1, insumoId: null, cantidad: "", unidad: "g" }]);
   const [produccionLote, setProduccionLote] = useState("");
@@ -76,6 +79,7 @@ export default function ElaboracionesManager({ elaboraciones, insumos, rol }: Pr
 
   const resetForm = () => {
     setEditId(null); setNombre(""); setUnidadBase("g"); setStockMinimo("");
+    setContenidoNeto(""); setContenidoUnidad("g");
     setProcedimiento(""); setLineas([{ uid: 1, insumoId: null, cantidad: "", unidad: "g" }]);
     setProduccionLote(""); setError(null);
   };
@@ -109,6 +113,8 @@ export default function ElaboracionesManager({ elaboraciones, insumos, rol }: Pr
     setProduccionLote("");
     setEditId(e.id); setNombre(e.nombre); setUnidadBase(e.unidadBase);
     setStockMinimo(e.stockMinimo != null ? String(e.stockMinimo) : "");
+    setContenidoNeto(e.contenidoNeto != null ? String(e.contenidoNeto) : "");
+    setContenidoUnidad(e.contenidoUnidad || "g");
     setProcedimiento(e.procedimiento || "");
     setLineas(e.ingredientes.map((i) => ({
       uid: i.id, insumoId: i.insumo?.id ?? i.producto?.id ?? null, cantidad: String(i.cantidad), unidad: i.unidad,
@@ -131,6 +137,8 @@ export default function ElaboracionesManager({ elaboraciones, insumos, rol }: Pr
       procedimiento: procedimiento || undefined,
       unidadBase,
       stockMinimo: stockMinimo ? parseFloat(stockMinimo) : undefined,
+      contenidoNeto: unidadBase === "unidad" && contenidoNeto ? parseFloat(contenidoNeto) : undefined,
+      contenidoUnidad: unidadBase === "unidad" && contenidoNeto ? contenidoUnidad : undefined,
       ingredientes: validos.map((l) => ({
         insumoId: l.insumoId!, cantidad: parseFloat(l.cantidad), unidad: l.unidad,
       })),
@@ -190,6 +198,28 @@ export default function ElaboracionesManager({ elaboraciones, insumos, rol }: Pr
                       onChange={(e) => setStockMinimo(e.target.value)} placeholder="Opcional" />
                   </div>
                 </div>
+
+                {unidadBase === "unidad" && (
+                  <div className="rounded-lg border border-blue-200 bg-blue-50/50 p-3 space-y-2">
+                    <Label className="text-xs text-blue-800 font-medium">Contenido por unidad producida</Label>
+                    <p className="text-[11px] text-blue-700/80 leading-snug">
+                      Cuánto pesa o mide cada unidad (ej. 280 g por bola de masa). Permite usar esta
+                      elaboración como ingrediente tanto en unidades como en gramos/ml en otras recetas.
+                    </p>
+                    <div className="flex gap-2">
+                      <Input type="number" min="0.001" step="any" value={contenidoNeto}
+                        onChange={(e) => setContenidoNeto(e.target.value)}
+                        placeholder="Ej: 280" className="flex-1 bg-white h-9 text-sm" />
+                      <Select value={contenidoUnidad} onValueChange={setContenidoUnidad}>
+                        <SelectTrigger className="w-28 h-9 bg-white text-sm"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="g">g</SelectItem>
+                          <SelectItem value="ml">ml</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                )}
 
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
@@ -288,6 +318,9 @@ export default function ElaboracionesManager({ elaboraciones, insumos, rol }: Pr
                   <h3 className="font-semibold text-slate-900">{e.nombre}</h3>
                   <p className="text-sm text-slate-500 mt-0.5">
                     Stock: <strong>{e.stockActual.toFixed(1)} {e.unidadBase}</strong>
+                    {e.contenidoNeto != null && (
+                      <span className="text-slate-400"> (≈ {(e.stockActual * e.contenidoNeto).toFixed(0)} {e.contenidoUnidad})</span>
+                    )}
                     {e.stockMinimo != null && ` · mín. ${e.stockMinimo} ${e.unidadBase}`}
                   </p>
                   <div className="mt-2 flex flex-wrap gap-1">

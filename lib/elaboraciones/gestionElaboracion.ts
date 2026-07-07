@@ -19,6 +19,8 @@ interface EditarElaboracionInput {
   procedimiento?: string
   unidadBase: string
   stockMinimo?: number
+  contenidoNeto?: number
+  contenidoUnidad?: string
   ingredientes: IngredienteInput[]
 }
 
@@ -34,7 +36,7 @@ export async function editarElaboracion(
   if (!session?.user) return { ok: false, error: 'No autenticado' }
   const tenantId = getActiveTenantId(session.user as any)
 
-  const { id, nombre, descripcion, procedimiento, unidadBase, stockMinimo, ingredientes } = input
+  const { id, nombre, descripcion, procedimiento, unidadBase, stockMinimo, contenidoNeto, contenidoUnidad, ingredientes } = input
 
   const elaboracion = await prisma.elaboracion.findFirst({ where: { id, tenantId } })
   if (!elaboracion) return { ok: false, error: 'Elaboración no encontrada' }
@@ -68,6 +70,8 @@ export async function editarElaboracion(
         procedimiento: procedimiento?.trim() || null,
         unidadBase,
         stockMinimo: stockMinimo ?? null,
+        contenidoNeto: unidadBase === 'unidad' && contenidoNeto && contenidoNeto > 0 ? contenidoNeto : null,
+        contenidoUnidad: unidadBase === 'unidad' && contenidoNeto && contenidoNeto > 0 ? contenidoUnidad || null : null,
         ingredientes: {
           create: ingredientes.map((ing) => ({
             tenantId,

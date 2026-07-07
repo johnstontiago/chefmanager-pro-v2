@@ -48,3 +48,13 @@ export function convertir(cantidad: number, desde: string, hasta: string): numbe
   // cantidad × factor_origen / factor_destino
   return (cantidad * origen.factor) / destino.factor
 }
+
+// ¿Son "a" y "b" la misma unidad, o de la misma familia física (convertibles
+// sin pérdida de sentido)? Permite distinguir una conversión real de un
+// pass-through silencioso de convertir() cuando las familias no coinciden.
+export function unidadesCompatibles(a: string, b: string): boolean {
+  if (a.trim().toLowerCase() === b.trim().toLowerCase()) return true
+  const oa = parsearUnidad(a)
+  const ob = parsearUnidad(b)
+  return !!oa && !!ob && oa.base === ob.base
+}

@@ -24,6 +24,7 @@ import { canEditFichas } from "@/lib/fichas/roles";
 
 type Elaboracion = {
   id: number; nombre: string; unidadBase: string;
+  contenidoNeto: number | null; contenidoUnidad: string | null;
   ingredientes: {
     id: number; cantidad: number; unidad: string;
     producto: { id: number; nombre: string } | null;
@@ -209,6 +210,11 @@ export default function PreparacionesManager({ elaboraciones, producciones, rol 
                         <Label>Cantidad producida ({elaboracion.unidadBase}) *</Label>
                         <Input type="number" min="0.001" step="any" value={cantidad}
                           onChange={(e) => setCantidad(e.target.value)} placeholder="Ej: 2000" />
+                        {elaboracion.contenidoNeto && cantNum > 0 && (
+                          <p className="text-[11px] text-slate-400">
+                            ≈ {(cantNum * elaboracion.contenidoNeto).toFixed(0)} {elaboracion.contenidoUnidad} en total
+                          </p>
+                        )}
                       </div>
                       <div className="space-y-1.5">
                         <Label>Nº de envases/bolsas</Label>

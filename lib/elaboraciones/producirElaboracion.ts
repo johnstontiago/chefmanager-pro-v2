@@ -4,6 +4,7 @@ import prisma from '@/lib/db'
 import { consumirFIFO } from '@/lib/stock/consumirFIFO'
 import { consumirFIFOElaboracion } from '@/lib/stock/consumirFIFOElaboracion'
 import { convertir } from '@/lib/stock/convertir'
+import { convertirHaciaElaboracion } from '@/lib/fichas/costing'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth-options'
 import { getActiveTenantId } from '@/lib/get-active-tenant'
@@ -107,7 +108,7 @@ export async function producirElaboracion(
           })
         }
       } else if (elabAnidada) {
-        const cantidadNecesaria = convertir(ingrediente.cantidad * cantidadProducida, ingrediente.unidad, elabAnidada.unidadBase)
+        const cantidadNecesaria = convertirHaciaElaboracion(ingrediente.cantidad * cantidadProducida, ingrediente.unidad, elabAnidada)
 
         const resultado = await consumirFIFOElaboracion(
           {

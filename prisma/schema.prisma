@@ -489,6 +489,8 @@ model Elaboracion {
   procedimiento String?  // paso a paso de la elaboración
   unidadBase    String   @map("unidad_base")
   stockMinimo   Float?   @map("stock_minimo")
+  contenidoNeto    Float?  @map("contenido_neto")
+  contenidoUnidad  String? @map("contenido_unidad")
   activa        Boolean  @default(true)
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")

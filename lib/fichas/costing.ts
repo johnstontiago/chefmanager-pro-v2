@@ -1,6 +1,6 @@
 import prisma from "@/lib/db";
 import { toNumber } from "@/lib/utils";
-import { convertir } from "@/lib/stock/convertir";
+import { convertir, unidadesCompatibles } from "@/lib/stock/convertir";
 
 // Costeo en vivo del módulo de fichas técnicas.
 //
@@ -96,6 +96,52 @@ export function contenidoDeProducto(producto: ProductoCosteable): {
   return unidadDeReceta(producto.unidadMedida);
 }
 
+interface ElaboracionCosteable {
+  unidadBase: string;
+  contenidoNeto: number | null;
+  contenidoUnidad: string | null;
+}
+
+/**
+ * Cuánto contenido (en `contenidoUnidad`, ej. g) representa una unidad de
+ * `unidadBase` de la elaboración. Igual que `contenidoDeProducto`, pero solo
+ * aplica cuando la elaboración se cuenta en "unidad" (ej. porciones de masa
+ * de 280 g) — si no hay factor declarado, cae en la propia unidadBase (sin
+ * conversión, comportamiento idéntico al actual).
+ */
+export function contenidoDeElaboracion(elab: ElaboracionCosteable): {
+  unidad: string;
+  factor: number;
+} {
+  if (elab.contenidoNeto && elab.contenidoNeto > 0 && elab.contenidoUnidad) {
+    return { unidad: elab.contenidoUnidad, factor: elab.contenidoNeto };
+  }
+  return { unidad: elab.unidadBase, factor: 1 };
+}
+
+/**
+ * Convierte una cantidad declarada en `unidadOrigen` a la unidad de stock de
+ * una elaboración. Si las unidades son de la misma familia física, usa la
+ * conversión directa; si no (ej. se pide "150 g" de una elaboración que se
+ * cuenta en "unidad"), usa el factor de `contenidoDeElaboracion` para
+ * traducir entre unidades y peso/volumen. Si no hay información suficiente,
+ * devuelve la cantidad tal cual (mismo comportamiento que `convertir`).
+ */
+export function convertirHaciaElaboracion(
+  cantidad: number,
+  unidadOrigen: string,
+  elab: ElaboracionCosteable
+): number {
+  if (unidadesCompatibles(unidadOrigen, elab.unidadBase)) {
+    return convertir(cantidad, unidadOrigen, elab.unidadBase);
+  }
+  const { unidad, factor } = contenidoDeElaboracion(elab);
+  if (factor > 0 && unidadesCompatibles(unidadOrigen, unidad)) {
+    return convertir(cantidad, unidadOrigen, unidad) / factor;
+  }
+  return cantidad;
+}
+
 function baseValue(insumo: InsumoBase): number {
   if (insumo.producto) {
     const { factor } = contenidoDeProducto(insumo.producto);
@@ -143,6 +189,9 @@ export async function getLiveCostMaps(tenantId: number): Promise<LiveCostMaps> {
       where: { tenantId },
       select: {
         id: true,
+        unidadBase: true,
+        contenidoNeto: true,
+        contenidoUnidad: true,
         ingredientes: { select: { productoId: true, insumoId: true, cantidad: true, unidad: true } },
       },
     }),
@@ -184,9 +233,12 @@ export async function getLiveCostMaps(tenantId: number): Promise<LiveCostMaps> {
     for (const ing of elab.ingredientes) {
       if (ing.insumoId != null) {
         const insumo = insumoById.get(ing.insumoId);
-        const cantidadEnUnidadInsumo = insumo
-          ? convertir(ing.cantidad, ing.unidad, insumo.unidad)
-          : ing.cantidad;
+        const elabDelInsumo = insumo?.elaboracionId != null ? elabById.get(insumo.elaboracionId) : undefined;
+        const cantidadEnUnidadInsumo = elabDelInsumo
+          ? convertirHaciaElaboracion(ing.cantidad, ing.unidad, elabDelInsumo)
+          : insumo
+            ? convertir(ing.cantidad, ing.unidad, insumo.unidad)
+            : ing.cantidad;
         costo += cantidadEnUnidadInsumo * resolveInsumo(ing.insumoId, visiting);
       } else if (ing.productoId != null) {
         const prod = productoById.get(ing.productoId);
