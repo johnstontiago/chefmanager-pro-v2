@@ -73,8 +73,8 @@ export default function ModuloStockTab() {
   return (
     <div className="space-y-4">
       <div>
-        <h2 className="text-lg font-semibold text-slate-800">Módulo de Stock</h2>
-        <p className="text-sm text-slate-500">
+        <h2 className="text-lg font-semibold text-foreground">Módulo de Stock</h2>
+        <p className="text-sm text-muted-foreground">
           Accesos directos a los flujos de control de stock por lotes, elaboraciones y TPV.
         </p>
       </div>
@@ -84,17 +84,17 @@ export default function ModuloStockTab() {
           <Link
             key={acceso.href}
             href={acceso.href}
-            className="group flex items-start gap-3 rounded-lg border bg-white p-4 transition-colors hover:border-blue-300 hover:bg-blue-50/50"
+            className="group flex items-start gap-3 rounded-lg border bg-card p-4 transition-colors hover:border-blue-300 hover:bg-blue-50/50"
           >
             <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-blue-100 text-blue-600">
               <acceso.icon className="h-5 w-5" />
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-1.5">
-                <span className="font-medium text-slate-800">{acceso.titulo}</span>
-                <ArrowRight className="h-3.5 w-3.5 text-slate-400 opacity-0 transition-opacity group-hover:opacity-100" />
+                <span className="font-medium text-foreground">{acceso.titulo}</span>
+                <ArrowRight className="h-3.5 w-3.5 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
               </div>
-              <p className="mt-0.5 text-sm text-slate-500">{acceso.descripcion}</p>
+              <p className="mt-0.5 text-sm text-muted-foreground">{acceso.descripcion}</p>
             </div>
           </Link>
         ))}

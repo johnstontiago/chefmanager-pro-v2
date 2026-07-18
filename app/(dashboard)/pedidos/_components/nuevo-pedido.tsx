@@ -280,7 +280,7 @@ export default function NuevoPedido({ onPedidoCreated, pedidoEditar, onCancelarE
             {/* Filters */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
                   placeholder="Buscar producto..."
                   value={busqueda}
@@ -319,7 +319,7 @@ export default function NuevoPedido({ onPedidoCreated, pedidoEditar, onCancelarE
             {/* Product Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[60vh] overflow-y-auto">
               {productosFiltrados.length === 0 ? (
-                <div className="col-span-2 text-center py-8 text-slate-500">
+                <div className="col-span-2 text-center py-8 text-muted-foreground">
                   <Package className="w-12 h-12 mx-auto mb-3 opacity-30" />
                   <p>No se encontraron productos</p>
                 </div>
@@ -329,24 +329,24 @@ export default function NuevoPedido({ onPedidoCreated, pedidoEditar, onCancelarE
                   return (
                     <div
                       key={producto.id}
-                      className="flex items-center justify-between p-3 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors"
+                      className="flex items-center justify-between p-3 bg-muted rounded-lg hover:bg-muted transition-colors"
                     >
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-slate-800 truncate">
+                        <p className="font-medium text-foreground truncate">
                           {producto.nombre}
                         </p>
-                        <div className="flex items-center space-x-2 text-sm text-slate-500">
+                        <div className="flex items-center space-x-2 text-sm text-muted-foreground">
                           <span>{producto.unidadMedida}</span>
                         </div>
                         {(producto.fabricante || producto.formato) && (
-                          <p className="text-xs text-slate-400 truncate">
+                          <p className="text-xs text-muted-foreground truncate">
                             {producto.fabricante && <span>🏭 {producto.fabricante}</span>}
                             {producto.fabricante && producto.formato && <span className="mx-1">·</span>}
                             {producto.formato && <span>📦 {producto.formato}</span>}
                           </p>
                         )}
                         {producto.proveedor && (
-                          <p className="text-xs text-slate-400 truncate">
+                          <p className="text-xs text-muted-foreground truncate">
                             {producto.proveedor.nombre}
                           </p>
                         )}
@@ -386,7 +386,7 @@ export default function NuevoPedido({ onPedidoCreated, pedidoEditar, onCancelarE
           </CardHeader>
           <CardContent className="space-y-4">
             {carrito.length === 0 ? (
-              <div className="text-center py-8 text-slate-500">
+              <div className="text-center py-8 text-muted-foreground">
                 <ShoppingCart className="w-12 h-12 mx-auto mb-3 opacity-30" />
                 <p>Carrito vacío</p>
                 <p className="text-sm">Agrega productos del catálogo</p>
@@ -397,13 +397,13 @@ export default function NuevoPedido({ onPedidoCreated, pedidoEditar, onCancelarE
                   {carrito.map((item) => (
                     <div
                       key={item.productoId}
-                      className="flex items-center justify-between p-3 bg-slate-50 rounded-lg"
+                      className="flex items-center justify-between p-3 bg-muted rounded-lg"
                     >
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-slate-800 text-sm truncate">
+                        <p className="font-medium text-foreground text-sm truncate">
                           {item.producto.nombre}
                         </p>
-                        <p className="text-xs text-slate-500">
+                        <p className="text-xs text-muted-foreground">
                           {item.producto.unidadMedida}
                         </p>
                       </div>
@@ -451,7 +451,7 @@ export default function NuevoPedido({ onPedidoCreated, pedidoEditar, onCancelarE
                 <div className="border-t pt-4 space-y-2">
                   {carrito.map((item) => (
                     <div key={item.productoId} className="flex justify-between text-sm">
-                      <span className="text-slate-600 truncate max-w-[70%]">
+                      <span className="text-muted-foreground truncate max-w-[70%]">
                         {item.producto.nombre}
                       </span>
                       <span className="font-medium">
@@ -471,7 +471,7 @@ export default function NuevoPedido({ onPedidoCreated, pedidoEditar, onCancelarE
 
                 {/* Notes */}
                 <div>
-                  <label className="text-sm font-medium text-slate-700">Notas (opcional)</label>
+                  <label className="text-sm font-medium text-foreground">Notas (opcional)</label>
                   <textarea
                     value={notas}
                     onChange={(e) => setNotas(e.target.value)}

@@ -412,8 +412,8 @@ export default function RecepcionContent({ userRole }: RecepcionContentProps) {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-slate-800">Recepción de Mercancía</h1>
-        <p className="text-slate-500">Recibe y registra la mercancía de los pedidos</p>
+        <h1 className="text-2xl font-bold text-foreground">Recepción de Mercancía</h1>
+        <p className="text-muted-foreground">Recibe y registra la mercancía de los pedidos</p>
       </div>
 
       {!selectedPedido ? (
@@ -434,8 +434,8 @@ export default function RecepcionContent({ userRole }: RecepcionContentProps) {
               <Card>
                 <CardContent className="py-12 text-center">
                   <CheckCircle className="w-12 h-12 mx-auto mb-4 text-green-500" />
-                  <h3 className="text-lg font-semibold text-slate-800">Todo al día</h3>
-                  <p className="text-slate-500">No hay pedidos pendientes de recibir</p>
+                  <h3 className="text-lg font-semibold text-foreground">Todo al día</h3>
+                  <p className="text-muted-foreground">No hay pedidos pendientes de recibir</p>
                 </CardContent>
               </Card>
             ) : (
@@ -453,7 +453,7 @@ export default function RecepcionContent({ userRole }: RecepcionContentProps) {
                               <Badge className="bg-blue-100 text-blue-700">Enviado</Badge>
                             )}
                           </div>
-                          <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-600">
+                          <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
                             <span className="flex items-center">
                               <Calendar className="w-4 h-4 mr-1" />
                               {formatDate(pedido.fechaPedido)}
@@ -465,7 +465,7 @@ export default function RecepcionContent({ userRole }: RecepcionContentProps) {
                             <span className="font-semibold">{formatCurrency(pedido.total)}</span>
                           </div>
                           {pedido.notas && (
-                            <p className="text-sm text-slate-500 mt-2">{pedido.notas}</p>
+                            <p className="text-sm text-muted-foreground mt-2">{pedido.notas}</p>
                           )}
                         </div>
                         <Button
@@ -490,28 +490,28 @@ export default function RecepcionContent({ userRole }: RecepcionContentProps) {
               </CardHeader>
               <CardContent>
                 {historialRecepciones.length === 0 ? (
-                  <div className="text-center py-8 text-slate-500">
+                  <div className="text-center py-8 text-muted-foreground">
                     <History className="w-12 h-12 mx-auto mb-3 opacity-30" />
                     <p>No hay recepciones registradas</p>
                   </div>
                 ) : (
                   <div className="space-y-3">
                     {historialRecepciones.map((mov) => (
-                      <div key={mov.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
+                      <div key={mov.id} className="flex items-center justify-between p-4 bg-muted rounded-lg">
                         <div className="flex items-center space-x-3">
                           <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
                             <Package className="w-5 h-5 text-green-600" />
                           </div>
                           <div>
-                            <p className="font-medium text-slate-800">{mov.producto?.nombre}</p>
-                            <p className="text-sm text-slate-500">
+                            <p className="font-medium text-foreground">{mov.producto?.nombre}</p>
+                            <p className="text-sm text-muted-foreground">
                               {formatDecimal(mov.cantidad)} {mov.producto?.unidadMedida} • Lote: {mov.lote || "-"}
                             </p>
                           </div>
                         </div>
                         <div className="text-right">
-                          <p className="text-sm text-slate-600">{formatDate(mov.fecha)}</p>
-                          <p className="text-xs text-slate-400">{mov.usuario?.nombre}</p>
+                          <p className="text-sm text-muted-foreground">{formatDate(mov.fecha)}</p>
+                          <p className="text-xs text-muted-foreground">{mov.usuario?.nombre}</p>
                         </div>
                       </div>
                     ))}
@@ -527,7 +527,7 @@ export default function RecepcionContent({ userRole }: RecepcionContentProps) {
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-xl font-bold">Pedido #{selectedPedido.id}</h2>
-              <p className="text-sm text-slate-500">
+              <p className="text-sm text-muted-foreground">
                 {itemsRecibidosCount} de {selectedPedido.items?.length} ítems registrados
               </p>
             </div>
@@ -553,7 +553,7 @@ export default function RecepcionContent({ userRole }: RecepcionContentProps) {
               <Button
                 variant="ghost"
                 size="sm"
-                className="text-slate-500"
+                className="text-muted-foreground"
                 onClick={() => { setSelectedPedido(null); setItemStates({}); }}
               >
                 Volver
@@ -590,16 +590,16 @@ export default function RecepcionContent({ userRole }: RecepcionContentProps) {
                           {item.producto?.nombre}
                         </p>
                         {(item.producto?.fabricante || item.producto?.formato) && (
-                          <p className="text-xs text-slate-400">
+                          <p className="text-xs text-muted-foreground">
                             {item.producto?.fabricante && <span>🏭 {item.producto.fabricante}</span>}
                             {item.producto?.fabricante && item.producto?.formato && <span className="mx-1">·</span>}
                             {item.producto?.formato && <span>📦 {item.producto.formato}</span>}
                           </p>
                         )}
-                        <p className="text-sm text-slate-500">
+                        <p className="text-sm text-muted-foreground">
                           Pedido: {formatDecimal(item.cantidad)} {item.producto?.unidadMedida}
                           {recibido && (
-                            <span className="ml-2 text-slate-600">
+                            <span className="ml-2 text-muted-foreground">
                               → Recibido: {formatDecimal(state.cantidadRecibida)}
                               {state.lote && ` • Lote: ${state.lote}`}
                             </span>
@@ -686,7 +686,7 @@ export default function RecepcionContent({ userRole }: RecepcionContentProps) {
               <Package className="w-5 h-5 text-green-600" />
               {drawerItem?.producto?.nombre}
             </DrawerTitle>
-            <p className="text-sm text-slate-500 mt-1">
+            <p className="text-sm text-muted-foreground mt-1">
               Cantidad pedida: {formatDecimal(drawerItem?.cantidad)} {drawerItem?.producto?.unidadMedida}
             </p>
           </DrawerHeader>
@@ -694,8 +694,8 @@ export default function RecepcionContent({ userRole }: RecepcionContentProps) {
           {drawerForm && (
             <div className="flex-1 min-h-0 px-4 pb-6 space-y-4 overflow-y-auto">
               {/* ¿La mercancía llegó como se pidió? */}
-              <div className="rounded-lg border p-3 space-y-3 bg-slate-50">
-                <p className="text-sm font-medium text-slate-700">
+              <div className="rounded-lg border p-3 space-y-3 bg-muted">
+                <p className="text-sm font-medium text-foreground">
                   ¿La mercancía llegó como se pidió?
                 </p>
                 <div className="grid grid-cols-2 gap-2">
@@ -705,7 +705,7 @@ export default function RecepcionContent({ userRole }: RecepcionContentProps) {
                     className={`py-2 px-3 rounded-md text-sm font-medium border transition-colors ${
                       !varianteOpen
                         ? "bg-green-600 text-white border-green-600"
-                        : "bg-white text-slate-600 border-slate-200 hover:bg-slate-100"
+                        : "bg-card text-muted-foreground border-border hover:bg-muted"
                     }`}
                   >
                     Sí, recepción normal
@@ -716,7 +716,7 @@ export default function RecepcionContent({ userRole }: RecepcionContentProps) {
                     className={`py-2 px-3 rounded-md text-sm font-medium border transition-colors ${
                       varianteOpen
                         ? "bg-amber-500 text-white border-amber-500"
-                        : "bg-white text-slate-600 border-slate-200 hover:bg-slate-100"
+                        : "bg-card text-muted-foreground border-border hover:bg-muted"
                     }`}
                   >
                     Llegó diferente
@@ -733,7 +733,7 @@ export default function RecepcionContent({ userRole }: RecepcionContentProps) {
                         className={`py-1.5 px-2 rounded text-xs font-medium border ${
                           tipoVariante === "formato"
                             ? "bg-blue-100 text-blue-700 border-blue-300"
-                            : "bg-white text-slate-500 border-slate-200"
+                            : "bg-card text-muted-foreground border-border"
                         }`}
                       >
                         Formato distinto
@@ -744,7 +744,7 @@ export default function RecepcionContent({ userRole }: RecepcionContentProps) {
                         className={`py-1.5 px-2 rounded text-xs font-medium border ${
                           tipoVariante === "sustituto"
                             ? "bg-blue-100 text-blue-700 border-blue-300"
-                            : "bg-white text-slate-500 border-slate-200"
+                            : "bg-card text-muted-foreground border-border"
                         }`}
                       >
                         Otro producto (sustituto)
@@ -760,8 +760,8 @@ export default function RecepcionContent({ userRole }: RecepcionContentProps) {
                             onClick={() => setFormatoModo("factor")}
                             className={`py-1.5 px-2 rounded text-xs border ${
                               formatoModo === "factor"
-                                ? "bg-white text-slate-800 border-blue-300 ring-1 ring-blue-200"
-                                : "bg-white text-slate-500 border-slate-200"
+                                ? "bg-card text-foreground border-blue-300 ring-1 ring-blue-200"
+                                : "bg-card text-muted-foreground border-border"
                             }`}
                           >
                             Cantidad × factor
@@ -771,8 +771,8 @@ export default function RecepcionContent({ userRole }: RecepcionContentProps) {
                             onClick={() => setFormatoModo("piezas")}
                             className={`py-1.5 px-2 rounded text-xs border ${
                               formatoModo === "piezas"
-                                ? "bg-white text-slate-800 border-blue-300 ring-1 ring-blue-200"
-                                : "bg-white text-slate-500 border-slate-200"
+                                ? "bg-card text-foreground border-blue-300 ring-1 ring-blue-200"
+                                : "bg-card text-muted-foreground border-border"
                             }`}
                           >
                             Piezas (peso variable)
@@ -792,7 +792,7 @@ export default function RecepcionContent({ userRole }: RecepcionContentProps) {
                                 placeholder="Ej: 2"
                                 value={factorConv}
                                 onChange={(e) => setFactorConv(e.target.value)}
-                                className="mt-1 bg-white"
+                                className="mt-1 bg-card"
                               />
                             </div>
                             <div>
@@ -801,7 +801,7 @@ export default function RecepcionContent({ userRole }: RecepcionContentProps) {
                                 placeholder="Ej: Caja 2kg"
                                 value={varianteNombre}
                                 onChange={(e) => setVarianteNombre(e.target.value)}
-                                className="mt-1 bg-white"
+                                className="mt-1 bg-card"
                               />
                             </div>
                           </div>
@@ -810,10 +810,10 @@ export default function RecepcionContent({ userRole }: RecepcionContentProps) {
                         {formatoModo === "piezas" && (
                           <div className="space-y-2">
                             <Label className="text-xs">Piezas recibidas (kg c/u)</Label>
-                            <div className="rounded border bg-white divide-y">
+                            <div className="rounded border bg-card divide-y">
                               {piezasRecep.map((p, i) => (
                                 <div key={p.id} className="flex items-center gap-2 px-2 py-1.5">
-                                  <span className="text-xs text-slate-400 w-12">#{i + 1}</span>
+                                  <span className="text-xs text-muted-foreground w-12">#{i + 1}</span>
                                   <Input
                                     type="number"
                                     step="0.001"
@@ -852,7 +852,7 @@ export default function RecepcionContent({ userRole }: RecepcionContentProps) {
                             >
                               + Añadir pieza
                             </button>
-                            <p className="text-xs text-slate-500">
+                            <p className="text-xs text-muted-foreground">
                               Total:{" "}
                               {piezasRecep
                                 .reduce((s, x) => s + (parseFloat(x.pesoKg) || 0), 0)
@@ -872,7 +872,7 @@ export default function RecepcionContent({ userRole }: RecepcionContentProps) {
                           value={sustitutoId?.toString() ?? ""}
                           onValueChange={(v) => setSustitutoId(parseInt(v, 10))}
                         >
-                          <SelectTrigger className="mt-1 bg-white">
+                          <SelectTrigger className="mt-1 bg-card">
                             <SelectValue placeholder="Selecciona el producto" />
                           </SelectTrigger>
                           <SelectContent>
@@ -883,7 +883,7 @@ export default function RecepcionContent({ userRole }: RecepcionContentProps) {
                             ))}
                           </SelectContent>
                         </Select>
-                        <p className="text-xs text-slate-500 mt-1">
+                        <p className="text-xs text-muted-foreground mt-1">
                           El stock se sumará a este producto, no al pedido original.
                         </p>
                       </div>
@@ -898,7 +898,7 @@ export default function RecepcionContent({ userRole }: RecepcionContentProps) {
                   <Label htmlFor="cant-recibida">
                     Cantidad recibida *
                     {varianteOpen && tipoVariante === "formato" && formatoModo === "factor" && (
-                      <span className="text-xs text-slate-400 ml-1">(nº de unidades del formato)</span>
+                      <span className="text-xs text-muted-foreground ml-1">(nº de unidades del formato)</span>
                     )}
                   </Label>
                   <Input
@@ -933,13 +933,13 @@ export default function RecepcionContent({ userRole }: RecepcionContentProps) {
                   }
                   className="mt-1"
                 />
-                <p className="text-xs text-slate-500 mt-1">
+                <p className="text-xs text-muted-foreground mt-1">
                   Vacío = mantiene el precio actual. Con valor = actualiza este lote y el precio del producto.
                 </p>
               </div>
 
-              <div className="border border-slate-200 rounded-lg p-3 space-y-3 bg-slate-50">
-                <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">Lote y caducidad</p>
+              <div className="border border-border rounded-lg p-3 space-y-3 bg-muted">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Lote y caducidad</p>
                 <ScanEtiqueta
                   disabled={savingItem}
                   onScan={(result) =>
@@ -961,7 +961,7 @@ export default function RecepcionContent({ userRole }: RecepcionContentProps) {
                     placeholder="LOT-XXXX"
                     value={drawerForm.lote}
                     onChange={(e) => setDrawerForm((f) => f ? { ...f, lote: e.target.value } : f)}
-                    className="mt-1 bg-white"
+                    className="mt-1 bg-card"
                   />
                 </div>
                 <div>
@@ -971,7 +971,7 @@ export default function RecepcionContent({ userRole }: RecepcionContentProps) {
                     type="date"
                     value={drawerForm.fechaCaducidad}
                     onChange={(e) => setDrawerForm((f) => f ? { ...f, fechaCaducidad: e.target.value } : f)}
-                    className="mt-1 bg-white"
+                    className="mt-1 bg-card"
                   />
                 </div>
               </div>

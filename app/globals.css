@@ -2,10 +2,147 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ============================================================
+   TEMAS — cada bloque define los tokens shadcn que consume
+   tailwind.config.ts (hsl(var(--token))). El selector del
+   header cambia la clase de <html> vía next-themes.
+   "Actual" = :root (default, azul/blanco/slate).
+   ============================================================ */
+
 :root {
-    --foreground-rgb: 15, 23, 42;
-    --background-start-rgb: 248, 250, 252;
-    --background-end-rgb: 241, 245, 249;
+    --background: 210 40% 98%;
+    --foreground: 222 47% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+    --primary: 221 83% 53%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222 47% 11%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
+    --accent: 210 40% 96%;
+    --accent-foreground: 222 47% 11%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 221 83% 53%;
+    --radius: 0.5rem;
+    --chart-1: 221 83% 53%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 35 85% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 0 72% 51%;
+    --sidebar: 222 47% 11%;
+    --sidebar-foreground: 210 40% 96%;
+    --sidebar-accent: 217 33% 20%;
+    --sidebar-border: 217 33% 24%;
+    --sidebar-primary: 221 83% 53%;
+    --sidebar-primary-foreground: 0 0% 100%;
+}
+
+/* Mediterráneo — azul, blanco cálido y ocre */
+.mediterraneo {
+    --background: 40 33% 97%;
+    --foreground: 205 45% 18%;
+    --card: 0 0% 100%;
+    --card-foreground: 205 45% 18%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 205 45% 18%;
+    --primary: 205 72% 42%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 40 38% 90%;
+    --secondary-foreground: 205 45% 18%;
+    --muted: 40 28% 92%;
+    --muted-foreground: 30 18% 40%;
+    --accent: 35 68% 52%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 6 68% 50%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 40 26% 84%;
+    --input: 40 26% 84%;
+    --ring: 205 72% 42%;
+    --chart-1: 205 72% 42%;
+    --chart-2: 35 68% 52%;
+    --chart-3: 175 45% 42%;
+    --chart-4: 25 60% 55%;
+    --chart-5: 205 40% 30%;
+    --sidebar: 205 55% 15%;
+    --sidebar-foreground: 40 33% 95%;
+    --sidebar-accent: 205 45% 23%;
+    --sidebar-border: 205 40% 26%;
+    --sidebar-primary: 35 68% 52%;
+    --sidebar-primary-foreground: 0 0% 100%;
+}
+
+/* Night — alto contraste, fondo profundo */
+.night {
+    --background: 222 47% 6%;
+    --foreground: 0 0% 98%;
+    --card: 222 40% 10%;
+    --card-foreground: 0 0% 98%;
+    --popover: 222 40% 10%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 210 100% 60%;
+    --primary-foreground: 222 47% 6%;
+    --secondary: 217 33% 18%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 217 33% 16%;
+    --muted-foreground: 215 22% 72%;
+    --accent: 217 33% 22%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 217 33% 24%;
+    --input: 217 33% 24%;
+    --ring: 210 100% 60%;
+    --chart-1: 210 100% 60%;
+    --chart-2: 160 70% 50%;
+    --chart-3: 40 95% 60%;
+    --chart-4: 280 75% 68%;
+    --chart-5: 0 84% 62%;
+    --sidebar: 222 47% 4%;
+    --sidebar-foreground: 0 0% 95%;
+    --sidebar-accent: 217 33% 16%;
+    --sidebar-border: 217 33% 20%;
+    --sidebar-primary: 210 100% 60%;
+    --sidebar-primary-foreground: 222 47% 6%;
+}
+
+/* Mono — escala de grises */
+.mono {
+    --background: 0 0% 98%;
+    --foreground: 0 0% 10%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 10%;
+    --primary: 0 0% 20%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 0 0% 92%;
+    --secondary-foreground: 0 0% 15%;
+    --muted: 0 0% 94%;
+    --muted-foreground: 0 0% 45%;
+    --accent: 0 0% 88%;
+    --accent-foreground: 0 0% 15%;
+    --destructive: 0 0% 30%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 85%;
+    --input: 0 0% 85%;
+    --ring: 0 0% 40%;
+    --chart-1: 0 0% 20%;
+    --chart-2: 0 0% 40%;
+    --chart-3: 0 0% 55%;
+    --chart-4: 0 0% 70%;
+    --chart-5: 0 0% 82%;
+    --sidebar: 0 0% 15%;
+    --sidebar-foreground: 0 0% 95%;
+    --sidebar-accent: 0 0% 24%;
+    --sidebar-border: 0 0% 28%;
+    --sidebar-primary: 0 0% 45%;
+    --sidebar-primary-foreground: 0 0% 98%;
 }
 
 html {
@@ -13,12 +150,8 @@ html {
 }
 
 body {
-    color: rgb(var(--foreground-rgb));
-    background: linear-gradient(
-          to bottom,
-          rgb(var(--background-start-rgb)),
-          rgb(var(--background-end-rgb))
-        );
+    color: hsl(var(--foreground));
+    background-color: hsl(var(--background));
     min-height: 100vh;
     overflow-x: hidden;
 }
@@ -40,16 +173,16 @@ body.menu-open {
 }
 
 ::-webkit-scrollbar-track {
-    background: #f1f5f9;
+    background: hsl(var(--muted));
 }
 
 ::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
+    background: hsl(var(--border));
     border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: #94a3b8;
+    background: hsl(var(--muted-foreground));
 }
 
 /* Number input without spinners */

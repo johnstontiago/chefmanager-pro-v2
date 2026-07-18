@@ -278,7 +278,7 @@ export function FichaForm({ initialData, onSubmit, loading }: FichaFormProps) {
         </div>
 
         {ingredientes.length === 0 && (
-          <p className="text-sm text-slate-400 text-center py-3 bg-slate-50 rounded-lg border border-slate-200">
+          <p className="text-sm text-muted-foreground text-center py-3 bg-muted rounded-lg border border-border">
             No hay ingredientes. Añade uno.
           </p>
         )}
@@ -289,7 +289,7 @@ export function FichaForm({ initialData, onSubmit, loading }: FichaFormProps) {
             return (
               <div
                 key={idx}
-                className="flex flex-col sm:flex-row sm:items-center gap-2 p-2 bg-slate-50 rounded-lg border border-slate-200"
+                className="flex flex-col sm:flex-row sm:items-center gap-2 p-2 bg-muted rounded-lg border border-border"
               >
                 <div className="flex-1 min-w-0">
                   <Select
@@ -329,7 +329,7 @@ export function FichaForm({ initialData, onSubmit, loading }: FichaFormProps) {
                     className="h-10 text-sm w-24"
                   />
                   {insumo && (
-                    <span className="text-xs text-slate-400 w-8 flex-shrink-0">{insumo.unidad}</span>
+                    <span className="text-xs text-muted-foreground w-8 flex-shrink-0">{insumo.unidad}</span>
                   )}
                   <span className="text-xs text-blue-600 font-medium w-16 text-right flex-shrink-0">
                     {formatCurrency(ing.costoCalculado)}

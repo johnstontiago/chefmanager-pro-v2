@@ -195,11 +195,11 @@ export default function SugerenciasPedidoPage() {
         <div>
           <div className="flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-blue-600" />
-            <h1 className="text-xl sm:text-2xl font-bold text-slate-900">
+            <h1 className="text-xl sm:text-2xl font-bold text-foreground">
               Sugerencias de pedido
             </h1>
           </div>
-          <p className="text-slate-500 text-sm">
+          <p className="text-muted-foreground text-sm">
             Basadas en tu consumo y compras de las últimas 12 semanas
           </p>
         </div>
@@ -234,18 +234,18 @@ export default function SugerenciasPedidoPage() {
       {loading ? (
         <div className="space-y-2">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-16 bg-white rounded-lg border border-slate-200 animate-pulse" />
+            <div key={i} className="h-16 bg-card rounded-lg border border-border animate-pulse" />
           ))}
         </div>
       ) : error ? (
-        <div className="text-center py-12 bg-white rounded-lg border border-slate-200">
+        <div className="text-center py-12 bg-card rounded-lg border border-border">
           <p className="text-red-600">{error}</p>
         </div>
       ) : lineas.length === 0 ? (
-        <div className="text-center py-16 bg-white rounded-lg border border-slate-200">
-          <TrendingUp className="h-12 w-12 text-slate-300 mx-auto mb-3" />
-          <h3 className="text-slate-600 font-medium">Sin sugerencias por ahora</h3>
-          <p className="text-slate-400 text-sm mt-1 max-w-md mx-auto">
+        <div className="text-center py-16 bg-card rounded-lg border border-border">
+          <TrendingUp className="h-12 w-12 text-muted-foreground/40 mx-auto mb-3" />
+          <h3 className="text-muted-foreground font-medium">Sin sugerencias por ahora</h3>
+          <p className="text-muted-foreground text-sm mt-1 max-w-md mx-auto">
             No hay necesidad de reponer según el historial, o aún falta historial de
             consumo y pedidos. Las sugerencias mejoran cuando la cocina registra los
             consumos en el módulo Consumo.
@@ -257,7 +257,7 @@ export default function SugerenciasPedidoPage() {
             <CardHeader className="pb-2">
               <CardTitle className="text-base flex items-center justify-between">
                 <span>{lineas.length} producto(s) con reposición sugerida</span>
-                <span className="text-sm font-normal text-slate-500">
+                <span className="text-sm font-normal text-muted-foreground">
                   Marca, ajusta cantidades y crea el borrador
                 </span>
               </CardTitle>
@@ -267,7 +267,7 @@ export default function SugerenciasPedidoPage() {
                 <div
                   key={linea.productoId}
                   className={`flex flex-col sm:flex-row sm:items-center gap-3 p-3 rounded-lg border transition-colors ${
-                    linea.incluida ? "bg-white border-slate-200" : "bg-slate-50 border-slate-100 opacity-60"
+                    linea.incluida ? "bg-card border-border" : "bg-muted border-border opacity-60"
                   }`}
                 >
                   <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -278,8 +278,8 @@ export default function SugerenciasPedidoPage() {
                       }}
                     />
                     <div className="min-w-0">
-                      <p className="font-medium text-slate-900 truncate">{linea.nombre}</p>
-                      <p className="text-xs text-slate-500">
+                      <p className="font-medium text-foreground truncate">{linea.nombre}</p>
+                      <p className="text-xs text-muted-foreground">
                         Previsto: {linea.consumoSemanalPrevisto} {linea.unidadMedida}/sem · Stock:{" "}
                         {linea.stockDisponible} · Colchón: {linea.colchonSeguridad}
                         {factorFestivo > 1 && " · ×" + factorFestivo + " festivo"}
@@ -310,8 +310,8 @@ export default function SugerenciasPedidoPage() {
                       }
                       className="w-24 h-10"
                     />
-                    <span className="text-xs text-slate-400 w-16">{linea.unidadMedida}</span>
-                    <span className="text-sm text-slate-600 font-medium w-20 text-right">
+                    <span className="text-xs text-muted-foreground w-16">{linea.unidadMedida}</span>
+                    <span className="text-sm text-muted-foreground font-medium w-20 text-right">
                       {formatCurrency((parseFloat(linea.cantidad) || 0) * linea.precioUnitario)}
                     </span>
                   </div>
@@ -320,12 +320,12 @@ export default function SugerenciasPedidoPage() {
             </CardContent>
           </Card>
 
-          <div className="sticky bottom-4 bg-white border border-slate-200 rounded-lg shadow-lg p-4 flex flex-wrap items-center justify-between gap-3">
+          <div className="sticky bottom-4 bg-card border border-border rounded-lg shadow-lg p-4 flex flex-wrap items-center justify-between gap-3">
             <div>
-              <p className="text-sm text-slate-500">
+              <p className="text-sm text-muted-foreground">
                 {seleccionadas.length} producto(s) seleccionado(s)
               </p>
-              <p className="text-lg font-bold text-slate-900">
+              <p className="text-lg font-bold text-foreground">
                 Total estimado: {formatCurrency(totalEstimado)}
               </p>
             </div>
@@ -347,28 +347,28 @@ export default function SugerenciasPedidoPage() {
 
       {/* Gestión de festivos */}
       <Dialog open={modalFestivos} onOpenChange={setModalFestivos}>
-        <DialogContent className="bg-white max-w-md">
+        <DialogContent className="bg-card max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <CalendarDays className="h-5 w-5 text-blue-600" />
               Festivos y eventos
             </DialogTitle>
           </DialogHeader>
-          <p className="text-sm text-slate-500 -mt-2">
+          <p className="text-sm text-muted-foreground -mt-2">
             En semanas con festivo, las sugerencias se multiplican por el factor.
           </p>
           <div className="max-h-60 overflow-y-auto space-y-1.5">
             {proximosFestivos.length === 0 && (
-              <p className="text-sm text-slate-400 text-center py-3">Sin festivos próximos</p>
+              <p className="text-sm text-muted-foreground text-center py-3">Sin festivos próximos</p>
             )}
             {proximosFestivos.map((f) => (
               <div
                 key={f.id}
-                className="flex items-center justify-between py-1.5 px-3 bg-slate-50 rounded-lg border border-slate-100 text-sm"
+                className="flex items-center justify-between py-1.5 px-3 bg-muted rounded-lg border border-border text-sm"
               >
                 <div>
-                  <span className="font-medium text-slate-800">{f.nombre}</span>
-                  <span className="text-slate-400 ml-2">{f.fecha}</span>
+                  <span className="font-medium text-foreground">{f.nombre}</span>
+                  <span className="text-muted-foreground ml-2">{f.fecha}</span>
                 </div>
                 <div className="flex items-center gap-1">
                   <Badge variant="secondary" className="text-xs">×{f.factor}</Badge>

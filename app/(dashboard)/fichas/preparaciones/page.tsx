@@ -77,8 +77,8 @@ export default async function FichasPreparacionesPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">Preparaciones</h1>
-        <p className="text-slate-500 text-sm">
+        <h1 className="text-2xl font-bold text-foreground">Preparaciones</h1>
+        <p className="text-muted-foreground text-sm">
           Producir una elaboración: entra al stock como lote e imprime etiquetas
         </p>
       </div>

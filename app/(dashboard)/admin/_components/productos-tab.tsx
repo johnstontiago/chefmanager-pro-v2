@@ -219,7 +219,7 @@ export default function ProductosTab() {
             </CardTitle>
             <div className="flex flex-wrap items-center gap-2">
               <div className="relative flex-1 min-w-[140px]">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
                   placeholder="Buscar..."
                   value={busqueda}
@@ -237,20 +237,20 @@ export default function ProductosTab() {
         </CardHeader>
         <CardContent>
           {productosFiltrados.length === 0 ? (
-            <div className="text-center py-12 text-slate-500">
+            <div className="text-center py-12 text-muted-foreground">
               <Package className="w-12 h-12 mx-auto mb-3 opacity-30" />
               <p>No hay productos</p>
             </div>
           ) : (
             <div className="space-y-2">
               {productosFiltrados.map((prod) => (
-                <div key={prod.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors">
+                <div key={prod.id} className="flex items-center justify-between p-4 bg-muted rounded-lg hover:bg-muted transition-colors">
                   <div className="flex-1">
                     <div className="flex items-center space-x-2">
-                      <h4 className="font-semibold text-slate-800">{prod.nombre}</h4>
+                      <h4 className="font-semibold text-foreground">{prod.nombre}</h4>
                       {!prod.activo && <Badge variant="secondary">Inactivo</Badge>}
                     </div>
-                    <div className="flex flex-wrap gap-x-3 gap-y-1 text-sm text-slate-500 mt-1">
+                    <div className="flex flex-wrap gap-x-3 gap-y-1 text-sm text-muted-foreground mt-1">
                       <span>{prod.categoria?.nombre || "-"}</span>
                       {prod.fabricante && <span>{prod.fabricante}</span>}
                       {prod.formato && <span className="italic">{prod.formato}</span>}

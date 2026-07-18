@@ -48,8 +48,8 @@ export default async function FichasElaboracionesPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">Elaboraciones</h1>
-        <p className="text-slate-500 text-sm">
+        <h1 className="text-2xl font-bold text-foreground">Elaboraciones</h1>
+        <p className="text-muted-foreground text-sm">
           Recetas base: ingredientes, cantidades y paso a paso
         </p>
       </div>

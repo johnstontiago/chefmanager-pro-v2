@@ -12,7 +12,7 @@ export const dynamic = "force-dynamic";
 
 function planBadge(plan: string) {
   const map: Record<string, { label: string; className: string }> = {
-    basico:       { label: "Básico",       className: "bg-slate-100 text-slate-700 border-slate-200" },
+    basico:       { label: "Básico",       className: "bg-muted text-foreground border-border" },
     profesional:  { label: "Profesional",  className: "bg-blue-100 text-blue-700 border-blue-200" },
     enterprise:   { label: "Enterprise",   className: "bg-purple-100 text-purple-700 border-purple-200" },
   };
@@ -56,11 +56,11 @@ export default async function SuperadminPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
+          <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
             <Crown className="w-6 h-6 text-purple-600" />
             Panel de Administración
           </h1>
-          <p className="text-slate-500 text-sm mt-1">Gestión de negocios clientes</p>
+          <p className="text-muted-foreground text-sm mt-1">Gestión de negocios clientes</p>
         </div>
         <Link href="/superadmin/tenants/nuevo">
           <Button className="bg-purple-600 hover:bg-purple-700 text-white">
@@ -74,8 +74,8 @@ export default async function SuperadminPage() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardContent className="p-4">
-            <div className="text-2xl font-bold text-slate-800">{total}</div>
-            <div className="text-sm text-slate-500 flex items-center gap-1 mt-1">
+            <div className="text-2xl font-bold text-foreground">{total}</div>
+            <div className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
               <Building2 className="w-3.5 h-3.5" /> Total negocios
             </div>
           </CardContent>
@@ -83,7 +83,7 @@ export default async function SuperadminPage() {
         <Card>
           <CardContent className="p-4">
             <div className="text-2xl font-bold text-green-600">{activos}</div>
-            <div className="text-sm text-slate-500 flex items-center gap-1 mt-1">
+            <div className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
               <CheckCircle2 className="w-3.5 h-3.5" /> Activos
             </div>
           </CardContent>
@@ -91,7 +91,7 @@ export default async function SuperadminPage() {
         <Card>
           <CardContent className="p-4">
             <div className="text-2xl font-bold text-yellow-500">{proximos}</div>
-            <div className="text-sm text-slate-500 flex items-center gap-1 mt-1">
+            <div className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
               <AlertCircle className="w-3.5 h-3.5" /> Vencen pronto
             </div>
           </CardContent>
@@ -99,7 +99,7 @@ export default async function SuperadminPage() {
         <Card>
           <CardContent className="p-4">
             <div className="text-2xl font-bold text-red-500">{total - activos + vencidos}</div>
-            <div className="text-sm text-slate-500 flex items-center gap-1 mt-1">
+            <div className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
               <XCircle className="w-3.5 h-3.5" /> Suspendidos/Vencidos
             </div>
           </CardContent>
@@ -113,7 +113,7 @@ export default async function SuperadminPage() {
         </CardHeader>
         <CardContent className="p-0">
           {tenants.length === 0 ? (
-            <div className="text-center py-16 text-slate-400">
+            <div className="text-center py-16 text-muted-foreground">
               <Building2 className="w-10 h-10 mx-auto mb-3 opacity-30" />
               <p className="font-medium">Aún no hay negocios registrados</p>
               <p className="text-sm mt-1">Crea el primero con "Nuevo Negocio"</p>
@@ -122,30 +122,30 @@ export default async function SuperadminPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b bg-slate-50">
-                    <th className="text-left px-4 py-3 font-medium text-slate-600">Negocio</th>
-                    <th className="text-left px-4 py-3 font-medium text-slate-600 hidden md:table-cell">Plan</th>
-                    <th className="text-left px-4 py-3 font-medium text-slate-600 hidden lg:table-cell">Vencimiento</th>
-                    <th className="text-left px-4 py-3 font-medium text-slate-600 hidden md:table-cell">Usuarios</th>
-                    <th className="text-left px-4 py-3 font-medium text-slate-600">Estado</th>
-                    <th className="text-right px-4 py-3 font-medium text-slate-600">Acciones</th>
+                  <tr className="border-b bg-muted">
+                    <th className="text-left px-4 py-3 font-medium text-muted-foreground">Negocio</th>
+                    <th className="text-left px-4 py-3 font-medium text-muted-foreground hidden md:table-cell">Plan</th>
+                    <th className="text-left px-4 py-3 font-medium text-muted-foreground hidden lg:table-cell">Vencimiento</th>
+                    <th className="text-left px-4 py-3 font-medium text-muted-foreground hidden md:table-cell">Usuarios</th>
+                    <th className="text-left px-4 py-3 font-medium text-muted-foreground">Estado</th>
+                    <th className="text-right px-4 py-3 font-medium text-muted-foreground">Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
                   {tenants.map((tenant) => (
-                    <tr key={tenant.id} className="border-b last:border-0 hover:bg-slate-50 transition-colors">
+                    <tr key={tenant.id} className="border-b last:border-0 hover:bg-muted transition-colors">
                       <td className="px-4 py-3">
-                        <div className="font-medium text-slate-800">{tenant.nombre}</div>
-                        <div className="text-xs text-slate-400">{tenant.email}</div>
+                        <div className="font-medium text-foreground">{tenant.nombre}</div>
+                        <div className="text-xs text-muted-foreground">{tenant.email}</div>
                       </td>
                       <td className="px-4 py-3 hidden md:table-cell">{planBadge(tenant.plan)}</td>
-                      <td className="px-4 py-3 hidden lg:table-cell text-slate-500">
+                      <td className="px-4 py-3 hidden lg:table-cell text-muted-foreground">
                         {tenant.fechaVencimiento
                           ? new Date(tenant.fechaVencimiento).toLocaleDateString("es-ES")
-                          : <span className="text-slate-300">—</span>}
+                          : <span className="text-muted-foreground/40">—</span>}
                       </td>
                       <td className="px-4 py-3 hidden md:table-cell">
-                        <span className="flex items-center gap-1 text-slate-500">
+                        <span className="flex items-center gap-1 text-muted-foreground">
                           <Users className="w-3.5 h-3.5" />
                           {tenant._count.usuarios}
                         </span>

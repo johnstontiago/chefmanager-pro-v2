@@ -286,14 +286,14 @@ export default function TenantDetailClient({ tenant: initial }: { tenant: Tenant
             <Crown className="w-6 h-6 text-purple-600" />
           </div>
           <div>
-            <h2 className="text-xl font-bold text-slate-800">{tenant.nombre}</h2>
+            <h2 className="text-xl font-bold text-foreground">{tenant.nombre}</h2>
             <div className="flex items-center gap-2 mt-0.5">
               <Badge variant="outline" className={tenant.activo
                 ? "bg-green-100 text-green-700 border-green-200"
                 : "bg-red-100 text-red-700 border-red-200"}>
                 {tenant.activo ? "Activo" : "Suspendido"}
               </Badge>
-              <Badge variant="outline" className="bg-slate-100 text-slate-600">
+              <Badge variant="outline" className="bg-muted text-muted-foreground">
                 {PLAN_LABELS[tenant.plan] ?? tenant.plan}
               </Badge>
             </div>
@@ -330,8 +330,8 @@ export default function TenantDetailClient({ tenant: initial }: { tenant: Tenant
         ].map(({ label, value, icon: Icon }) => (
           <Card key={label}>
             <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-slate-800">{value}</div>
-              <div className="text-xs text-slate-500 mt-1 flex items-center justify-center gap-1">
+              <div className="text-2xl font-bold text-foreground">{value}</div>
+              <div className="text-xs text-muted-foreground mt-1 flex items-center justify-center gap-1">
                 <Icon className="w-3 h-3" /> {label}
               </div>
             </CardContent>
@@ -378,13 +378,13 @@ export default function TenantDetailClient({ tenant: initial }: { tenant: Tenant
             </div>
           ) : (
             <dl className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-              <div><dt className="text-slate-400">Email</dt><dd className="font-medium">{tenant.email}</dd></div>
-              <div><dt className="text-slate-400">CIF</dt><dd className="font-medium">{tenant.cif || "—"}</dd></div>
-              <div><dt className="text-slate-400">Plan</dt><dd className="font-medium">{PLAN_LABELS[tenant.plan]}</dd></div>
-              <div><dt className="text-slate-400">Vencimiento</dt><dd className="font-medium">{tenant.fechaVencimiento ? new Date(tenant.fechaVencimiento).toLocaleDateString("es-ES") : "Sin límite"}</dd></div>
-              <div><dt className="text-slate-400">Alta</dt><dd className="font-medium">{new Date(tenant.createdAt).toLocaleDateString("es-ES")}</dd></div>
+              <div><dt className="text-muted-foreground">Email</dt><dd className="font-medium">{tenant.email}</dd></div>
+              <div><dt className="text-muted-foreground">CIF</dt><dd className="font-medium">{tenant.cif || "—"}</dd></div>
+              <div><dt className="text-muted-foreground">Plan</dt><dd className="font-medium">{PLAN_LABELS[tenant.plan]}</dd></div>
+              <div><dt className="text-muted-foreground">Vencimiento</dt><dd className="font-medium">{tenant.fechaVencimiento ? new Date(tenant.fechaVencimiento).toLocaleDateString("es-ES") : "Sin límite"}</dd></div>
+              <div><dt className="text-muted-foreground">Alta</dt><dd className="font-medium">{new Date(tenant.createdAt).toLocaleDateString("es-ES")}</dd></div>
               {tenant.notasInternas && (
-                <div className="sm:col-span-2"><dt className="text-slate-400">Notas internas</dt><dd className="font-medium whitespace-pre-wrap">{tenant.notasInternas}</dd></div>
+                <div className="sm:col-span-2"><dt className="text-muted-foreground">Notas internas</dt><dd className="font-medium whitespace-pre-wrap">{tenant.notasInternas}</dd></div>
               )}
             </dl>
           )}
@@ -403,14 +403,14 @@ export default function TenantDetailClient({ tenant: initial }: { tenant: Tenant
         </CardHeader>
         <CardContent>
           {tenant.unidades.length === 0 ? (
-            <p className="text-slate-400 text-sm py-2">Sin locales — añade el primero</p>
+            <p className="text-muted-foreground text-sm py-2">Sin locales — añade el primero</p>
           ) : (
             <div className="space-y-2">
               {tenant.unidades.map((u) => (
                 <div key={u.id} className="flex items-center justify-between py-2 border-b last:border-0">
                   <div>
                     <div className="font-medium text-sm">{u.nombre}</div>
-                    {u.direccion && <div className="text-xs text-slate-400">{u.direccion}</div>}
+                    {u.direccion && <div className="text-xs text-muted-foreground">{u.direccion}</div>}
                   </div>
                   <Button variant="ghost" size="sm" className="text-red-500 hover:bg-red-50"
                     onClick={() => setDeleteUnidad(u)}>
@@ -435,14 +435,14 @@ export default function TenantDetailClient({ tenant: initial }: { tenant: Tenant
         </CardHeader>
         <CardContent>
           {tenant.usuarios.length === 0 ? (
-            <p className="text-slate-400 text-sm py-2">Sin usuarios — añade el primero</p>
+            <p className="text-muted-foreground text-sm py-2">Sin usuarios — añade el primero</p>
           ) : (
             <div className="space-y-2">
               {tenant.usuarios.map((u) => (
                 <div key={u.id} className="flex items-center justify-between py-2 border-b last:border-0">
                   <div>
                     <div className="font-medium text-sm">{u.nombre}</div>
-                    <div className="text-xs text-slate-400">{u.email}</div>
+                    <div className="text-xs text-muted-foreground">{u.email}</div>
                   </div>
                   <div className="flex items-center gap-2">
                     <Badge variant="outline" className="text-xs">{ROL_LABELS[u.rol] ?? u.rol}</Badge>
@@ -469,7 +469,7 @@ export default function TenantDetailClient({ tenant: initial }: { tenant: Tenant
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
-            <p className="text-sm text-slate-600">Selecciona el local desde el que quieres visualizar el dashboard:</p>
+            <p className="text-sm text-muted-foreground">Selecciona el local desde el que quieres visualizar el dashboard:</p>
             {tenant.unidades.length === 0 ? (
               <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 px-3 py-2 rounded">
                 Este negocio no tiene locales. Crea uno primero antes de entrar.

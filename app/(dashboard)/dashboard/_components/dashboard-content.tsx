@@ -88,7 +88,7 @@ export default function DashboardContent({ userRole, unidadNombre, tieneUnidad }
       case "merma":
         return <AlertTriangle className="w-4 h-4 text-red-500" />;
       default:
-        return <RotateCcw className="w-4 h-4 text-slate-400" />;
+        return <RotateCcw className="w-4 h-4 text-muted-foreground" />;
     }
   };
 
@@ -110,7 +110,7 @@ export default function DashboardContent({ userRole, unidadNombre, tieneUnidad }
       <div className="flex items-center justify-center min-h-[50vh]">
         <div className="text-center">
           <Loader2 className="w-10 h-10 animate-spin text-blue-600 mx-auto mb-4" />
-          <p className="text-slate-600">Cargando dashboard...</p>
+          <p className="text-muted-foreground">Cargando dashboard...</p>
         </div>
       </div>
     );
@@ -166,7 +166,7 @@ export default function DashboardContent({ userRole, unidadNombre, tieneUnidad }
                   className="h-20 flex flex-col items-center justify-center space-y-2"
                   onClick={() => router.push("/admin")}
                 >
-                  <Settings className="w-6 h-6 text-slate-600" />
+                  <Settings className="w-6 h-6 text-muted-foreground" />
                   <span className="text-sm">Administración</span>
                 </Button>
               </div>
@@ -182,8 +182,8 @@ export default function DashboardContent({ userRole, unidadNombre, tieneUnidad }
       <div className="flex items-center justify-center min-h-[50vh]">
         <Card className="p-8 text-center">
           <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-slate-800 mb-2">Error al cargar</h3>
-          <p className="text-slate-600 mb-4">{error}</p>
+          <h3 className="text-lg font-semibold text-foreground mb-2">Error al cargar</h3>
+          <p className="text-muted-foreground mb-4">{error}</p>
           <Button onClick={fetchStats}>Reintentar</Button>
         </Card>
       </div>
@@ -200,7 +200,7 @@ export default function DashboardContent({ userRole, unidadNombre, tieneUnidad }
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <div className="w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center">
+            <div className="w-14 h-14 bg-card/20 rounded-xl flex items-center justify-center">
               <Building2 className="w-7 h-7" />
             </div>
             <div>
@@ -222,9 +222,9 @@ export default function DashboardContent({ userRole, unidadNombre, tieneUnidad }
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-slate-500 font-medium">Stock Bajo</p>
-                  <p className="text-3xl font-bold text-slate-800">{stats?.stockBajo || 0}</p>
-                  <p className="text-xs text-slate-400 mt-1">productos</p>
+                  <p className="text-sm text-muted-foreground font-medium">Stock Bajo</p>
+                  <p className="text-3xl font-bold text-foreground">{stats?.stockBajo || 0}</p>
+                  <p className="text-xs text-muted-foreground mt-1">productos</p>
                 </div>
                 <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center">
                   <AlertTriangle className="w-6 h-6 text-red-500" />
@@ -239,9 +239,9 @@ export default function DashboardContent({ userRole, unidadNombre, tieneUnidad }
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-slate-500 font-medium">Próximos a Caducar</p>
-                  <p className="text-3xl font-bold text-slate-800">{stats?.proximosACaducar || 0}</p>
-                  <p className="text-xs text-slate-400 mt-1">en 7 días</p>
+                  <p className="text-sm text-muted-foreground font-medium">Próximos a Caducar</p>
+                  <p className="text-3xl font-bold text-foreground">{stats?.proximosACaducar || 0}</p>
+                  <p className="text-xs text-muted-foreground mt-1">en 7 días</p>
                 </div>
                 <div className="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center">
                   <Clock className="w-6 h-6 text-yellow-600" />
@@ -256,9 +256,9 @@ export default function DashboardContent({ userRole, unidadNombre, tieneUnidad }
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-slate-500 font-medium">Pedidos Pendientes</p>
-                  <p className="text-3xl font-bold text-slate-800">{stats?.pedidosPendientes || 0}</p>
-                  <p className="text-xs text-slate-400 mt-1">activos</p>
+                  <p className="text-sm text-muted-foreground font-medium">Pedidos Pendientes</p>
+                  <p className="text-3xl font-bold text-foreground">{stats?.pedidosPendientes || 0}</p>
+                  <p className="text-xs text-muted-foreground mt-1">activos</p>
                 </div>
                 <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
                   <ShoppingCart className="w-6 h-6 text-blue-500" />
@@ -273,9 +273,9 @@ export default function DashboardContent({ userRole, unidadNombre, tieneUnidad }
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-slate-500 font-medium">Valor Inventario</p>
-                  <p className="text-2xl font-bold text-slate-800">{formatCurrency(stats?.valorInventario || 0)}</p>
-                  <p className="text-xs text-slate-400 mt-1">total estimado</p>
+                  <p className="text-sm text-muted-foreground font-medium">Valor Inventario</p>
+                  <p className="text-2xl font-bold text-foreground">{formatCurrency(stats?.valorInventario || 0)}</p>
+                  <p className="text-xs text-muted-foreground mt-1">total estimado</p>
                 </div>
                 <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
                   <TrendingUp className="w-6 h-6 text-green-500" />
@@ -325,15 +325,15 @@ export default function DashboardContent({ userRole, unidadNombre, tieneUnidad }
                 <button
                   key={item.href}
                   onClick={() => router.push(item.href)}
-                  className="w-full flex items-center justify-between p-3 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors group"
+                  className="w-full flex items-center justify-between p-3 bg-muted rounded-lg hover:bg-muted transition-colors group"
                 >
                   <div className="flex items-center space-x-3">
                     <div className={`w-10 h-10 ${item.color} rounded-lg flex items-center justify-center`}>
                       <item.icon className="w-5 h-5 text-white" />
                     </div>
-                    <span className="font-medium text-slate-700">{item.label}</span>
+                    <span className="font-medium text-foreground">{item.label}</span>
                   </div>
-                  <ArrowRight className="w-4 h-4 text-slate-400 group-hover:translate-x-1 transition-transform" />
+                  <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:translate-x-1 transition-transform" />
                 </button>
               ))}
             </CardContent>
@@ -358,25 +358,25 @@ export default function DashboardContent({ userRole, unidadNombre, tieneUnidad }
               {stats?.ultimosMovimientos && stats.ultimosMovimientos.length > 0 ? (
                 <div className="space-y-3">
                   {stats.ultimosMovimientos.map((mov) => (
-                    <div key={mov.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                    <div key={mov.id} className="flex items-center justify-between p-3 bg-muted rounded-lg">
                       <div className="flex items-center space-x-3">
                         {getMovementIcon(mov.tipo)}
                         <div>
-                          <p className="font-medium text-slate-800">{mov.productoNombre}</p>
-                          <p className="text-xs text-slate-500">
+                          <p className="font-medium text-foreground">{mov.productoNombre}</p>
+                          <p className="text-xs text-muted-foreground">
                             {formatDecimal(mov.cantidad)} {mov.unidadMedida} • {mov.usuario}
                           </p>
                         </div>
                       </div>
                       <div className="text-right">
                         {getMovementBadge(mov.tipo)}
-                        <p className="text-xs text-slate-400 mt-1">{formatDateTime(mov.fecha)}</p>
+                        <p className="text-xs text-muted-foreground mt-1">{formatDateTime(mov.fecha)}</p>
                       </div>
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-8 text-slate-500">
+                <div className="text-center py-8 text-muted-foreground">
                   <RotateCcw className="w-12 h-12 mx-auto mb-3 opacity-30" />
                   <p>No hay movimientos recientes</p>
                 </div>

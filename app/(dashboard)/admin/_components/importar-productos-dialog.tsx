@@ -116,7 +116,7 @@ export default function ImportarProductosDialog({ onImported }: Props) {
           <div className="space-y-4">
             {!informe ? (
               <>
-                <div className="rounded-lg border bg-slate-50 p-3 text-sm text-slate-600 space-y-2">
+                <div className="rounded-lg border bg-muted p-3 text-sm text-muted-foreground space-y-2">
                   <p>1. Descarga la plantilla y rellena tus productos (una fila por producto).</p>
                   <p>2. Lo único obligatorio es el <strong>nombre</strong>. Lo que falte (precio, stock, categoría) lo completas luego con <strong>Editar producto</strong>.</p>
                   <Button size="sm" variant="outline" onClick={descargarPlantilla}>

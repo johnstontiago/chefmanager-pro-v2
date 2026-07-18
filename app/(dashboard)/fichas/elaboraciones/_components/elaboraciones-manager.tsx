@@ -170,7 +170,7 @@ export default function ElaboracionesManager({ elaboraciones, insumos, rol }: Pr
             <DialogTrigger asChild>
               <Button onClick={openCrear}><Plus className="h-4 w-4 mr-2" />Nueva elaboración</Button>
             </DialogTrigger>
-            <DialogContent className="bg-white max-w-lg max-h-[90vh] overflow-y-auto">
+            <DialogContent className="bg-card max-w-lg max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>{editId ? "Editar elaboración" : "Nueva elaboración"}</DialogTitle>
               </DialogHeader>
@@ -209,9 +209,9 @@ export default function ElaboracionesManager({ elaboraciones, insumos, rol }: Pr
                     <div className="flex gap-2">
                       <Input type="number" min="0.001" step="any" value={contenidoNeto}
                         onChange={(e) => setContenidoNeto(e.target.value)}
-                        placeholder="Ej: 280" className="flex-1 bg-white h-9 text-sm" />
+                        placeholder="Ej: 280" className="flex-1 bg-card h-9 text-sm" />
                       <Select value={contenidoUnidad} onValueChange={setContenidoUnidad}>
-                        <SelectTrigger className="w-28 h-9 bg-white text-sm"><SelectValue /></SelectTrigger>
+                        <SelectTrigger className="w-28 h-9 bg-card text-sm"><SelectValue /></SelectTrigger>
                         <SelectContent>
                           <SelectItem value="g">g</SelectItem>
                           <SelectItem value="ml">ml</SelectItem>
@@ -224,7 +224,7 @@ export default function ElaboracionesManager({ elaboraciones, insumos, rol }: Pr
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <Label>Ingredientes *</Label>
-                    <span className="text-xs text-slate-400">por unidad de {unidadBase} producida</span>
+                    <span className="text-xs text-muted-foreground">por unidad de {unidadBase} producida</span>
                   </div>
 
                   {/* Conversor: receta real → proporciones por unidad */}
@@ -241,7 +241,7 @@ export default function ElaboracionesManager({ elaboraciones, insumos, rol }: Pr
                         <Label className="text-xs">Producción del lote ({unidadBase})</Label>
                         <Input type="number" min="0.001" step="any" value={produccionLote}
                           onChange={(e) => setProduccionLote(e.target.value)}
-                          placeholder="Ej: 3500" className="mt-1 bg-white h-9" />
+                          placeholder="Ej: 3500" className="mt-1 bg-card h-9" />
                       </div>
                       <Button type="button" variant="outline" size="sm" onClick={convertirProporciones}
                         className="h-9 border-blue-300 text-blue-700">
@@ -278,7 +278,7 @@ export default function ElaboracionesManager({ elaboraciones, insumos, rol }: Pr
                           className="w-16 text-sm text-center" />
                         {lineas.length > 1 ? (
                           <button type="button" onClick={() => removeLinea(l.uid)}
-                            className="text-slate-400 hover:text-red-500 text-xl leading-none px-1 flex-shrink-0">×</button>
+                            className="text-muted-foreground hover:text-red-500 text-xl leading-none px-1 flex-shrink-0">×</button>
                         ) : <div className="w-6 flex-shrink-0" />}
                       </div>
                     </div>
@@ -305,34 +305,34 @@ export default function ElaboracionesManager({ elaboraciones, insumos, rol }: Pr
       )}
 
       {elaboraciones.length === 0 ? (
-        <div className="text-center py-12 bg-white rounded-lg border">
-          <Utensils className="h-10 w-10 text-slate-300 mx-auto mb-3" />
-          <p className="text-slate-500">No hay elaboraciones todavía</p>
+        <div className="text-center py-12 bg-card rounded-lg border">
+          <Utensils className="h-10 w-10 text-muted-foreground/40 mx-auto mb-3" />
+          <p className="text-muted-foreground">No hay elaboraciones todavía</p>
         </div>
       ) : (
         <div className="space-y-3">
           {elaboraciones.map((e) => (
-            <div key={e.id} className="bg-white rounded-lg border p-4">
+            <div key={e.id} className="bg-card rounded-lg border p-4">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-slate-900">{e.nombre}</h3>
-                  <p className="text-sm text-slate-500 mt-0.5">
+                  <h3 className="font-semibold text-foreground">{e.nombre}</h3>
+                  <p className="text-sm text-muted-foreground mt-0.5">
                     Stock: <strong>{e.stockActual.toFixed(1)} {e.unidadBase}</strong>
                     {e.contenidoNeto != null && (
-                      <span className="text-slate-400"> (≈ {(e.stockActual * e.contenidoNeto).toFixed(0)} {e.contenidoUnidad})</span>
+                      <span className="text-muted-foreground"> (≈ {(e.stockActual * e.contenidoNeto).toFixed(0)} {e.contenidoUnidad})</span>
                     )}
                     {e.stockMinimo != null && ` · mín. ${e.stockMinimo} ${e.unidadBase}`}
                   </p>
                   <div className="mt-2 flex flex-wrap gap-1">
                     {e.ingredientes.map((i) => (
-                      <span key={i.id} className="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">
+                      <span key={i.id} className="text-xs bg-muted text-muted-foreground px-2 py-0.5 rounded-full">
                         {i.insumo?.nombre ?? i.producto?.nombre ?? "?"} × {i.cantidad} {i.unidad}
                       </span>
                     ))}
                   </div>
                   {e.procedimiento && (
-                    <div className="mt-2 flex items-start gap-1.5 text-xs text-slate-500">
-                      <ListOrdered className="h-3.5 w-3.5 mt-0.5 flex-shrink-0 text-slate-400" />
+                    <div className="mt-2 flex items-start gap-1.5 text-xs text-muted-foreground">
+                      <ListOrdered className="h-3.5 w-3.5 mt-0.5 flex-shrink-0 text-muted-foreground" />
                       <span className="line-clamp-2 whitespace-pre-line">{e.procedimiento}</span>
                     </div>
                   )}
@@ -340,7 +340,7 @@ export default function ElaboracionesManager({ elaboraciones, insumos, rol }: Pr
                 <div className="flex gap-1 flex-shrink-0">
                   {canEdit && (
                     <Button variant="ghost" size="icon" onClick={() => openEditar(e)}
-                      className="h-10 w-10 text-slate-500 hover:text-slate-700"><Edit2 className="h-4 w-4" /></Button>
+                      className="h-10 w-10 text-muted-foreground hover:text-foreground"><Edit2 className="h-4 w-4" /></Button>
                   )}
                   {canDelete && (
                     <Button variant="ghost" size="icon" onClick={() => setEliminando(e.id)}
@@ -354,7 +354,7 @@ export default function ElaboracionesManager({ elaboraciones, insumos, rol }: Pr
       )}
 
       <AlertDialog open={eliminando !== null} onOpenChange={(o) => !o && setEliminando(null)}>
-        <AlertDialogContent className="bg-white">
+        <AlertDialogContent className="bg-card">
           <AlertDialogHeader>
             <AlertDialogTitle>Eliminar elaboración</AlertDialogTitle>
             <AlertDialogDescription>

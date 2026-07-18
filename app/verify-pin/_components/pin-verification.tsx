@@ -78,7 +78,7 @@ export default function PinVerification({ userName }: PinVerificationProps) {
 
   return (
     <div className="space-y-6">
-      <p className="text-center text-slate-600">
+      <p className="text-center text-muted-foreground">
         Hola, <span className="font-semibold">{userName}</span>
       </p>
 
@@ -94,7 +94,7 @@ export default function PinVerification({ userName }: PinVerificationProps) {
             onChange={(e) => handleChange(index, e.target.value)}
             onKeyDown={(e) => handleKeyDown(index, e)}
             disabled={loading}
-            className="w-14 h-14 text-center text-2xl font-bold border-2 border-slate-300 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all disabled:opacity-50"
+            className="w-14 h-14 text-center text-2xl font-bold border-2 border-input rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all disabled:opacity-50"
           />
         ))}
       </div>
@@ -108,7 +108,7 @@ export default function PinVerification({ userName }: PinVerificationProps) {
       <div className="pt-4 border-t">
         <Button
           variant="ghost"
-          className="w-full text-slate-500 hover:text-slate-700"
+          className="w-full text-muted-foreground hover:text-foreground"
           onClick={handleLogout}
         >
           <LogOut className="mr-2 h-4 w-4" />

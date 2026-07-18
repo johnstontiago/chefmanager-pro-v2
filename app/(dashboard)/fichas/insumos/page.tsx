@@ -154,8 +154,8 @@ export default function InsumosPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Insumos</h1>
-          <p className="text-slate-500 text-sm">
+          <h1 className="text-2xl font-bold text-foreground">Insumos</h1>
+          <p className="text-muted-foreground text-sm">
             Productos del inventario, preparaciones e insumos manuales
           </p>
         </div>
@@ -170,7 +170,7 @@ export default function InsumosPage() {
       <FichasNav />
 
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
           placeholder="Buscar insumos..."
           value={search}
@@ -184,14 +184,14 @@ export default function InsumosPage() {
           {[1, 2, 3, 4, 5].map((i) => (
             <div
               key={i}
-              className="h-16 bg-white rounded-lg border border-slate-200 animate-pulse"
+              className="h-16 bg-card rounded-lg border border-border animate-pulse"
             />
           ))}
         </div>
       ) : filtrados.length === 0 ? (
-        <div className="text-center py-12 bg-white rounded-lg border border-slate-200">
-          <Package className="h-10 w-10 text-slate-300 mx-auto mb-3" />
-          <p className="text-slate-500">
+        <div className="text-center py-12 bg-card rounded-lg border border-border">
+          <Package className="h-10 w-10 text-muted-foreground/40 mx-auto mb-3" />
+          <p className="text-muted-foreground">
             {search ? "No se encontraron insumos" : "No hay insumos registrados"}
           </p>
           {canEdit && !search && (
@@ -209,11 +209,11 @@ export default function InsumosPage() {
             return (
               <div
                 key={insumo.id}
-                className="flex items-center justify-between p-4 bg-white rounded-lg border border-slate-200 hover:border-slate-300 transition-colors"
+                className="flex items-center justify-between p-4 bg-card rounded-lg border border-border hover:border-input transition-colors"
               >
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="font-medium text-slate-900">{insumo.nombre}</span>
+                    <span className="font-medium text-foreground">{insumo.nombre}</span>
                     {insumo.esPreparacion && (
                       <Badge variant="secondary" className="text-xs">
                         Preparación
@@ -225,12 +225,12 @@ export default function InsumosPage() {
                       </Badge>
                     )}
                     {esDeInventario && insumo.producto?.activo === false && (
-                      <Badge variant="secondary" className="text-xs text-slate-500">
+                      <Badge variant="secondary" className="text-xs text-muted-foreground">
                         Producto inactivo
                       </Badge>
                     )}
                   </div>
-                  <div className="flex flex-wrap items-center gap-2 mt-1 text-xs text-slate-500">
+                  <div className="flex flex-wrap items-center gap-2 mt-1 text-xs text-muted-foreground">
                     <span>Unidad: {insumo.unidad}</span>
                     <span className="text-blue-600 font-medium">
                       {formatCurrency(insumo.valorPorUnidad)}/{insumo.unidad}
@@ -243,7 +243,7 @@ export default function InsumosPage() {
                       variant="ghost"
                       size="icon"
                       onClick={() => openEditar(insumo)}
-                      className="h-11 w-11 text-slate-500 hover:text-slate-700"
+                      className="h-11 w-11 text-muted-foreground hover:text-foreground"
                     >
                       <Edit2 className="h-4 w-4" />
                     </Button>
@@ -266,9 +266,9 @@ export default function InsumosPage() {
       )}
 
       <Dialog open={modalOpen} onOpenChange={(o) => !saving && setModalOpen(o)}>
-        <DialogContent className="bg-white max-w-md">
+        <DialogContent className="bg-card max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-slate-900">
+            <DialogTitle className="text-foreground">
               {editando ? "Editar Insumo" : "Nuevo Insumo"}
             </DialogTitle>
           </DialogHeader>
@@ -332,7 +332,7 @@ export default function InsumosPage() {
         open={eliminando !== null}
         onOpenChange={(o) => !o && setEliminando(null)}
       >
-        <AlertDialogContent className="bg-white">
+        <AlertDialogContent className="bg-card">
           <AlertDialogHeader>
             <AlertDialogTitle>Eliminar Insumo</AlertDialogTitle>
             <AlertDialogDescription>

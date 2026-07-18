@@ -125,13 +125,13 @@ export default function EtiquetasTab({ inventario }: EtiquetasTabProps) {
               {conectado ? (
                 <BluetoothConnected className="w-5 h-5 text-green-600" />
               ) : (
-                <Bluetooth className="w-5 h-5 text-slate-400" />
+                <Bluetooth className="w-5 h-5 text-muted-foreground" />
               )}
               <div>
                 <p className="font-medium text-sm">
                   {conectado ? deviceName ?? "Impresora conectada" : "Impresora no conectada"}
                 </p>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-muted-foreground">
                   {status === "connecting"
                     ? "Conectando..."
                     : status === "error"
@@ -241,34 +241,34 @@ export default function EtiquetasTab({ inventario }: EtiquetasTabProps) {
               {selectedItem ? (
                 <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 space-y-1">
                   <div className="flex items-start justify-between gap-2">
-                    <p className="font-medium text-slate-800">{selectedItem.producto?.nombre}</p>
+                    <p className="font-medium text-foreground">{selectedItem.producto?.nombre}</p>
                     <button
                       type="button"
                       onClick={() => setSelectedItem(null)}
-                      className="text-slate-400 hover:text-slate-600"
+                      className="text-muted-foreground hover:text-muted-foreground"
                       aria-label="Quitar selección"
                     >
                       <X className="w-4 h-4" />
                     </button>
                   </div>
-                  <p className="text-xs text-slate-600 flex items-center gap-1">
+                  <p className="text-xs text-muted-foreground flex items-center gap-1">
                     <Tag className="w-3 h-3" /> {selectedItem.codigoUnico ?? "Sin código"}
                   </p>
                   {selectedItem.fechaCaducidad && (
-                    <p className="text-xs text-slate-600 flex items-center gap-1">
+                    <p className="text-xs text-muted-foreground flex items-center gap-1">
                       <Calendar className="w-3 h-3" /> Cad. original: {formatDate(selectedItem.fechaCaducidad)}
                     </p>
                   )}
                 </div>
               ) : (
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-muted-foreground">
                   Escanea el QR de la etiqueta o busca el código único del inventario.
                   Se rellenarán solos el nombre, el código y la caducidad original.
                 </p>
               )}
             </div>
           ) : (
-            <p className="text-sm text-slate-500">
+            <p className="text-sm text-muted-foreground">
               Se imprimirá una etiqueta con todos los campos vacíos para rellenar a mano:
               nombre, código, caducidad, fecha de apertura, caducidad tras apertura y porción.
             </p>
@@ -295,7 +295,7 @@ export default function EtiquetasTab({ inventario }: EtiquetasTabProps) {
               value={copias}
               onChange={(e) => setCopias(e.target.value)}
             />
-            <p className="text-xs text-slate-500">Etiquetas idénticas a imprimir (máx. {MAX_COPIAS}).</p>
+            <p className="text-xs text-muted-foreground">Etiquetas idénticas a imprimir (máx. {MAX_COPIAS}).</p>
           </div>
 
           <Button

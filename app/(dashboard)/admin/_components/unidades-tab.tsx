@@ -185,7 +185,7 @@ export default function UnidadesTab() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row gap-4 justify-between">
         <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
             placeholder="Buscar unidades..."
             value={searchTerm}
@@ -202,8 +202,8 @@ export default function UnidadesTab() {
       {filteredUnidades.length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center">
-            <Building2 className="w-12 h-12 mx-auto text-slate-300 mb-4" />
-            <p className="text-slate-500">No hay unidades de negocio registradas</p>
+            <Building2 className="w-12 h-12 mx-auto text-muted-foreground/40 mb-4" />
+            <p className="text-muted-foreground">No hay unidades de negocio registradas</p>
           </CardContent>
         </Card>
       ) : (
@@ -224,20 +224,20 @@ export default function UnidadesTab() {
               </CardHeader>
               <CardContent className="space-y-3">
                 {unidad.direccion && (
-                  <div className="flex items-start gap-2 text-sm text-slate-600">
-                    <MapPin className="w-4 h-4 mt-0.5 text-slate-400 flex-shrink-0" />
+                  <div className="flex items-start gap-2 text-sm text-muted-foreground">
+                    <MapPin className="w-4 h-4 mt-0.5 text-muted-foreground flex-shrink-0" />
                     <span>{unidad.direccion}</span>
                   </div>
                 )}
                 {unidad.responsable && (
-                  <div className="flex items-center gap-2 text-sm text-slate-600">
-                    <User className="w-4 h-4 text-slate-400" />
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <User className="w-4 h-4 text-muted-foreground" />
                     <span>{unidad.responsable}</span>
                   </div>
                 )}
                 {unidad.telefono && (
-                  <div className="flex items-center gap-2 text-sm text-slate-600">
-                    <Phone className="w-4 h-4 text-slate-400" />
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Phone className="w-4 h-4 text-muted-foreground" />
                     <span>{unidad.telefono}</span>
                   </div>
                 )}

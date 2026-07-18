@@ -17,7 +17,7 @@ export function FichasNav() {
   const pathname = usePathname();
 
   return (
-    <div className="flex gap-1 overflow-x-auto border-b border-slate-200 -mx-1 px-1">
+    <div className="flex gap-1 overflow-x-auto border-b border-border -mx-1 px-1">
       {tabs.map((tab) => {
         const isActive =
           tab.href === "/fichas"
@@ -32,7 +32,7 @@ export function FichasNav() {
               "flex items-center gap-1.5 px-3 py-2.5 text-sm font-medium whitespace-nowrap border-b-2 -mb-px transition-colors",
               isActive
                 ? "border-blue-600 text-blue-600"
-                : "border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300"
+                : "border-transparent text-muted-foreground hover:text-foreground hover:border-input"
             )}
           >
             <Icon className="h-4 w-4" />

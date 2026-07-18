@@ -25,6 +25,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import UnitSelector from "./unit-selector";
+import ThemeSelector from "./theme-selector";
 import SyncStatus from "@/components/sync-status";
 
 interface DashboardShellProps {
@@ -96,7 +97,7 @@ export default function DashboardShell({ user, children, sudoTenant }: Dashboard
   };
 
   return (
-        <div className="min-h-screen bg-slate-50">
+        <div className="min-h-screen bg-muted">
           {/* Mobile sidebar backdrop */}
           {sidebarOpen && (
                   <div
@@ -108,34 +109,34 @@ export default function DashboardShell({ user, children, sudoTenant }: Dashboard
           {/* Sidebar */}
               <aside
                         className={cn(
-                                    "fixed top-0 left-0 z-50 h-full w-64 bg-slate-900 transform transition-transform duration-200 ease-in-out lg:translate-x-0",
+                                    "fixed top-0 left-0 z-50 h-full w-64 bg-sidebar transform transition-transform duration-200 ease-in-out lg:translate-x-0",
                                     sidebarOpen ? "translate-x-0" : "-translate-x-full"
                                   )}
                       >
                       <div className="flex flex-col h-full">
                         {/* Logo */}
-                                <div className="flex items-center justify-between h-16 px-4 border-b border-slate-800">
+                                <div className="flex items-center justify-between h-16 px-4 border-b border-sidebar-border">
                                             <div className="flex items-center space-x-2">
                                                           <img
                                                             src="/icons/icon-192.png"
                                                             alt="ChefManager logo"
                                                             className="w-8 h-8 rounded-lg object-cover"
                                                           />
-                                                          <span className="text-white font-bold">ChefManager</span>
+                                                          <span className="text-sidebar-foreground font-bold">ChefManager</span>
                                                         </div>
                                             <button
                                                             onClick={() => setSidebarOpen(false)}
-                                                            className="lg:hidden text-slate-400 hover:text-white"
+                                                            className="lg:hidden text-sidebar-foreground/60 hover:text-sidebar-foreground"
                                                           >
                                                           <X className="w-5 h-5" />
                                             </button>
                                 </div>
-                      
+
                         {/* User Info */}
-                                <div className="px-4 py-4 border-b border-slate-800">
-                                            <div className="text-sm text-slate-400">Conectado como</div>
-                                            <div className="text-white font-medium truncate">{currentUser?.name}</div>
-                                            <div className="text-xs text-blue-400 capitalize">{currentUser?.rol}</div>
+                                <div className="px-4 py-4 border-b border-sidebar-border">
+                                            <div className="text-sm text-sidebar-foreground/60">Conectado como</div>
+                                            <div className="text-sidebar-foreground font-medium truncate">{currentUser?.name}</div>
+                                            <div className="text-xs text-sidebar-primary capitalize">{currentUser?.rol}</div>
                                 </div>
                       
                         {/* Navigation */}
@@ -150,8 +151,8 @@ export default function DashboardShell({ user, children, sudoTenant }: Dashboard
                                                                             className={cn(
                                                                                                   "flex items-center px-4 py-3 mb-1 rounded-lg text-sm font-medium transition-colors",
                                                                                                   isActive
-                                                                                                    ? "bg-blue-600 text-white"
-                                                                                                    : "text-slate-300 hover:bg-slate-800 hover:text-white"
+                                                                                                    ? "bg-sidebar-primary text-sidebar-primary-foreground"
+                                                                                                    : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground"
                                                                                                 )}
                                                                           >
                                                                           <item.icon className="w-5 h-5 mr-3" />
@@ -167,17 +168,17 @@ export default function DashboardShell({ user, children, sudoTenant }: Dashboard
                                 </nav>
                       
                         {/* Footer actions */}
-                                <div className="p-4 border-t border-slate-800 space-y-1">
+                                <div className="p-4 border-t border-sidebar-border space-y-1">
                                             <button
                                                             onClick={handleGoToRegistros}
-                                                            className="flex items-center w-full px-4 py-3 rounded-lg text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"
+                                                            className="flex items-center w-full px-4 py-3 rounded-lg text-sm font-medium text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground transition-colors"
                                                           >
                                                           <ExternalLink className="w-5 h-5 mr-3" />
                                                           Registros APPCC
                                             </button>
                                             <button
                                                             onClick={handleLogout}
-                                                            className="flex items-center w-full px-4 py-3 rounded-lg text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"
+                                                            className="flex items-center w-full px-4 py-3 rounded-lg text-sm font-medium text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground transition-colors"
                                                           >
                                                           <LogOut className="w-5 h-5 mr-3" />
                                                           Cerrar Sesión
@@ -189,11 +190,11 @@ export default function DashboardShell({ user, children, sudoTenant }: Dashboard
           {/* Main content */}
               <div className="lg:pl-64 min-w-0 overflow-x-hidden">
                 {/* Top bar */}
-                      <header className="sticky top-0 z-30 bg-white border-b shadow-sm">
+                      <header className="sticky top-0 z-30 bg-card border-b border-border shadow-sm">
                                 <div className="flex items-center justify-between h-16 px-4">
                                             <button
                                                             onClick={() => setSidebarOpen(true)}
-                                                            className="lg:hidden text-slate-600 hover:text-slate-900"
+                                                            className="lg:hidden text-muted-foreground hover:text-foreground"
                                                           >
                                                           <Menu className="w-6 h-6" />
                                             </button>
@@ -217,7 +218,8 @@ export default function DashboardShell({ user, children, sudoTenant }: Dashboard
                                             </div>
                                 
                                             <div className="flex items-center space-x-2 flex-shrink-0">
-                                                          <span className="hidden sm:inline text-sm text-slate-600 truncate max-w-[150px]">
+                                                          <ThemeSelector />
+                                                          <span className="hidden sm:inline text-sm text-muted-foreground truncate max-w-[150px]">
                                                             {currentUser?.email}
                                                           </span>
                                             </div>
@@ -236,7 +238,7 @@ export default function DashboardShell({ user, children, sudoTenant }: Dashboard
                     <button
                       onClick={handleExitSudo}
                       disabled={exitingSudo}
-                      className="flex items-center gap-1.5 bg-white/20 hover:bg-white/30 px-3 py-1 rounded text-xs font-medium transition-colors"
+                      className="flex items-center gap-1.5 bg-card/20 hover:bg-card/30 px-3 py-1 rounded text-xs font-medium transition-colors"
                     >
                       <EyeOff className="w-3 h-3" />
                       {exitingSudo ? "Saliendo..." : "Salir"}

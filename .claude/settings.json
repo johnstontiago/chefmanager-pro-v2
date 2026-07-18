@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Program Files/PostgreSQL/**)",
+      "Read(//c/Program Files \\\\\\(x86\\\\\\)/**)",
+      "Bash(PGPASSWORD='' '/c/Program Files/PostgreSQL/16/bin/psql.exe' -U postgres -h localhost -c '\\\\l')",
+      "Bash(cd \"c:/Users/johns/Documents/PANZZONI - APPS/chefmanager-pro-v2\" *)",
+      "Read(//c/Users/johns/.claude/projects/c--Users-johns-Documents-PANZZONI---APPS-chefmanager-pro-v2/memory/**)",
+      "Bash(npx tsc *)",
+      "Bash(echo \"=== exit: $? ===\")",
+      "Bash(xargs -0 sed -i -e 's/\\\\btext-slate-950\\\\b/text-foreground/g' -e 's/\\\\btext-slate-900\\\\b/text-foreground/g' -e 's/\\\\btext-slate-800\\\\b/text-foreground/g' -e 's/\\\\btext-slate-700\\\\b/text-foreground/g' -e 's/\\\\btext-slate-600\\\\b/text-muted-foreground/g' -e 's/\\\\btext-slate-500\\\\b/text-muted-foreground/g' -e 's/\\\\btext-slate-400\\\\b/text-muted-foreground/g' -e 's/\\\\bbg-white\\\\b/bg-card/g' -e 's/\\\\bbg-slate-50\\\\b/bg-muted/g' -e 's/\\\\bbg-slate-100\\\\b/bg-muted/g' -e 's/\\\\bborder-slate-200\\\\b/border-border/g' -e 's/\\\\bborder-slate-300\\\\b/border-input/g')",
+      "Bash(echo \"tsc exit: $?\")",
+      "Bash(npx next *)",
+      "Bash(echo \"lint exit: $?\")",
+      "Bash(xargs -0 sed -i -e 's/\\\\btext-slate-300\\\\b/text-muted-foreground\\\\/40/g' -e 's/\\\\btext-slate-200\\\\b/text-muted-foreground\\\\/30/g' -e 's/\\\\bbg-slate-200\\\\b/bg-secondary/g' -e 's/\\\\bborder-slate-100\\\\b/border-border/g' -e 's/\\\\bborder-slate-400\\\\b/border-input/g')",
+      "Bash(echo \"=== commit ok, exit $? ===\")"
+    ]
+  }
+}

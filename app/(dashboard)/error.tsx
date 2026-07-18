@@ -18,8 +18,8 @@ export default function Error({
   return (
     <div className="flex flex-col items-center justify-center min-h-[50vh] gap-4 text-center">
       <AlertTriangle className="w-12 h-12 text-red-500" />
-      <h2 className="text-lg font-semibold text-slate-800">Ocurrió un error inesperado</h2>
-      <p className="text-slate-500 text-sm max-w-sm">{error.message || "Intenta de nuevo o recarga la página."}</p>
+      <h2 className="text-lg font-semibold text-foreground">Ocurrió un error inesperado</h2>
+      <p className="text-muted-foreground text-sm max-w-sm">{error.message || "Intenta de nuevo o recarga la página."}</p>
       <Button onClick={reset}>Reintentar</Button>
     </div>
   );

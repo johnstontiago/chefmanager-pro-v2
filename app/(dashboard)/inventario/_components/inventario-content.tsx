@@ -219,8 +219,8 @@ export default function InventarioContent({ userRole }: InventarioContentProps) 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-slate-800">Inventario</h1>
-        <p className="text-slate-500">Visualiza y gestiona el stock de productos</p>
+        <h1 className="text-2xl font-bold text-foreground">Inventario</h1>
+        <p className="text-muted-foreground">Visualiza y gestiona el stock de productos</p>
       </div>
 
       {/* Stats */}
@@ -279,7 +279,7 @@ export default function InventarioContent({ userRole }: InventarioContentProps) 
         <CardContent className="py-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <div className="relative col-span-2 md:col-span-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
                 placeholder="Buscar producto..."
                 value={busqueda}
@@ -336,14 +336,14 @@ export default function InventarioContent({ userRole }: InventarioContentProps) 
               <BarChart3 className="w-5 h-5 text-blue-600" />
               <span>Productos en Stock</span>
             </div>
-            <span className="text-sm font-normal text-slate-500">
+            <span className="text-sm font-normal text-muted-foreground">
               {productosFiltrados.length} productos
             </span>
           </CardTitle>
         </CardHeader>
         <CardContent>
           {productosFiltrados.length === 0 ? (
-            <div className="text-center py-12 text-slate-500">
+            <div className="text-center py-12 text-muted-foreground">
               <Package className="w-12 h-12 mx-auto mb-3 opacity-30" />
               <p>No se encontraron productos</p>
             </div>
@@ -355,29 +355,29 @@ export default function InventarioContent({ userRole }: InventarioContentProps) 
 
                 return (
                   <Collapsible key={prod.id} open={isExpanded} onOpenChange={() => toggleExpand(prod.id)}>
-                    <div className={`rounded-lg border ${prod.isLowStock ? "border-red-200 bg-red-50" : prod.proximoACaducar ? "border-yellow-200 bg-yellow-50" : "border-slate-200 bg-slate-50"}`}>
+                    <div className={`rounded-lg border ${prod.isLowStock ? "border-red-200 bg-red-50" : prod.proximoACaducar ? "border-yellow-200 bg-yellow-50" : "border-border bg-muted"}`}>
                       <CollapsibleTrigger asChild>
-                        <div className="flex items-center justify-between p-3 sm:p-4 cursor-pointer hover:bg-slate-100 transition-colors gap-2">
+                        <div className="flex items-center justify-between p-3 sm:p-4 cursor-pointer hover:bg-muted transition-colors gap-2">
                           <div className="flex items-center gap-3 flex-1 min-w-0">
-                            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white rounded-lg flex items-center justify-center shadow-sm flex-shrink-0">
+                            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-card rounded-lg flex items-center justify-center shadow-sm flex-shrink-0">
                               {isExpanded ? (
-                                <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5 text-slate-400" />
+                                <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
                               ) : (
-                                <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-slate-400" />
+                                <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
                               )}
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="flex flex-wrap items-center gap-1 mb-1">
-                                <h4 className="font-semibold text-slate-800 text-sm sm:text-base">{prod.nombre}</h4>
+                                <h4 className="font-semibold text-foreground text-sm sm:text-base">{prod.nombre}</h4>
                                 {getStockBadge(prod)}
                               </div>
-                              <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs sm:text-sm text-slate-500">
+                              <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs sm:text-sm text-muted-foreground">
                                 <span>{prod.categoria?.nombre || "-"}</span>
                                 <span className="hidden sm:inline">{prod.proveedor?.nombre || "Sin proveedor"}</span>
                                 <span>{formatCurrency(prod.precioUnitario)}/{prod.unidadMedida}</span>
                               </div>
                               {(prod.fabricante || prod.formato) && (
-                                <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-slate-400 mt-0.5">
+                                <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground mt-0.5">
                                   {prod.fabricante && <span>🏭 {prod.fabricante}</span>}
                                   {prod.formato && <span>📦 {prod.formato}</span>}
                                 </div>
@@ -386,46 +386,46 @@ export default function InventarioContent({ userRole }: InventarioContentProps) 
                           </div>
                           <div className="text-right flex-shrink-0 ml-1">
                             <div className="flex items-baseline gap-1">
-                              <span className={`text-lg sm:text-2xl font-bold ${prod.isLowStock ? "text-red-600" : "text-slate-800"}`}>
+                              <span className={`text-lg sm:text-2xl font-bold ${prod.isLowStock ? "text-red-600" : "text-foreground"}`}>
                                 {formatDecimal(prod.stockTotal)}
                               </span>
-                              <span className="text-xs sm:text-sm text-slate-500">{prod.unidadDisplay}</span>
+                              <span className="text-xs sm:text-sm text-muted-foreground">{prod.unidadDisplay}</span>
                             </div>
-                            <div className="w-16 sm:w-24 h-2 bg-slate-200 rounded-full mt-1 sm:mt-2">
+                            <div className="w-16 sm:w-24 h-2 bg-secondary rounded-full mt-1 sm:mt-2">
                               <div
                                 className={`h-2 rounded-full ${prod.isLowStock ? "bg-red-500" : "bg-green-500"}`}
                                 style={{ width: `${stockPercent}%` }}
                               />
                             </div>
-                            <p className="text-xs text-slate-400 mt-0.5">Mín: {formatDecimal(prod.stockMinimo)}</p>
+                            <p className="text-xs text-muted-foreground mt-0.5">Mín: {formatDecimal(prod.stockMinimo)}</p>
                           </div>
                         </div>
                       </CollapsibleTrigger>
 
                       <CollapsibleContent>
                         <div className="border-t px-4 pb-4 pt-3">
-                          <h5 className="text-sm font-semibold text-slate-700 mb-3">Lotes en inventario ({prod.lotes.length})</h5>
+                          <h5 className="text-sm font-semibold text-foreground mb-3">Lotes en inventario ({prod.lotes.length})</h5>
                           {prod.lotes.length === 0 ? (
-                            <p className="text-sm text-slate-500">Sin stock disponible</p>
+                            <p className="text-sm text-muted-foreground">Sin stock disponible</p>
                           ) : (
                             <div className="grid gap-2">
                               {prod.lotes.map((inv: any) => (
-                                <div key={inv.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 bg-white rounded-lg border gap-2">
+                                <div key={inv.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 bg-card rounded-lg border gap-2">
                                   <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                                     {inv.lote && (
                                       <span className="flex items-center text-sm">
-                                        <Tag className="w-4 h-4 mr-1 text-slate-400" />
+                                        <Tag className="w-4 h-4 mr-1 text-muted-foreground" />
                                         {inv.lote}
                                       </span>
                                     )}
                                     {inv.ubicacion && (
                                       <span className="flex items-center text-sm">
-                                        <MapPin className="w-4 h-4 mr-1 text-slate-400" />
+                                        <MapPin className="w-4 h-4 mr-1 text-muted-foreground" />
                                         {inv.ubicacion}
                                       </span>
                                     )}
                                     {inv.codigoUnico && (
-                                      <span className="flex items-center text-xs text-slate-400">
+                                      <span className="flex items-center text-xs text-muted-foreground">
                                         <QrCode className="w-3 h-3 mr-1" />
                                         {inv.codigoUnico}
                                       </span>
@@ -434,12 +434,12 @@ export default function InventarioContent({ userRole }: InventarioContentProps) 
                                   <div className="flex flex-wrap items-center gap-x-3 gap-y-1 sm:justify-end">
                                     {inv.fechaCaducidad && (
                                       <span className="flex items-center text-sm">
-                                        <Calendar className="w-4 h-4 mr-1 text-slate-400" />
+                                        <Calendar className="w-4 h-4 mr-1 text-muted-foreground" />
                                         {formatDate(inv.fechaCaducidad)}
                                       </span>
                                     )}
                                     {getExpiryBadge(inv)}
-                                    <span className="font-semibold text-slate-800">
+                                    <span className="font-semibold text-foreground">
                                       {formatDecimal(inv.cantidad)} {prod.unidadDisplay}
                                       {inv.pesoRealKg ? ` (${formatDecimal(inv.pesoRealKg)} kg)` : ""}
                                     </span>
@@ -467,14 +467,14 @@ export default function InventarioContent({ userRole }: InventarioContentProps) 
               <Package className="w-5 h-5 text-amber-600" />
               <span>Preparaciones en stock</span>
             </div>
-            <span className="text-sm font-normal text-slate-500">
+            <span className="text-sm font-normal text-muted-foreground">
               {elaboraciones.length} elaboracion{elaboraciones.length !== 1 ? "es" : ""}
             </span>
           </CardTitle>
         </CardHeader>
         <CardContent>
           {elaboraciones.length === 0 ? (
-            <div className="text-center py-8 text-slate-500">
+            <div className="text-center py-8 text-muted-foreground">
               <Package className="w-10 h-10 mx-auto mb-2 opacity-30" />
               <p className="text-sm">No hay preparaciones producidas</p>
             </div>
@@ -489,21 +489,21 @@ export default function InventarioContent({ userRole }: InventarioContentProps) 
                   : { label: "OK", cls: "bg-green-100 text-green-700" };
                 return (
                   <Collapsible key={e.id} open={isExpanded} onOpenChange={() => toggleExpandElab(e.id)}>
-                    <div className={`rounded-lg border ${e.isLowStock ? "border-amber-200 bg-amber-50" : "border-slate-200 bg-slate-50"}`}>
+                    <div className={`rounded-lg border ${e.isLowStock ? "border-amber-200 bg-amber-50" : "border-border bg-muted"}`}>
                       <CollapsibleTrigger asChild>
-                        <div className="flex items-center justify-between p-3 sm:p-4 cursor-pointer hover:bg-slate-100 transition-colors gap-2">
+                        <div className="flex items-center justify-between p-3 sm:p-4 cursor-pointer hover:bg-muted transition-colors gap-2">
                           <div className="flex items-center gap-3 flex-1 min-w-0">
-                            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white rounded-lg flex items-center justify-center shadow-sm flex-shrink-0">
+                            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-card rounded-lg flex items-center justify-center shadow-sm flex-shrink-0">
                               {isExpanded
-                                ? <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5 text-slate-400" />
-                                : <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-slate-400" />}
+                                ? <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
+                                : <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />}
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="flex flex-wrap items-center gap-1 mb-1">
-                                <h4 className="font-semibold text-slate-800 text-sm sm:text-base">{e.nombre}</h4>
+                                <h4 className="font-semibold text-foreground text-sm sm:text-base">{e.nombre}</h4>
                                 <span className={`text-xs px-2 py-0.5 rounded font-medium ${estado.cls}`}>{estado.label}</span>
                               </div>
-                              <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs sm:text-sm text-slate-500">
+                              <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs sm:text-sm text-muted-foreground">
                                 <span>{e.lotes?.length || 0} lote(s)</span>
                                 {e.stockMinimo != null && <span>Mín: {formatDecimal(e.stockMinimo)} {e.unidadBase}</span>}
                                 {e.proximaCaducidad && <span>Caduca: {formatDate(e.proximaCaducidad)}</span>}
@@ -512,13 +512,13 @@ export default function InventarioContent({ userRole }: InventarioContentProps) 
                           </div>
                           <div className="text-right flex-shrink-0 ml-1">
                             <div className="flex items-baseline gap-1">
-                              <span className={`text-lg sm:text-2xl font-bold ${e.isLowStock ? "text-amber-600" : "text-slate-800"}`}>
+                              <span className={`text-lg sm:text-2xl font-bold ${e.isLowStock ? "text-amber-600" : "text-foreground"}`}>
                                 {formatDecimal(e.stockActual)}
                               </span>
-                              <span className="text-xs sm:text-sm text-slate-500">{e.unidadBase}</span>
+                              <span className="text-xs sm:text-sm text-muted-foreground">{e.unidadBase}</span>
                             </div>
                             {e.stockMinimo != null && (
-                              <p className="text-xs text-slate-400 mt-0.5">Mín: {formatDecimal(e.stockMinimo)}</p>
+                              <p className="text-xs text-muted-foreground mt-0.5">Mín: {formatDecimal(e.stockMinimo)}</p>
                             )}
                           </div>
                         </div>
@@ -526,33 +526,33 @@ export default function InventarioContent({ userRole }: InventarioContentProps) 
 
                       <CollapsibleContent>
                         <div className="border-t px-4 pb-4 pt-3">
-                          <h5 className="text-sm font-semibold text-slate-700 mb-3">Producciones en stock ({e.lotes?.length || 0})</h5>
+                          <h5 className="text-sm font-semibold text-foreground mb-3">Producciones en stock ({e.lotes?.length || 0})</h5>
                           {!e.lotes || e.lotes.length === 0 ? (
-                            <p className="text-sm text-slate-500">Sin stock disponible</p>
+                            <p className="text-sm text-muted-foreground">Sin stock disponible</p>
                           ) : (
                             <div className="grid gap-2">
                               {e.lotes.map((l: any) => (
-                                <div key={l.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 bg-white rounded-lg border gap-2">
+                                <div key={l.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 bg-card rounded-lg border gap-2">
                                   <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                                     {l.numeroLote && (
                                       <span className="flex items-center text-sm">
-                                        <Tag className="w-4 h-4 mr-1 text-slate-400" />{l.numeroLote}
+                                        <Tag className="w-4 h-4 mr-1 text-muted-foreground" />{l.numeroLote}
                                       </span>
                                     )}
                                     {l.numeroEnvases != null && (
-                                      <span className="text-xs text-slate-500">{l.numeroEnvases} envase(s)</span>
+                                      <span className="text-xs text-muted-foreground">{l.numeroEnvases} envase(s)</span>
                                     )}
                                     {l.fechaProduccion && (
-                                      <span className="text-xs text-slate-400">Prod: {formatDate(l.fechaProduccion)}</span>
+                                      <span className="text-xs text-muted-foreground">Prod: {formatDate(l.fechaProduccion)}</span>
                                     )}
                                   </div>
                                   <div className="flex flex-wrap items-center gap-x-3 gap-y-1 sm:justify-end">
                                     {l.fechaCaducidad && (
                                       <span className="flex items-center text-sm">
-                                        <Calendar className="w-4 h-4 mr-1 text-slate-400" />{formatDate(l.fechaCaducidad)}
+                                        <Calendar className="w-4 h-4 mr-1 text-muted-foreground" />{formatDate(l.fechaCaducidad)}
                                       </span>
                                     )}
-                                    <span className="font-semibold text-slate-800">
+                                    <span className="font-semibold text-foreground">
                                       {formatDecimal(l.cantidadActual)} {e.unidadBase}
                                     </span>
                                   </div>

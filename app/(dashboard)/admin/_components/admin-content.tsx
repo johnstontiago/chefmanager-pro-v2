@@ -34,8 +34,8 @@ export default function AdminContent({ userRole }: AdminContentProps) {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-slate-800">Administración</h1>
-        <p className="text-slate-500">Gestiona productos, proveedores, categorías y usuarios</p>
+        <h1 className="text-2xl font-bold text-foreground">Administración</h1>
+        <p className="text-muted-foreground">Gestiona productos, proveedores, categorías y usuarios</p>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>

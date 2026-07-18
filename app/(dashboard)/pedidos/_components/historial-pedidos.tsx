@@ -269,7 +269,7 @@ export default function HistorialPedidos({ userRole, onEditarPedido }: Historial
             </CardTitle>
             <div className="flex flex-col md:flex-row gap-2">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
                   placeholder="Buscar..."
                   value={busqueda}
@@ -295,7 +295,7 @@ export default function HistorialPedidos({ userRole, onEditarPedido }: Historial
         </CardHeader>
         <CardContent>
           {pedidosFiltrados.length === 0 ? (
-            <div className="text-center py-12 text-slate-500">
+            <div className="text-center py-12 text-muted-foreground">
               <FileText className="w-12 h-12 mx-auto mb-3 opacity-30" />
               <p>No hay pedidos</p>
             </div>
@@ -304,25 +304,25 @@ export default function HistorialPedidos({ userRole, onEditarPedido }: Historial
               {pedidosFiltrados.map((pedido) => (
                 <div
                   key={pedido.id}
-                  className="flex flex-col md:flex-row md:items-center justify-between p-4 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors"
+                  className="flex flex-col md:flex-row md:items-center justify-between p-4 bg-muted rounded-lg hover:bg-muted transition-colors"
                 >
                   <div className="flex-1">
                     <div className="flex items-center space-x-3 mb-2">
                       <span className="font-bold text-lg">#{pedido.id}</span>
                       {getEstadoBadge(pedido.estado)}
                     </div>
-                    <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-600">
+                    <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
                       <span className="flex items-center">
                         <Calendar className="w-4 h-4 mr-1" />
                         {formatDate(pedido.fechaPedido)}
                       </span>
-                      <span className="flex items-center font-semibold text-slate-800">
+                      <span className="flex items-center font-semibold text-foreground">
                         <Truck className="w-4 h-4 mr-1" />
                         {pedido.items?.length || 0} productos
                       </span>
                     </div>
                     {pedido.notas && (
-                      <p className="text-xs text-slate-500 mt-1 truncate max-w-md">
+                      <p className="text-xs text-muted-foreground mt-1 truncate max-w-md">
                         {pedido.notas}
                       </p>
                     )}
@@ -341,13 +341,13 @@ export default function HistorialPedidos({ userRole, onEditarPedido }: Historial
                           <MoreVertical className="w-4 h-4" />
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="bg-white border-slate-200">
+                      <DropdownMenuContent align="end" className="bg-card border-border">
                         <DropdownMenuSub>
                           <DropdownMenuSubTrigger>
                             <FileDown className="w-4 h-4 mr-2" />
                             Generar PDF
                           </DropdownMenuSubTrigger>
-                          <DropdownMenuSubContent className="bg-white border-slate-200">
+                          <DropdownMenuSubContent className="bg-card border-border">
                             <DropdownMenuItem
                               onClick={() => generarPDF(pedido, "completo")}
                               disabled={generandoPDF}
@@ -433,11 +433,11 @@ export default function HistorialPedidos({ userRole, onEditarPedido }: Historial
             <div className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                 <div>
-                  <p className="text-slate-500">Fecha</p>
+                  <p className="text-muted-foreground">Fecha</p>
                   <p className="font-medium">{formatDate(pedidoDetalle.fechaPedido)}</p>
                 </div>
                 <div>
-                  <p className="text-slate-500">Usuario</p>
+                  <p className="text-muted-foreground">Usuario</p>
                   <p className="font-medium">{pedidoDetalle.usuario?.nombre || "-"}</p>
                 </div>
               </div>
@@ -448,16 +448,16 @@ export default function HistorialPedidos({ userRole, onEditarPedido }: Historial
                   {pedidoDetalle.items?.map((item: any) => (
                     <div
                       key={item.id}
-                      className="flex items-center justify-between p-3 bg-slate-50 rounded-lg"
+                      className="flex items-center justify-between p-3 bg-muted rounded-lg"
                     >
                       <div>
                         <p className="font-medium">{item.producto?.nombre}</p>
-                        <p className="text-sm text-slate-500">
+                        <p className="text-sm text-muted-foreground">
                           {item.producto?.proveedor?.nombre || "Sin proveedor"} •{" "}
                           {item.producto?.categoria?.nombre || "Sin categoría"}
                         </p>
                         {(item.producto?.fabricante || item.producto?.formato) && (
-                          <p className="text-xs text-slate-400 mt-0.5">
+                          <p className="text-xs text-muted-foreground mt-0.5">
                             {item.producto?.fabricante && <span>🏭 {item.producto.fabricante}</span>}
                             {item.producto?.fabricante && item.producto?.formato && <span className="mx-1">·</span>}
                             {item.producto?.formato && <span>📦 {item.producto.formato}</span>}
@@ -484,7 +484,7 @@ export default function HistorialPedidos({ userRole, onEditarPedido }: Historial
               {pedidoDetalle.notas && (
                 <div className="border-t pt-4">
                   <h4 className="font-semibold mb-2">Notas</h4>
-                  <p className="text-slate-600">{pedidoDetalle.notas}</p>
+                  <p className="text-muted-foreground">{pedidoDetalle.notas}</p>
                 </div>
               )}
 

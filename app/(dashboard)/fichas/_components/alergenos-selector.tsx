@@ -51,14 +51,14 @@ export function AlergenosSelector({
             className={`flex items-center gap-2 p-2 rounded-lg border transition-colors text-left w-full ${
               isSelected
                 ? "border-blue-300 bg-blue-50"
-                : "border-slate-200 hover:border-slate-300 hover:bg-slate-50"
+                : "border-border hover:border-input hover:bg-muted"
             } disabled:opacity-50 disabled:cursor-not-allowed`}
           >
             <div
               className={`h-4 w-4 shrink-0 rounded-sm border flex items-center justify-center ${
                 isSelected
                   ? "bg-blue-600 border-blue-600"
-                  : "border-slate-300"
+                  : "border-input"
               }`}
             >
               {isSelected && <Check className="h-3 w-3 text-white" />}

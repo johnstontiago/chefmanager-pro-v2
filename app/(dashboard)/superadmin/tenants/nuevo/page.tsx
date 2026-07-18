@@ -20,8 +20,8 @@ export default async function NuevoTenantPage() {
           </Button>
         </Link>
         <div>
-          <h1 className="text-xl font-bold text-slate-800">Nuevo Negocio</h1>
-          <p className="text-slate-500 text-sm">Incorpora un nuevo cliente al sistema</p>
+          <h1 className="text-xl font-bold text-foreground">Nuevo Negocio</h1>
+          <p className="text-muted-foreground text-sm">Incorpora un nuevo cliente al sistema</p>
         </div>
       </div>
       <OnboardingForm />

@@ -267,7 +267,7 @@ export default function ConsumoContent({ userRole }: ConsumoContentProps) {
       case "entrada":
         return <Package className="w-4 h-4 text-green-500" />;
       default:
-        return <Package className="w-4 h-4 text-slate-400" />;
+        return <Package className="w-4 h-4 text-muted-foreground" />;
     }
   };
 
@@ -295,8 +295,8 @@ export default function ConsumoContent({ userRole }: ConsumoContentProps) {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-slate-800">Consumo y Mermas</h1>
-        <p className="text-slate-500">Registra el consumo de productos y mermas</p>
+        <h1 className="text-2xl font-bold text-foreground">Consumo y Mermas</h1>
+        <p className="text-muted-foreground">Registra el consumo de productos y mermas</p>
       </div>
 
       <Tabs defaultValue="registrar">
@@ -379,14 +379,14 @@ export default function ConsumoContent({ userRole }: ConsumoContentProps) {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {!selectedItem ? (
-                    <div className="text-center py-8 text-slate-500">
+                    <div className="text-center py-8 text-muted-foreground">
                       <UtensilsCrossed className="w-12 h-12 mx-auto mb-3 opacity-30" />
                       <p>Selecciona un producto/lote</p>
                     </div>
                   ) : (
                     <>
                       {/* Selected Item Info */}
-                      <div className="bg-slate-50 p-4 rounded-lg">
+                      <div className="bg-muted p-4 rounded-lg">
                         <div className="flex items-center justify-between mb-2">
                           <h4 className="font-semibold">{selectedItem.producto?.nombre}</h4>
                           <Button
@@ -398,9 +398,9 @@ export default function ConsumoContent({ userRole }: ConsumoContentProps) {
                             <X className="w-4 h-4" />
                           </Button>
                         </div>
-                        <div className="text-sm text-slate-600 space-y-1">
+                        <div className="text-sm text-muted-foreground space-y-1">
                           {(selectedItem.producto?.fabricante || selectedItem.producto?.formato) && (
-                            <p className="text-xs text-slate-400">
+                            <p className="text-xs text-muted-foreground">
                               {selectedItem.producto?.fabricante && <span>🏭 {selectedItem.producto.fabricante}</span>}
                               {selectedItem.producto?.fabricante && selectedItem.producto?.formato && <span className="mx-1">·</span>}
                               {selectedItem.producto?.formato && <span>📦 {selectedItem.producto.formato}</span>}
@@ -408,7 +408,7 @@ export default function ConsumoContent({ userRole }: ConsumoContentProps) {
                           )}
                           {selectedItem.lote && <p>Lote: {selectedItem.lote}</p>}
                           {selectedItem.ubicacion && <p>Ubicación: {selectedItem.ubicacion}</p>}
-                          <p className="font-semibold text-lg text-slate-800">
+                          <p className="font-semibold text-lg text-foreground">
                             Stock: {formatDecimal(selectedItem.cantidad)} {unidadDe(selectedItem.producto)}
                           </p>
                         </div>
@@ -450,7 +450,7 @@ export default function ConsumoContent({ userRole }: ConsumoContentProps) {
                           onChange={(e) => setCantidad(e.target.value)}
                           placeholder="Ej: 0.5, 1.25, 3"
                         />
-                        <p className="text-xs text-slate-500 mt-1">
+                        <p className="text-xs text-muted-foreground mt-1">
                           Máx: {formatDecimal(selectedItem.cantidad)} {unidadDe(selectedItem.producto)}
                         </p>
                       </div>
@@ -508,7 +508,7 @@ export default function ConsumoContent({ userRole }: ConsumoContentProps) {
                       className={`py-2 px-3 rounded-md text-sm font-medium border transition-colors ${
                         modoStock === "productos"
                           ? "bg-blue-600 text-white border-blue-600"
-                          : "bg-white text-slate-600 border-slate-200 hover:bg-slate-100"
+                          : "bg-card text-muted-foreground border-border hover:bg-muted"
                       }`}
                     >
                       Materias primas
@@ -519,7 +519,7 @@ export default function ConsumoContent({ userRole }: ConsumoContentProps) {
                       className={`py-2 px-3 rounded-md text-sm font-medium border transition-colors ${
                         modoStock === "preparaciones"
                           ? "bg-amber-500 text-white border-amber-500"
-                          : "bg-white text-slate-600 border-slate-200 hover:bg-slate-100"
+                          : "bg-card text-muted-foreground border-border hover:bg-muted"
                       }`}
                     >
                       Preparaciones
@@ -527,7 +527,7 @@ export default function ConsumoContent({ userRole }: ConsumoContentProps) {
                   </div>
 
                   <div className="relative mb-4">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input
                       placeholder={modoStock === "preparaciones" ? "Buscar preparación..." : "Buscar producto..."}
                       value={busqueda}
@@ -540,14 +540,14 @@ export default function ConsumoContent({ userRole }: ConsumoContentProps) {
                   {modoStock === "preparaciones" ? (
                     <div className="space-y-3 max-h-[60vh] overflow-y-auto">
                       {preparacionesFiltradas.length === 0 ? (
-                        <div className="text-center py-8 text-slate-500">
+                        <div className="text-center py-8 text-muted-foreground">
                           <Package className="w-12 h-12 mx-auto mb-3 opacity-30" />
                           <p>No hay preparaciones con stock</p>
                         </div>
                       ) : (
                         preparacionesFiltradas.map((e) => (
-                          <div key={e.id} className="border rounded-lg p-3 hover:bg-slate-50">
-                            <h4 className="font-semibold text-slate-800">{e.nombre}</h4>
+                          <div key={e.id} className="border rounded-lg p-3 hover:bg-muted">
+                            <h4 className="font-semibold text-foreground">{e.nombre}</h4>
                             <div className="mt-2 space-y-2">
                               {(e.lotes || []).map((l: any) => {
                                 const item = prepLoteToItem(e, l);
@@ -557,22 +557,22 @@ export default function ConsumoContent({ userRole }: ConsumoContentProps) {
                                     className={`flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 rounded-lg cursor-pointer transition-colors gap-1 ${
                                       selectedItem?.tipo === "preparacion" && selectedItem?.id === l.id
                                         ? "bg-amber-100 border-amber-300 border"
-                                        : "bg-slate-100 hover:bg-slate-200"
+                                        : "bg-muted hover:bg-secondary"
                                     }`}
                                     onClick={() => seleccionarLote(item)}
                                   >
                                     <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                                       {l.numeroLote && (
                                         <span className="flex items-center text-sm">
-                                          <Tag className="w-4 h-4 mr-1 text-slate-400" />{l.numeroLote}
+                                          <Tag className="w-4 h-4 mr-1 text-muted-foreground" />{l.numeroLote}
                                         </span>
                                       )}
                                       {l.numeroEnvases != null && (
-                                        <span className="text-xs text-slate-500">{l.numeroEnvases} envase(s)</span>
+                                        <span className="text-xs text-muted-foreground">{l.numeroEnvases} envase(s)</span>
                                       )}
                                       {l.fechaCaducidad && (
                                         <span className="flex items-center text-sm">
-                                          <Calendar className="w-4 h-4 mr-1 text-slate-400" />{formatDate(l.fechaCaducidad)}
+                                          <Calendar className="w-4 h-4 mr-1 text-muted-foreground" />{formatDate(l.fechaCaducidad)}
                                         </span>
                                       )}
                                     </div>
@@ -590,7 +590,7 @@ export default function ConsumoContent({ userRole }: ConsumoContentProps) {
                   ) : (
                   <div className="space-y-3 max-h-[60vh] overflow-y-auto">
                     {productosFiltrados.length === 0 ? (
-                      <div className="text-center py-8 text-slate-500">
+                      <div className="text-center py-8 text-muted-foreground">
                         <Package className="w-12 h-12 mx-auto mb-3 opacity-30" />
                         <p>No hay productos con stock</p>
                       </div>
@@ -598,10 +598,10 @@ export default function ConsumoContent({ userRole }: ConsumoContentProps) {
                       productosFiltrados.map((prod) => {
                         const lotes = inventarioByProducto[prod.id] || [];
                         return (
-                          <div key={prod.id} className="border rounded-lg p-3 hover:bg-slate-50">
-                            <h4 className="font-semibold text-slate-800">{prod.nombre}</h4>
+                          <div key={prod.id} className="border rounded-lg p-3 hover:bg-muted">
+                            <h4 className="font-semibold text-foreground">{prod.nombre}</h4>
                             {(prod.fabricante || prod.formato) && (
-                              <p className="text-xs text-slate-400 mb-1">
+                              <p className="text-xs text-muted-foreground mb-1">
                                 {prod.fabricante && <span>🏭 {prod.fabricante}</span>}
                                 {prod.fabricante && prod.formato && <span className="mx-1">·</span>}
                                 {prod.formato && <span>📦 {prod.formato}</span>}
@@ -614,26 +614,26 @@ export default function ConsumoContent({ userRole }: ConsumoContentProps) {
                                   className={`flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 rounded-lg cursor-pointer transition-colors gap-1 ${
                                     selectedItem?.id === inv.id
                                       ? "bg-blue-100 border-blue-300 border"
-                                      : "bg-slate-100 hover:bg-slate-200"
+                                      : "bg-muted hover:bg-secondary"
                                   }`}
                                   onClick={() => seleccionarLote(inv)}
                                 >
                                   <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                                     {inv.lote && (
                                       <span className="flex items-center text-sm">
-                                        <Tag className="w-4 h-4 mr-1 text-slate-400" />
+                                        <Tag className="w-4 h-4 mr-1 text-muted-foreground" />
                                         {inv.lote}
                                       </span>
                                     )}
                                     {inv.ubicacion && (
                                       <span className="flex items-center text-sm">
-                                        <MapPin className="w-4 h-4 mr-1 text-slate-400" />
+                                        <MapPin className="w-4 h-4 mr-1 text-muted-foreground" />
                                         {inv.ubicacion}
                                       </span>
                                     )}
                                     {inv.fechaCaducidad && (
                                       <span className="flex items-center text-sm">
-                                        <Calendar className="w-4 h-4 mr-1 text-slate-400" />
+                                        <Calendar className="w-4 h-4 mr-1 text-muted-foreground" />
                                         {formatDate(inv.fechaCaducidad)}
                                       </span>
                                     )}
@@ -668,30 +668,30 @@ export default function ConsumoContent({ userRole }: ConsumoContentProps) {
             </CardHeader>
             <CardContent>
               {movimientos.length === 0 ? (
-                <div className="text-center py-12 text-slate-500">
+                <div className="text-center py-12 text-muted-foreground">
                   <History className="w-12 h-12 mx-auto mb-3 opacity-30" />
                   <p>No hay movimientos registrados</p>
                 </div>
               ) : (
                 <div className="space-y-3">
                   {movimientos.map((mov) => (
-                    <div key={mov.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 bg-slate-50 rounded-lg gap-3">
+                    <div key={mov.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 bg-muted rounded-lg gap-3">
                       <div className="flex items-start gap-3">
                         <div className="mt-0.5 flex-shrink-0">{getMovementIcon(mov.tipo)}</div>
                         <div className="min-w-0">
-                          <p className="font-medium text-slate-800">{mov.producto?.nombre}</p>
-                          <p className="text-sm text-slate-500">
+                          <p className="font-medium text-foreground">{mov.producto?.nombre}</p>
+                          <p className="text-sm text-muted-foreground">
                             {formatDecimal(mov.cantidad)} {mov.producto?.unidadMedida}
                             {mov.lote && ` • Lote: ${mov.lote}`}
                           </p>
-                          {mov.notas && <p className="text-xs text-slate-400 mt-1">{mov.notas}</p>}
+                          {mov.notas && <p className="text-xs text-muted-foreground mt-1">{mov.notas}</p>}
                         </div>
                       </div>
                       <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-start gap-2 sm:gap-1 pl-7 sm:pl-0 flex-shrink-0">
                         {getMovementBadge(mov.tipo)}
                         <div className="text-right">
-                          <p className="text-xs text-slate-600">{formatDateTime(mov.fecha)}</p>
-                          <p className="text-xs text-slate-400">{mov.usuario?.nombre}</p>
+                          <p className="text-xs text-muted-foreground">{formatDateTime(mov.fecha)}</p>
+                          <p className="text-xs text-muted-foreground">{mov.usuario?.nombre}</p>
                         </div>
                       </div>
                     </div>

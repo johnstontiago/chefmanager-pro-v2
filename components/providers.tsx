@@ -1,6 +1,7 @@
 "use client";
 
 import { SessionProvider } from "next-auth/react";
+import { ThemeProvider } from "@/components/theme-provider";
 import { useState, useEffect, ReactNode } from "react";
 
 export function Providers({ children }: { children: ReactNode }) {
@@ -12,11 +13,21 @@ export function Providers({ children }: { children: ReactNode }) {
 
   if (!mounted) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <div className="animate-pulse text-slate-400">Cargando...</div>
+      <div className="min-h-screen flex items-center justify-center bg-muted">
+        <div className="animate-pulse text-muted-foreground">Cargando...</div>
       </div>
     );
   }
 
-  return <SessionProvider>{children}</SessionProvider>;
+  return (
+    <ThemeProvider
+      attribute="class"
+      defaultTheme="actual"
+      themes={["actual", "mediterraneo", "night", "mono"]}
+      enableSystem={false}
+      disableTransitionOnChange
+    >
+      <SessionProvider>{children}</SessionProvider>
+    </ThemeProvider>
+  );
 }

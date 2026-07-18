@@ -131,8 +131,8 @@ export default function CategoriasFichasPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Categorías</h1>
-          <p className="text-slate-500 text-sm">Organiza tus fichas técnicas</p>
+          <h1 className="text-2xl font-bold text-foreground">Categorías</h1>
+          <p className="text-muted-foreground text-sm">Organiza tus fichas técnicas</p>
         </div>
         {canEdit && (
           <Button onClick={openCrear}>
@@ -149,14 +149,14 @@ export default function CategoriasFichasPage() {
           {[1, 2, 3].map((i) => (
             <div
               key={i}
-              className="h-14 bg-white rounded-lg border border-slate-200 animate-pulse"
+              className="h-14 bg-card rounded-lg border border-border animate-pulse"
             />
           ))}
         </div>
       ) : categorias.length === 0 ? (
-        <div className="text-center py-12 bg-white rounded-lg border border-slate-200">
-          <Tag className="h-10 w-10 text-slate-300 mx-auto mb-3" />
-          <p className="text-slate-500">No hay categorías registradas</p>
+        <div className="text-center py-12 bg-card rounded-lg border border-border">
+          <Tag className="h-10 w-10 text-muted-foreground/40 mx-auto mb-3" />
+          <p className="text-muted-foreground">No hay categorías registradas</p>
           {canEdit && (
             <Button className="mt-3" onClick={openCrear}>
               <Plus className="h-4 w-4 mr-2" />
@@ -169,16 +169,16 @@ export default function CategoriasFichasPage() {
           {categorias.map((cat) => (
             <div
               key={cat.id}
-              className="flex items-center justify-between p-4 bg-white rounded-lg border border-slate-200 hover:border-slate-300 transition-colors"
+              className="flex items-center justify-between p-4 bg-card rounded-lg border border-border hover:border-input transition-colors"
             >
               <div className="flex items-center gap-3">
                 <div className="bg-blue-100 rounded-lg p-2">
                   <Tag className="h-4 w-4 text-blue-600" />
                 </div>
                 <div>
-                  <span className="font-medium text-slate-900">{cat.nombre}</span>
+                  <span className="font-medium text-foreground">{cat.nombre}</span>
                   {cat._count && (
-                    <p className="text-xs text-slate-500 mt-0.5">
+                    <p className="text-xs text-muted-foreground mt-0.5">
                       {cat._count.fichas} ficha(s)
                     </p>
                   )}
@@ -195,7 +195,7 @@ export default function CategoriasFichasPage() {
                     variant="ghost"
                     size="icon"
                     onClick={() => openEditar(cat)}
-                    className="text-slate-500 hover:text-slate-700"
+                    className="text-muted-foreground hover:text-foreground"
                   >
                     <Edit2 className="h-4 w-4" />
                   </Button>
@@ -217,9 +217,9 @@ export default function CategoriasFichasPage() {
       )}
 
       <Dialog open={modalOpen} onOpenChange={(o) => !saving && setModalOpen(o)}>
-        <DialogContent className="bg-white max-w-sm">
+        <DialogContent className="bg-card max-w-sm">
           <DialogHeader>
-            <DialogTitle className="text-slate-900">
+            <DialogTitle className="text-foreground">
               {editando ? "Editar Categoría" : "Nueva Categoría"}
             </DialogTitle>
           </DialogHeader>
@@ -258,7 +258,7 @@ export default function CategoriasFichasPage() {
         open={eliminando !== null}
         onOpenChange={(o) => !o && setEliminando(null)}
       >
-        <AlertDialogContent className="bg-white">
+        <AlertDialogContent className="bg-card">
           <AlertDialogHeader>
             <AlertDialogTitle>Eliminar Categoría</AlertDialogTitle>
             <AlertDialogDescription>

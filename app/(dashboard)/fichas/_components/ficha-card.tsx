@@ -41,8 +41,8 @@ export function FichaCard({
     .slice(0, 4);
 
   return (
-    <Card className="overflow-hidden hover:shadow-md transition-shadow bg-white">
-      <div className="relative h-48 bg-slate-100">
+    <Card className="overflow-hidden hover:shadow-md transition-shadow bg-card">
+      <div className="relative h-48 bg-muted">
         {ficha.urlImagen ? (
           <Image
             src={ficha.urlImagen}
@@ -65,16 +65,16 @@ export function FichaCard({
         )}
       </div>
       <CardContent className="p-4">
-        <h3 className="font-semibold text-slate-900 text-base mb-1 line-clamp-1">
+        <h3 className="font-semibold text-foreground text-base mb-1 line-clamp-1">
           {ficha.nombre}
         </h3>
         {ficha.descripcion && (
-          <p className="text-slate-500 text-xs mb-3 line-clamp-2">
+          <p className="text-muted-foreground text-xs mb-3 line-clamp-2">
             {ficha.descripcion}
           </p>
         )}
 
-        <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500 mb-3">
+        <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground mb-3">
           <span className="flex items-center gap-1">
             <Users className="h-3 w-3" />
             {ficha.porciones} porciones
@@ -97,7 +97,7 @@ export function FichaCard({
               </span>
             ))}
             {ficha.alergenos.length > 4 && (
-              <span className="text-xs text-slate-400">
+              <span className="text-xs text-muted-foreground">
                 +{ficha.alergenos.length - 4}
               </span>
             )}

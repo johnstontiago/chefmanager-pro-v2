@@ -56,20 +56,20 @@ export default function UnitSelector({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md animate-fade-in">
+      <div className="bg-card rounded-2xl shadow-2xl w-full max-w-md animate-fade-in">
         <div className="flex items-center justify-between p-6 border-b">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
               <Building2 className="w-5 h-5 text-blue-600" />
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-slate-900">Unidad Actual</h2>
-              <p className="text-sm text-slate-500">Seleccione la unidad de trabajo</p>
+              <h2 className="text-lg font-semibold text-foreground">Unidad Actual</h2>
+              <p className="text-sm text-muted-foreground">Seleccione la unidad de trabajo</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 transition-colors"
+            className="text-muted-foreground hover:text-muted-foreground transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -85,8 +85,8 @@ export default function UnitSelector({
               <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Building2 className="w-8 h-8 text-blue-600" />
               </div>
-              <h3 className="text-lg font-semibold text-slate-900">{currentUnidadNombre}</h3>
-              <p className="text-slate-500 mt-2">Esta es su unidad asignada</p>
+              <h3 className="text-lg font-semibold text-foreground">{currentUnidadNombre}</h3>
+              <p className="text-muted-foreground mt-2">Esta es su unidad asignada</p>
             </div>
           ) : (
             <div className="space-y-2 max-h-64 overflow-y-auto">
@@ -97,13 +97,13 @@ export default function UnitSelector({
                   className={`w-full flex items-center justify-between p-4 rounded-lg border-2 transition-all ${
                     selectedId === unidad.id
                       ? "border-blue-500 bg-blue-50"
-                      : "border-slate-200 hover:border-slate-300"
+                      : "border-border hover:border-input"
                   }`}
                 >
                   <div className="text-left">
-                    <div className="font-medium text-slate-900">{unidad.nombre}</div>
+                    <div className="font-medium text-foreground">{unidad.nombre}</div>
                     {unidad.direccion && (
-                      <div className="text-sm text-slate-500">{unidad.direccion}</div>
+                      <div className="text-sm text-muted-foreground">{unidad.direccion}</div>
                     )}
                   </div>
                   {selectedId === unidad.id && (
@@ -115,7 +115,7 @@ export default function UnitSelector({
           )}
         </div>
 
-        <div className="flex items-center justify-end gap-3 p-6 border-t bg-slate-50 rounded-b-2xl">
+        <div className="flex items-center justify-end gap-3 p-6 border-t bg-muted rounded-b-2xl">
           <Button variant="outline" onClick={onClose}>
             Cancelar
           </Button>

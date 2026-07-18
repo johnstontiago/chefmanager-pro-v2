@@ -68,11 +68,11 @@ export default function RegistroPage() {
           <div className="inline-flex items-center justify-center w-14 h-14 bg-blue-600 rounded-2xl mb-3">
             <ChefHat className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-slate-800">Crea tu cuenta</h1>
-          <p className="text-slate-500 text-sm mt-1">Introduce tu licencia y los datos de tu negocio</p>
+          <h1 className="text-2xl font-bold text-foreground">Crea tu cuenta</h1>
+          <p className="text-muted-foreground text-sm mt-1">Introduce tu licencia y los datos de tu negocio</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="bg-card rounded-2xl shadow-sm border border-border p-6 space-y-4">
           <Field icon={KeyRound} label="Licencia">
             <Input
               required
@@ -113,7 +113,7 @@ export default function RegistroPage() {
               onChange={(e) => set("pin", e.target.value.replace(/\D/g, "").slice(0, 4))}
               autoComplete="off"
             />
-            <p className="text-xs text-slate-400 mt-1">Te lo pedirá cada vez que entres, como segunda verificación.</p>
+            <p className="text-xs text-muted-foreground mt-1">Te lo pedirá cada vez que entres, como segunda verificación.</p>
           </Field>
 
           {error && (
@@ -128,13 +128,13 @@ export default function RegistroPage() {
             {loading ? "Creando tu cuenta..." : "Crear cuenta"}
           </Button>
 
-          <p className="text-center text-sm text-slate-500">
+          <p className="text-center text-sm text-muted-foreground">
             ¿Ya tienes cuenta?{" "}
             <Link href="/login" className="text-blue-600 font-medium hover:underline">Inicia sesión</Link>
           </p>
         </form>
 
-        <p className="text-center text-xs text-slate-400 mt-4">
+        <p className="text-center text-xs text-muted-foreground mt-4">
           ¿No tienes licencia? Consíguela en <span className="font-medium">chefmanager.pro</span>
         </p>
       </div>
@@ -145,8 +145,8 @@ export default function RegistroPage() {
 function Field({ icon: Icon, label, children }: { icon: React.ComponentType<{ className?: string }>; label: string; children: React.ReactNode }) {
   return (
     <div>
-      <Label className="flex items-center gap-1.5 mb-1 text-slate-700">
-        <Icon className="w-3.5 h-3.5 text-slate-400" />
+      <Label className="flex items-center gap-1.5 mb-1 text-foreground">
+        <Icon className="w-3.5 h-3.5 text-muted-foreground" />
         {label}
       </Label>
       {children}

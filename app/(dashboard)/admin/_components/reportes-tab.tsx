@@ -58,8 +58,8 @@ export default function ReportesTab() {
                   <report.icon className="w-6 h-6 text-white" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-semibold text-slate-800">{report.name}</h3>
-                  <p className="text-sm text-slate-500 mb-4">{report.description}</p>
+                  <h3 className="font-semibold text-foreground">{report.name}</h3>
+                  <p className="text-sm text-muted-foreground mb-4">{report.description}</p>
                   <div className="flex space-x-2">
                     <Button
                       size="sm"

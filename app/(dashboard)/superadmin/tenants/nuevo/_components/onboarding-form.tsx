@@ -113,11 +113,11 @@ export default function OnboardingForm() {
       <Card className="max-w-lg mx-auto">
         <CardContent className="pt-10 pb-8 text-center space-y-4">
           <CheckCircle2 className="w-16 h-16 text-green-500 mx-auto" />
-          <h2 className="text-xl font-bold text-slate-800">¡Negocio creado con éxito!</h2>
-          <p className="text-slate-500">
-            <span className="font-semibold text-slate-700">{done.tenantNombre}</span> ya está activo en el sistema.
+          <h2 className="text-xl font-bold text-foreground">¡Negocio creado con éxito!</h2>
+          <p className="text-muted-foreground">
+            <span className="font-semibold text-foreground">{done.tenantNombre}</span> ya está activo en el sistema.
           </p>
-          <p className="text-sm text-slate-400">
+          <p className="text-sm text-muted-foreground">
             El administrador puede entrar con el email y contraseña que configuraste.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
@@ -140,14 +140,14 @@ export default function OnboardingForm() {
         {[1, 2, 3].map((s) => (
           <div key={s} className="flex items-center gap-2 flex-1 last:flex-none">
             <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 ${
-              step > s ? "bg-purple-600 text-white" : step === s ? "bg-purple-600 text-white ring-4 ring-purple-100" : "bg-slate-200 text-slate-500"
+              step > s ? "bg-purple-600 text-white" : step === s ? "bg-purple-600 text-white ring-4 ring-purple-100" : "bg-secondary text-muted-foreground"
             }`}>
               {step > s ? "✓" : s}
             </div>
-            <span className={`text-sm hidden sm:inline ${step === s ? "font-semibold text-slate-800" : "text-slate-400"}`}>
+            <span className={`text-sm hidden sm:inline ${step === s ? "font-semibold text-foreground" : "text-muted-foreground"}`}>
               {s === 1 ? "Negocio" : s === 2 ? "Local" : "Admin"}
             </span>
-            {s < 3 && <div className={`flex-1 h-0.5 mx-2 ${step > s ? "bg-purple-600" : "bg-slate-200"}`} />}
+            {s < 3 && <div className={`flex-1 h-0.5 mx-2 ${step > s ? "bg-purple-600" : "bg-secondary"}`} />}
           </div>
         ))}
       </div>
@@ -248,7 +248,7 @@ export default function OnboardingForm() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <p className="text-sm text-slate-500">
+            <p className="text-sm text-muted-foreground">
               Esta cuenta tendrá rol <strong>Admin</strong> y será el acceso principal del cliente.
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

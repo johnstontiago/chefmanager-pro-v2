@@ -188,8 +188,8 @@ export default function FichasPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Fichas Técnicas</h1>
-          <p className="text-slate-500 text-sm">Gestión de escandallos con costos del inventario</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-foreground">Fichas Técnicas</h1>
+          <p className="text-muted-foreground text-sm">Gestión de escandallos con costos del inventario</p>
         </div>
         {canEdit && (
           <Button onClick={() => setModalCrear(true)} className="min-h-[44px]">
@@ -203,7 +203,7 @@ export default function FichasPage() {
 
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Buscar fichas..."
             value={search}
@@ -214,7 +214,7 @@ export default function FichasPage() {
         <div className="sm:w-48">
           <Select value={categoriaFiltro || "all"} onValueChange={(v) => setCategoriaFiltro(v === "all" ? "" : v)}>
             <SelectTrigger>
-              <Filter className="h-4 w-4 mr-2 text-slate-400" />
+              <Filter className="h-4 w-4 mr-2 text-muted-foreground" />
               <SelectValue placeholder="Todas las categorías" />
             </SelectTrigger>
             <SelectContent>
@@ -234,15 +234,15 @@ export default function FichasPage() {
           {[1, 2, 3, 4, 5, 6].map((i) => (
             <div
               key={i}
-              className="h-72 bg-white rounded-lg border border-slate-200 animate-pulse"
+              className="h-72 bg-card rounded-lg border border-border animate-pulse"
             />
           ))}
         </div>
       ) : fichas.length === 0 ? (
-        <div className="text-center py-16 bg-white rounded-lg border border-slate-200">
-          <ChefHat className="h-12 w-12 text-slate-300 mx-auto mb-3" />
-          <h3 className="text-slate-600 font-medium">No hay fichas técnicas</h3>
-          <p className="text-slate-400 text-sm mt-1">
+        <div className="text-center py-16 bg-card rounded-lg border border-border">
+          <ChefHat className="h-12 w-12 text-muted-foreground/40 mx-auto mb-3" />
+          <h3 className="text-muted-foreground font-medium">No hay fichas técnicas</h3>
+          <p className="text-muted-foreground text-sm mt-1">
             {search || categoriaFiltro
               ? "No se encontraron resultados para tu búsqueda"
               : "Comienza creando tu primera ficha técnica"}
@@ -271,9 +271,9 @@ export default function FichasPage() {
       )}
 
       <Dialog open={modalCrear} onOpenChange={setModalCrear}>
-        <DialogContent className="max-w-2xl w-[calc(100vw-2rem)] sm:w-full bg-white">
+        <DialogContent className="max-w-2xl w-[calc(100vw-2rem)] sm:w-full bg-card">
           <DialogHeader>
-            <DialogTitle className="text-slate-900">Nueva Ficha Técnica</DialogTitle>
+            <DialogTitle className="text-foreground">Nueva Ficha Técnica</DialogTitle>
           </DialogHeader>
           <div className="overflow-y-auto max-h-[55dvh] sm:max-h-[75vh] pr-1">
             <FichaForm onSubmit={handleCrear} loading={saving} />
@@ -282,9 +282,9 @@ export default function FichasPage() {
       </Dialog>
 
       <Dialog open={!!modalEditar} onOpenChange={(o) => !o && setModalEditar(null)}>
-        <DialogContent className="max-w-2xl w-[calc(100vw-2rem)] sm:w-full bg-white">
+        <DialogContent className="max-w-2xl w-[calc(100vw-2rem)] sm:w-full bg-card">
           <DialogHeader>
-            <DialogTitle className="text-slate-900">Editar Ficha Técnica</DialogTitle>
+            <DialogTitle className="text-foreground">Editar Ficha Técnica</DialogTitle>
           </DialogHeader>
           {modalEditar && (
             <div className="overflow-y-auto max-h-[55dvh] sm:max-h-[75vh] pr-1">
@@ -309,9 +309,9 @@ export default function FichasPage() {
         open={!!modalDetalle}
         onOpenChange={(o) => !o && setModalDetalle(null)}
       >
-        <DialogContent className="max-w-2xl w-[calc(100vw-2rem)] sm:w-full bg-white">
+        <DialogContent className="max-w-2xl w-[calc(100vw-2rem)] sm:w-full bg-card">
           <DialogHeader>
-            <DialogTitle className="text-slate-900">Detalle de Ficha</DialogTitle>
+            <DialogTitle className="text-foreground">Detalle de Ficha</DialogTitle>
           </DialogHeader>
           {modalDetalle && (
             <div className="overflow-y-auto max-h-[70dvh] sm:max-h-[80vh] pr-1">
@@ -325,14 +325,14 @@ export default function FichasPage() {
         open={!!modalEliminar}
         onOpenChange={(o) => !o && setModalEliminar(null)}
       >
-        <AlertDialogContent className="bg-white">
+        <AlertDialogContent className="bg-card">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-red-700">
               ¿Eliminar ficha técnica?
             </AlertDialogTitle>
-            <AlertDialogDescription className="text-sm text-slate-600">
+            <AlertDialogDescription className="text-sm text-muted-foreground">
               Estás a punto de eliminar permanentemente{" "}
-              <span className="font-semibold text-slate-900">
+              <span className="font-semibold text-foreground">
                 &ldquo;{modalEliminar?.nombre}&rdquo;
               </span>
               .{" "}

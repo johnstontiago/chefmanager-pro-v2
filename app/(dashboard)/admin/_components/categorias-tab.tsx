@@ -93,7 +93,7 @@ export default function CategoriasTab() {
             </CardTitle>
             <div className="flex flex-wrap items-center gap-2">
               <div className="relative flex-1 min-w-[140px]">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input placeholder="Buscar..." value={busqueda} onChange={(e) => setBusqueda(e.target.value)} className="pl-10 w-full sm:w-48" />
               </div>
               <Button onClick={openNew} className="flex-shrink-0"><Plus className="w-4 h-4 mr-2" />Nueva</Button>
@@ -102,15 +102,15 @@ export default function CategoriasTab() {
         </CardHeader>
         <CardContent>
           {filtradas.length === 0 ? (
-            <div className="text-center py-12 text-slate-500">
+            <div className="text-center py-12 text-muted-foreground">
               <Tags className="w-12 h-12 mx-auto mb-3 opacity-30" />
               <p>No hay categorías</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
               {filtradas.map((item) => (
-                <div key={item.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors">
-                  <h4 className="font-semibold text-slate-800">{item.nombre}</h4>
+                <div key={item.id} className="flex items-center justify-between p-4 bg-muted rounded-lg hover:bg-muted transition-colors">
+                  <h4 className="font-semibold text-foreground">{item.nombre}</h4>
                   <div className="flex items-center space-x-1">
                     <Button size="sm" variant="ghost" onClick={() => openEdit(item)}><Edit2 className="w-4 h-4" /></Button>
                     <Button size="sm" variant="ghost" className="text-red-600" onClick={() => setDeleteItem(item)}><Trash2 className="w-4 h-4" /></Button>

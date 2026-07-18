@@ -119,7 +119,7 @@ export default function EtiquetaTab() {
               onChange={(v) => set("fuente", v)} min={0} max={7} />
           </div>
 
-          <p className="text-[10px] text-slate-400">
+          <p className="text-[10px] text-muted-foreground">
             El QR se posiciona automáticamente en la esquina inferior derecha.
           </p>
 
@@ -140,13 +140,13 @@ export default function EtiquetaTab() {
       <Card>
         <CardHeader>
           <CardTitle>Vista previa</CardTitle>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-muted-foreground">
             Escala aproximada · 50mm × {Math.round(cfg.altoLabel / 200 * 25.4)}mm
           </p>
         </CardHeader>
         <CardContent className="flex justify-center">
           <div
-            className="relative border-2 border-slate-300 bg-white overflow-hidden"
+            className="relative border-2 border-input bg-card overflow-hidden"
             style={{ width: 220, height: labelH }}
           >
             {/* Título */}
@@ -165,7 +165,7 @@ export default function EtiquetaTab() {
             {lines.map((l, i) => (
               <div
                 key={i}
-                className={`absolute leading-none ${l.small ? "text-[5px]" : "text-[7px]"} text-slate-700`}
+                className={`absolute leading-none ${l.small ? "text-[5px]" : "text-[7px]"} text-foreground`}
                 style={{ left: PX(cfg.xMargen), top: PX(l.y) }}
               >
                 {l.text}
@@ -191,7 +191,7 @@ export default function EtiquetaTab() {
                 height: Math.min(PX(QR_DOTS), labelH - PX(cfg.altoLabel - QR_DOTS - 10)),
               }}
             >
-              <span className="text-[5px] text-slate-500 text-center leading-tight px-1">QR</span>
+              <span className="text-[5px] text-muted-foreground text-center leading-tight px-1">QR</span>
             </div>
           </div>
         </CardContent>
@@ -210,7 +210,7 @@ function Field({
   return (
     <div>
       <Label className="text-xs">{label}</Label>
-      <p className="text-[10px] text-slate-400 mb-1">{hint}</p>
+      <p className="text-[10px] text-muted-foreground mb-1">{hint}</p>
       <Input
         type="number"
         value={value}

@@ -39,8 +39,8 @@ export default function PedidosContent({ userRole }: PedidosContentProps) {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800">Gestión de Pedidos</h1>
-          <p className="text-slate-500">Crea y administra pedidos a proveedores</p>
+          <h1 className="text-2xl font-bold text-foreground">Gestión de Pedidos</h1>
+          <p className="text-muted-foreground">Crea y administra pedidos a proveedores</p>
         </div>
         <Link href="/pedidos/sugerencias">
           <Button variant="outline" className="border-blue-200 text-blue-700 hover:bg-blue-50">

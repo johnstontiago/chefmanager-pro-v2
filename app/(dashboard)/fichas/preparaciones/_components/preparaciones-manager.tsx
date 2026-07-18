@@ -183,7 +183,7 @@ export default function PreparacionesManager({ elaboraciones, producciones, rol 
             <DialogTrigger asChild>
               <Button className="ml-auto"><Plus className="h-4 w-4 mr-2" />Nueva preparación</Button>
             </DialogTrigger>
-            <DialogContent className="bg-white max-w-lg max-h-[90vh] overflow-y-auto">
+            <DialogContent className="bg-card max-w-lg max-h-[90vh] overflow-y-auto">
               <DialogHeader><DialogTitle>Nueva preparación (producción)</DialogTitle></DialogHeader>
               <div className="space-y-4">
                 {mensaje && (
@@ -212,7 +212,7 @@ export default function PreparacionesManager({ elaboraciones, producciones, rol 
                         <Input type="number" min="0.001" step="any" value={cantidad}
                           onChange={(e) => setCantidad(e.target.value)} placeholder="Ej: 2000" />
                         {elaboracion.contenidoNeto && cantNum > 0 && (
-                          <p className="text-[11px] text-slate-400">
+                          <p className="text-[11px] text-muted-foreground">
                             ≈ {(cantNum * elaboracion.contenidoNeto).toFixed(0)} {elaboracion.contenidoUnidad} en total
                           </p>
                         )}
@@ -242,15 +242,15 @@ export default function PreparacionesManager({ elaboraciones, producciones, rol 
 
                     {/* Ingredientes que se consumirán */}
                     {cantNum > 0 && (
-                      <div className="bg-slate-50 rounded p-3 text-xs space-y-1">
-                        <p className="font-medium text-slate-600 flex items-center gap-1">
+                      <div className="bg-muted rounded p-3 text-xs space-y-1">
+                        <p className="font-medium text-muted-foreground flex items-center gap-1">
                           <Package className="h-3.5 w-3.5" />Se consumirá del inventario (FIFO):
                         </p>
                         {elaboracion.ingredientes.map((ing) => (
-                          <p key={ing.id} className="text-slate-500">
+                          <p key={ing.id} className="text-muted-foreground">
                             • {ing.insumo?.nombre ?? ing.producto?.nombre ?? "?"}: <strong>{(ing.cantidad * cantNum).toFixed(3)} {ing.unidad}</strong>
                             {ing.cantidadEnUnidadInsumo != null && (
-                              <span className="text-slate-400"> (≈ {(ing.cantidadEnUnidadInsumo * cantNum).toFixed(2)} {ing.unidadInsumo} de stock)</span>
+                              <span className="text-muted-foreground"> (≈ {(ing.cantidadEnUnidadInsumo * cantNum).toFixed(2)} {ing.unidadInsumo} de stock)</span>
                             )}
                           </p>
                         ))}
@@ -258,7 +258,7 @@ export default function PreparacionesManager({ elaboraciones, producciones, rol 
                     )}
 
                     {envases > 1 && cantNum > 0 && (
-                      <p className="text-xs text-slate-500">
+                      <p className="text-xs text-muted-foreground">
                         {envases} envases × {formatDecimal(cantNum / envases)} {elaboracion.unidadBase} cada uno
                         {printerStatus === "connected" && " · se imprimirán " + envases + " etiquetas"}
                       </p>
@@ -278,28 +278,28 @@ export default function PreparacionesManager({ elaboraciones, producciones, rol 
 
       {/* Historial de producciones */}
       {producciones.length === 0 ? (
-        <div className="text-center py-12 bg-white rounded-lg border">
-          <Soup className="h-10 w-10 text-slate-300 mx-auto mb-3" />
-          <p className="text-slate-500">No hay producciones registradas</p>
+        <div className="text-center py-12 bg-card rounded-lg border">
+          <Soup className="h-10 w-10 text-muted-foreground/40 mx-auto mb-3" />
+          <p className="text-muted-foreground">No hay producciones registradas</p>
         </div>
       ) : (
         <div className="space-y-3">
           {producciones.map((p) => (
-            <div key={p.id} className="bg-white rounded-lg border p-4 hover:border-blue-300 transition-colors">
+            <div key={p.id} className="bg-card rounded-lg border p-4 hover:border-blue-300 transition-colors">
               <div className="flex items-start justify-between gap-3">
                 <button type="button" onClick={() => abrirDetalle(p.id)}
                   className="flex-1 min-w-0 text-left cursor-pointer">
                   <div className="flex items-center gap-2">
-                    <h3 className="font-semibold text-slate-900 hover:text-blue-600">{p.elaboracionNombre}</h3>
+                    <h3 className="font-semibold text-foreground hover:text-blue-600">{p.elaboracionNombre}</h3>
                     {p.agotado
                       ? <Badge variant="destructive">Agotado</Badge>
                       : <Badge className="bg-green-100 text-green-800 hover:bg-green-100">En stock</Badge>}
                   </div>
-                  <p className="text-sm text-slate-500 mt-0.5">
+                  <p className="text-sm text-muted-foreground mt-0.5">
                     {formatDecimal(p.cantidadActual)} / {formatDecimal(p.cantidadInicial)} {p.unidadBase}
                     {p.numeroEnvases ? ` · ${p.numeroEnvases} envase(s)` : ""}
                   </p>
-                  <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-slate-400 mt-1">
+                  <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground mt-1">
                     {p.numeroLote && <span className="flex items-center gap-1"><Tag className="h-3 w-3" />{p.numeroLote}</span>}
                     <span>Prod: {formatDate(p.fechaProduccion)}</span>
                     {p.fechaCaducidad && <span>Cad: {formatDate(p.fechaCaducidad)}</span>}
@@ -325,7 +325,7 @@ export default function PreparacionesManager({ elaboraciones, producciones, rol 
 
       {/* Detalle de la preparación: trazabilidad de ítems de inventario usados */}
       <Dialog open={!!detalle} onOpenChange={(o) => !o && setDetalle(null)}>
-        <DialogContent className="bg-white max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogContent className="bg-card max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               {detalle?.elaboracionNombre ?? "Preparación"}
@@ -348,24 +348,24 @@ export default function PreparacionesManager({ elaboraciones, producciones, rol 
 
               {/* Ítems de inventario consumidos (trazabilidad) */}
               <div>
-                <p className="font-semibold text-slate-700 mb-2 flex items-center gap-1.5">
+                <p className="font-semibold text-foreground mb-2 flex items-center gap-1.5">
                   <Package className="h-4 w-4 text-amber-600" />Ítems de inventario usados
                 </p>
                 {detalle.insumos.length === 0 ? (
-                  <p className="text-slate-500 text-xs">Sin datos de trazabilidad.</p>
+                  <p className="text-muted-foreground text-xs">Sin datos de trazabilidad.</p>
                 ) : (
                   <div className="border rounded-lg divide-y">
                     {detalle.insumos.map((ins: any) => (
                       <div key={ins.id} className="flex items-center justify-between px-3 py-2 gap-2">
                         <div className="min-w-0">
-                          <p className="font-medium text-slate-800 truncate">{ins.productoNombre}</p>
-                          <p className="text-xs text-slate-400 flex flex-wrap gap-x-2">
+                          <p className="font-medium text-foreground truncate">{ins.productoNombre}</p>
+                          <p className="text-xs text-muted-foreground flex flex-wrap gap-x-2">
                             {ins.numeroLote && <span className="flex items-center gap-1"><Tag className="h-3 w-3" />Lote {ins.numeroLote}</span>}
                             {ins.codigoUnico && <span>Cód: {ins.codigoUnico}</span>}
                             {!ins.numeroLote && !ins.codigoUnico && <span>Lote inv. #{ins.loteInventarioId}</span>}
                           </p>
                         </div>
-                        <span className="font-semibold text-slate-700 flex-shrink-0">{formatDecimal(ins.cantidadUsada)}</span>
+                        <span className="font-semibold text-foreground flex-shrink-0">{formatDecimal(ins.cantidadUsada)}</span>
                       </div>
                     ))}
                   </div>
@@ -375,11 +375,11 @@ export default function PreparacionesManager({ elaboraciones, producciones, rol 
               {/* Consumos posteriores */}
               {detalle.consumos?.length > 0 && (
                 <div>
-                  <p className="font-semibold text-slate-700 mb-2">Consumos</p>
+                  <p className="font-semibold text-foreground mb-2">Consumos</p>
                   <div className="border rounded-lg divide-y">
                     {detalle.consumos.map((c: any) => (
                       <div key={c.id} className="flex items-center justify-between px-3 py-2 text-xs">
-                        <span className="text-slate-500">{formatDate(c.createdAt)}</span>
+                        <span className="text-muted-foreground">{formatDate(c.createdAt)}</span>
                         <span className={`px-1.5 py-0.5 rounded ${c.motivo === "VENTA" ? "bg-blue-100 text-blue-700" : c.motivo === "MERMA" ? "bg-red-100 text-red-700" : "bg-gray-100 text-gray-700"}`}>{c.motivo}</span>
                         <span className="font-semibold">{formatDecimal(c.cantidad)} {detalle.unidadBase}</span>
                       </div>
@@ -390,8 +390,8 @@ export default function PreparacionesManager({ elaboraciones, producciones, rol 
 
               {detalle.procedimiento && (
                 <div>
-                  <p className="font-semibold text-slate-700 mb-1">Paso a paso</p>
-                  <p className="text-xs text-slate-500 whitespace-pre-line">{detalle.procedimiento}</p>
+                  <p className="font-semibold text-foreground mb-1">Paso a paso</p>
+                  <p className="text-xs text-muted-foreground whitespace-pre-line">{detalle.procedimiento}</p>
                 </div>
               )}
             </div>
@@ -404,9 +404,9 @@ export default function PreparacionesManager({ elaboraciones, producciones, rol 
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="bg-slate-50 rounded p-2">
-      <p className="text-[11px] text-slate-400">{label}</p>
-      <p className="text-sm font-medium text-slate-800 mt-0.5 break-words">{value}</p>
+    <div className="bg-muted rounded p-2">
+      <p className="text-[11px] text-muted-foreground">{label}</p>
+      <p className="text-sm font-medium text-foreground mt-0.5 break-words">{value}</p>
     </div>
   );
 }
